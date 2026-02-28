@@ -3,6 +3,8 @@
 import React, { useMemo, useRef, useEffect, useState, Suspense } from 'react'
 import { parseResume } from '@/lib/parser'
 import { getTemplate } from '@/lib/templates'
+import { DEFAULT_SETTINGS } from '@/types/resume'
+import type { ParsedResume, ResumeSection } from '@/types/resume'
 import EmptyState from './EmptyState'
 
 const A4_WIDTH = 595
@@ -14,13 +16,67 @@ interface LivePreviewProps {
   rawContent: string
   templateId: string
   isPro: boolean
+  onTextDoubleClick?: (word: string, context: string) => void
 }
 
-export default function LivePreview({ rawContent, templateId, isPro }: LivePreviewProps) {
+interface PageSlice {
+  showHeader: boolean
+  sections: ResumeSection[]
+}
+
+/**
+ * Assigns sections to pages using measured heights.
+ * Page 0 includes the header section (if any) and as many body sections as fit.
+ * Subsequent pages contain only body sections.
+ */
+function buildPageSlices(
+  allSections: ResumeSection[],
+  headerSection: ResumeSection | null,
+  headerHeight: number,
+  sectionHeights: Map<string, number>,
+  usableHeight: number,
+): PageSlice[] {
+  const bodySections = allSections.filter(s => s !== headerSection)
+
+  const pages: PageSlice[] = []
+  let currentBody: ResumeSection[] = []
+  let isFirst = true
+  let used = headerHeight // first page pays the header cost upfront
+
+  for (const section of bodySections) {
+    const h = sectionHeights.get(section.id) ?? 0
+    // Flush current page if section doesn't fit (always keep at least one section per page)
+    if (used + h > usableHeight && currentBody.length > 0) {
+      pages.push({
+        showHeader: isFirst,
+        sections: isFirst && headerSection
+          ? [headerSection, ...currentBody]
+          : currentBody,
+      })
+      isFirst = false
+      currentBody = []
+      used = 0
+    }
+    currentBody.push(section)
+    used += h
+  }
+
+  // Last (or only) page
+  pages.push({
+    showHeader: isFirst,
+    sections: isFirst && headerSection
+      ? [headerSection, ...currentBody]
+      : currentBody,
+  })
+
+  return pages
+}
+
+export default function LivePreview({ rawContent, templateId, isPro, onTextDoubleClick }: LivePreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const measureRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
-  const [numPages, setNumPages] = useState(1)
+  const [pages, setPages] = useState<PageSlice[]>([])
 
   const parsedResume = useMemo(() => parseResume(rawContent), [rawContent])
   const template = getTemplate(templateId)
@@ -36,11 +92,40 @@ export default function LivePreview({ rawContent, templateId, isPro }: LivePrevi
     return () => ro.disconnect()
   }, [])
 
-  // Measure content height → page count
+  // Measure rendered sections → assign to pages
   useEffect(() => {
     const el = measureRef.current
     if (!el) return
-    const update = () => setNumPages(Math.max(1, Math.ceil(el.scrollHeight / A4_HEIGHT)))
+
+    const update = () => {
+      const marginV = parsedResume.settings?.marginV ?? DEFAULT_SETTINGS.marginV
+      const usableHeight = A4_HEIGHT - marginV * 2
+
+      // Header element height (includes its marginBottom)
+      const headerEl = el.querySelector('[data-header]') as HTMLElement | null
+      const headerHeight = headerEl?.offsetHeight ?? 0
+
+      // Body sections: elements marked with data-section
+      const sectionEls = Array.from(el.querySelectorAll('[data-section]')) as HTMLElement[]
+      const sectionHeights = new Map(
+        sectionEls.map(node => [node.dataset.section!, node.offsetHeight])
+      )
+      const bodySectionIds = new Set(sectionHeights.keys())
+
+      // Identify header section as the one not measured as a body section
+      const headerSection =
+        parsedResume.sections.find(s => !bodySectionIds.has(s.id)) ?? null
+
+      const slices = buildPageSlices(
+        parsedResume.sections,
+        headerSection,
+        headerHeight,
+        sectionHeights,
+        usableHeight,
+      )
+      setPages(slices)
+    }
+
     update()
     const ro = new ResizeObserver(update)
     ro.observe(el)
@@ -58,12 +143,38 @@ export default function LivePreview({ rawContent, templateId, isPro }: LivePrevi
   }
 
   const TemplateComponent = template.component
+  const numPages = Math.max(pages.length, 1)
   const totalUnscaledHeight =
     PAGE_PADDING + numPages * A4_HEIGHT + (numPages - 1) * PAGE_GAP + PAGE_PADDING
 
+  function handleDblClick(e: React.MouseEvent) {
+    if (!onTextDoubleClick) return
+    requestAnimationFrame(() => {
+      const sel = window.getSelection()
+      const word = sel?.toString().trim()
+      if (!word || !sel) return
+
+      let el: Element | null =
+        sel.anchorNode?.nodeType === Node.ELEMENT_NODE
+          ? (sel.anchorNode as Element)
+          : sel.anchorNode?.parentElement ?? null
+      let context = ''
+      while (el && el !== e.currentTarget) {
+        const display = window.getComputedStyle(el).display
+        if (display !== 'inline' && display !== 'inline-block' && display !== 'inline-flex') {
+          context = el.textContent?.trim().replace(/^[–\-]\s*/, '') ?? ''
+          break
+        }
+        el = el.parentElement
+      }
+
+      onTextDoubleClick(word, context)
+    })
+  }
+
   return (
-    <div ref={containerRef} className="h-full overflow-y-auto overflow-x-hidden bg-surface-2">
-      {/* Hidden measurement div */}
+    <div ref={containerRef} className="h-full overflow-y-auto overflow-x-hidden bg-surface-2" onDoubleClick={handleDblClick}>
+      {/* Hidden measurement div — renders the full template to measure section heights */}
       <div style={{ position: 'relative', overflow: 'hidden', width: 0, height: 0 }}>
         <div
           ref={measureRef}
@@ -78,7 +189,7 @@ export default function LivePreview({ rawContent, templateId, isPro }: LivePrevi
           }}
         >
           <Suspense fallback={null}>
-            <TemplateComponent resume={parsedResume} isPro={isPro} />
+            <TemplateComponent resume={parsedResume} isPro={isPro} showHeader />
           </Suspense>
         </div>
       </div>
@@ -100,26 +211,36 @@ export default function LivePreview({ rawContent, templateId, isPro }: LivePrevi
             gap: PAGE_GAP,
           }}
         >
-          {Array.from({ length: numPages }, (_, i) => (
-            <div
-              key={i}
-              style={{
-                width: A4_WIDTH,
-                height: A4_HEIGHT,
-                overflow: 'hidden',
-                flexShrink: 0,
-                background: '#ffffff',
-                boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
-                position: 'relative',
-              }}
-            >
-              <div style={{ position: 'absolute', top: -i * A4_HEIGHT, width: A4_WIDTH }}>
-                <Suspense fallback={null}>
-                  <TemplateComponent resume={parsedResume} isPro={isPro} />
-                </Suspense>
-              </div>
-            </div>
-          ))}
+          {pages.length === 0
+            ? (
+              // Loading state while measurement runs
+              <div style={{ width: A4_WIDTH, height: A4_HEIGHT, background: '#ffffff', boxShadow: '0 1px 6px rgba(0,0,0,0.18)' }} />
+            )
+            : pages.map((page, i) => {
+              const pageResume: ParsedResume = { ...parsedResume, sections: page.sections }
+              return (
+                <div
+                  key={i}
+                  style={{
+                    width: A4_WIDTH,
+                    height: A4_HEIGHT,
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    background: '#ffffff',
+                    boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
+                  }}
+                >
+                  <Suspense fallback={null}>
+                    <TemplateComponent
+                      resume={pageResume}
+                      isPro={isPro}
+                      showHeader={page.showHeader}
+                    />
+                  </Suspense>
+                </div>
+              )
+            })
+          }
         </div>
       </div>
     </div>

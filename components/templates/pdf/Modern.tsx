@@ -7,7 +7,10 @@ import type {
   KeyValueItem,
   EntryItem,
 } from '@/types/resume'
+import { DEFAULT_SETTINGS } from '@/types/resume'
 import { renderInlinePdf } from '@/lib/renderInlinePdf'
+
+type RS = Required<typeof DEFAULT_SETTINGS>
 
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position'])
 
@@ -113,9 +116,10 @@ const styles = StyleSheet.create({
 
 export default function ModernPdf({ resume, isPro }: TemplateProps) {
   const { sections, meta } = resume
+  const s: RS = { ...DEFAULT_SETTINGS, ...resume.settings }
 
   const headerSection =
-    sections.find(s => s.hint === 'keyvalue' || s.title.toLowerCase() === 'bio') ??
+    sections.find(sec => sec.hint === 'keyvalue' || sec.title.toLowerCase() === 'bio') ??
     sections[0] ??
     null
 
@@ -124,15 +128,15 @@ export default function ModernPdf({ resume, isPro }: TemplateProps) {
       i.kind === 'keyvalue' && !HEADER_META_KEYS.has(i.key.toLowerCase()),
   )
 
-  const bodySections = sections.filter(s => s !== headerSection)
+  const bodySections = sections.filter(sec => sec !== headerSection)
   const sidebarSections = bodySections.filter(isSidebarSection)
-  const mainSections = bodySections.filter(s => !isSidebarSection(s))
+  const mainSections = bodySections.filter(sec => !isSidebarSection(sec))
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={[styles.page, { fontSize: s.fontSize, lineHeight: s.lineHeight }]}>
         {/* Sidebar */}
-        <View style={styles.sidebar}>
+        <View style={[styles.sidebar, { paddingTop: s.marginV, paddingBottom: s.marginV, paddingLeft: s.marginH }]}>
           {meta.name && <Text style={styles.sidebarName}>{meta.name}</Text>}
           {meta.title && <Text style={styles.sidebarJobTitle}>{meta.title}</Text>}
 
@@ -159,14 +163,16 @@ export default function ModernPdf({ resume, isPro }: TemplateProps) {
         </View>
 
         {/* Main */}
-        <View style={styles.main}>
+        <View style={[styles.main, { paddingTop: s.marginV, paddingBottom: s.marginV, paddingRight: s.marginH }]}>
           {mainSections.map((section, idx) => (
             <View key={section.id}>
-              <Text style={[styles.mainSectionTitle, idx === 0 ? { marginTop: 0 } : {}]}>
-                {section.title}
-              </Text>
+              <View minPresenceAhead={30}>
+                <Text style={[styles.mainSectionTitle, idx === 0 ? { marginTop: 0 } : {}]}>
+                  {section.title}
+                </Text>
+              </View>
               {section.items.map((item, i) => (
-                <MainItemBlock key={i} item={item} isKeyValueSection={section.hint === 'keyvalue'} />
+                <MainItemBlock key={i} item={item} isKeyValueSection={section.hint === 'keyvalue'} s={s} />
               ))}
             </View>
           ))}
@@ -223,7 +229,7 @@ function SidebarItemBlock({ item, isKeyValueSection }: { item: SectionItem; isKe
   }
 }
 
-function MainItemBlock({ item, isKeyValueSection }: { item: SectionItem; isKeyValueSection: boolean }) {
+function MainItemBlock({ item, isKeyValueSection, s }: { item: SectionItem; isKeyValueSection: boolean; s: RS }) {
   switch (item.kind) {
     case 'keyvalue': {
       if (isKeyValueSection) {
@@ -241,49 +247,49 @@ function MainItemBlock({ item, isKeyValueSection }: { item: SectionItem; isKeyVa
       }
       return (
         <View style={styles.kvRow}>
-          <Text style={styles.kvKey}>{item.key}:</Text>
-          <Text style={styles.kvValue}>{renderInlinePdf(item.value)}</Text>
+          <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>{item.key}:</Text>
+          <Text style={[styles.kvValue, { fontSize: s.fontSize }]}>{renderInlinePdf(item.value)}</Text>
         </View>
       )
     }
     case 'entry':
-      return <MainEntryBlock entry={item} />
+      return <MainEntryBlock entry={item} s={s} />
     case 'bullet':
       return (
         <View style={styles.bulletRow}>
-          <Text style={styles.bulletDash}>–</Text>
-          <Text style={styles.bulletText}>{renderInlinePdf(item.text)}</Text>
+          <Text style={[styles.bulletDash, { fontSize: s.fontSize }]}>–</Text>
+          <Text style={[styles.bulletText, { fontSize: s.fontSize }]}>{renderInlinePdf(item.text)}</Text>
         </View>
       )
     case 'text':
-      return <Text style={styles.textPara}>{renderInlinePdf(item.text)}</Text>
+      return <Text style={[styles.textPara, { fontSize: s.fontSize }]}>{renderInlinePdf(item.text)}</Text>
   }
 }
 
-function MainEntryBlock({ entry }: { entry: EntryItem }) {
+function MainEntryBlock({ entry, s }: { entry: EntryItem; s: RS }) {
   return (
-    <View style={styles.entry}>
+    <View style={[styles.entry, { marginBottom: s.entrySpacing }]} wrap={false}>
       <View style={styles.entryHeader}>
         <View style={{ flex: 1 }}>
           {entry.role ? (
             <Text>
-              <Text style={styles.entryRole}>{renderInlinePdf(entry.role)}</Text>
+              <Text style={[styles.entryRole, { fontSize: s.fontSize + 0.5 }]}>{renderInlinePdf(entry.role)}</Text>
               {entry.organization && (
-                <Text style={styles.entryOrg}> @ {renderInlinePdf(entry.organization)}</Text>
+                <Text style={[styles.entryOrg, { fontSize: s.fontSize + 0.5 }]}> @ {renderInlinePdf(entry.organization)}</Text>
               )}
             </Text>
           ) : (
-            <Text style={styles.entryRole}>{renderInlinePdf(entry.heading)}</Text>
+            <Text style={[styles.entryRole, { fontSize: s.fontSize + 0.5 }]}>{renderInlinePdf(entry.heading)}</Text>
           )}
         </View>
         {entry.meta.length > 0 && (
-          <Text style={styles.entryMeta}>{entry.meta.join(' · ')}</Text>
+          <Text style={[styles.entryMeta, { fontSize: s.fontSize - 1.5 }]}>{entry.meta.join(' · ')}</Text>
         )}
       </View>
       {entry.children.length > 0 && (
         <View style={styles.entryChildren}>
           {entry.children.map((child, i) => (
-            <MainItemBlock key={i} item={child} isKeyValueSection={false} />
+            <MainItemBlock key={i} item={child} isKeyValueSection={false} s={s} />
           ))}
         </View>
       )}

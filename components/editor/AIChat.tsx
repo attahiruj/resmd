@@ -1,36 +1,95 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { PaperPlaneTiltIcon } from '@phosphor-icons/react'
+import { CheckIcon, PaperPlaneTiltIcon, XIcon } from '@phosphor-icons/react'
+import { parseSuggestion } from '@/lib/prompts'
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+type EditStatus = 'pending' | 'applied' | 'dismissed'
+
+interface Edit {
+  search: string
+  replace: string
+  status: EditStatus
+}
 
 interface Message {
   role: 'user' | 'assistant'
-  content: string
+  prose: string
+  edits: Edit[]
 }
 
 interface AIChatProps {
   resumeContent: string
+  onApplyEdit?: (search: string, replace: string) => void
 }
 
-export default function AIChat({ resumeContent }: AIChatProps) {
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
+export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const historyRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Scroll message history to bottom whenever messages change
   useEffect(() => {
     if (historyRef.current) {
       historyRef.current.scrollTop = historyRef.current.scrollHeight
     }
   }, [messages, loading])
 
+  const updateEditStatus = (msgIdx: number, editIdx: number, status: EditStatus) => {
+    setMessages(prev =>
+      prev.map((m, mi) =>
+        mi !== msgIdx ? m : {
+          ...m,
+          edits: m.edits.map((e, ei) => ei === editIdx ? { ...e, status } : e),
+        }
+      )
+    )
+  }
+
+  const handleApply = (msgIdx: number, editIdx: number) => {
+    const edit = messages[msgIdx]?.edits[editIdx]
+    if (!edit || edit.status !== 'pending') return
+    onApplyEdit?.(edit.search, edit.replace)
+    updateEditStatus(msgIdx, editIdx, 'applied')
+  }
+
+  const handleDismiss = (msgIdx: number, editIdx: number) => {
+    updateEditStatus(msgIdx, editIdx, 'dismissed')
+  }
+
+  const handleApplyAll = (msgIdx: number) => {
+    const msg = messages[msgIdx]
+    if (!msg) return
+    msg.edits.forEach((edit, ei) => {
+      if (edit.status === 'pending') {
+        onApplyEdit?.(edit.search, edit.replace)
+      }
+    })
+    setMessages(prev =>
+      prev.map((m, mi) =>
+        mi !== msgIdx ? m : {
+          ...m,
+          edits: m.edits.map(e => e.status === 'pending' ? { ...e, status: 'applied' as EditStatus } : e),
+        }
+      )
+    )
+  }
+
   const send = async () => {
     const text = input.trim()
     if (!text || loading) return
 
-    const next: Message[] = [...messages, { role: 'user', content: text }]
+    const userMsg: Message = { role: 'user', prose: text, edits: [] }
+    const next = [...messages, userMsg]
     setMessages(next)
     setInput('')
     setLoading(true)
@@ -42,25 +101,42 @@ export default function AIChat({ resumeContent }: AIChatProps) {
         body: JSON.stringify({
           message: text,
           resumeContent,
-          // Only send role/content pairs (omit any local state)
-          history: messages.map(({ role, content }) => ({ role, content })),
+          // Send only prose for history — the full resume is always in the preamble
+          history: messages.map(m => ({ role: m.role, content: m.prose })),
         }),
       })
 
+      if (res.status === 429) {
+        const after = res.headers.get('Retry-After')
+        setMessages([...next, {
+          role: 'assistant',
+          prose: `Slow down — try again${after ? ` in ${after}s` : ' in a moment'}.`,
+          edits: [],
+        }])
+        return
+      }
+
       const data = await res.json()
       if (data.reply) {
-        setMessages([...next, { role: 'assistant', content: data.reply }])
+        const { prose, edits } = parseSuggestion(data.reply)
+        setMessages([...next, {
+          role: 'assistant',
+          prose,
+          edits: edits.map(e => ({ ...e, status: 'pending' as EditStatus })),
+        }])
       } else {
-        setMessages([
-          ...next,
-          { role: 'assistant', content: 'Something went wrong. Please try again.' },
-        ])
+        setMessages([...next, {
+          role: 'assistant',
+          prose: 'Something went wrong. Please try again.',
+          edits: [],
+        }])
       }
     } catch {
-      setMessages([
-        ...next,
-        { role: 'assistant', content: 'Failed to reach the AI. Check your connection.' },
-      ])
+      setMessages([...next, {
+        role: 'assistant',
+        prose: 'Failed to reach the AI. Check your connection.',
+        edits: [],
+      }])
     } finally {
       setLoading(false)
       inputRef.current?.focus()
@@ -76,30 +152,53 @@ export default function AIChat({ resumeContent }: AIChatProps) {
 
   return (
     <div className="flex flex-col border-t border-border bg-editor-bg flex-shrink-0">
-      {/* Message history — only rendered when there are messages */}
       {messages.length > 0 && (
         <div
           ref={historyRef}
-          className="overflow-y-auto px-4 py-3 flex flex-col gap-2"
-          style={{ maxHeight: '220px' }}
+          className="overflow-y-auto px-4 py-3 flex flex-col gap-3"
+          style={{ maxHeight: '300px' }}
         >
-          {messages.map((msg, i) => (
+          {messages.map((msg, mi) => (
             <div
-              key={i}
-              className={`flex flex-col gap-0.5 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+              key={mi}
+              className={`flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
             >
               <span className="text-[10px] uppercase tracking-wide text-faint select-none">
                 {msg.role === 'user' ? 'You' : 'AI'}
               </span>
-              <div
-                className={`text-sm rounded-xl px-3 py-1.5 max-w-[90%] whitespace-pre-wrap leading-relaxed ${
-                  msg.role === 'user'
-                    ? 'bg-accent text-accent-text'
-                    : 'bg-surface text-text border border-border'
-                }`}
-              >
-                {msg.content}
-              </div>
+
+              {msg.prose && (
+                <div
+                  className={`text-sm rounded-xl px-3 py-1.5 max-w-[90%] whitespace-pre-wrap leading-relaxed ${
+                    msg.role === 'user'
+                      ? 'bg-accent text-accent-text'
+                      : 'bg-surface text-text border border-border'
+                  }`}
+                >
+                  {msg.prose}
+                </div>
+              )}
+
+              {msg.edits.map((edit, ei) =>
+                edit.status === 'dismissed' ? null : (
+                  <SuggestionCard
+                    key={ei}
+                    edit={edit}
+                    onApply={() => handleApply(mi, ei)}
+                    onDismiss={() => handleDismiss(mi, ei)}
+                  />
+                )
+              )}
+
+              {msg.edits.filter(e => e.status === 'pending').length > 1 && (
+                <button
+                  onClick={() => handleApplyAll(mi)}
+                  className="self-start flex items-center gap-1.5 px-3 py-1.5 text-xs bg-accent text-accent-text rounded-lg hover:opacity-90 transition-opacity duration-150"
+                >
+                  <CheckIcon size={12} weight="bold" />
+                  Apply all ({msg.edits.filter(e => e.status === 'pending').length})
+                </button>
+              )}
             </div>
           ))}
 
@@ -116,9 +215,7 @@ export default function AIChat({ resumeContent }: AIChatProps) {
 
       {/* Input row */}
       <div className="flex items-center gap-2 px-3 py-2">
-        <span className="text-accent select-none text-sm flex-shrink-0" aria-hidden>
-          ✦
-        </span>
+        <span className="text-accent select-none text-sm flex-shrink-0" aria-hidden>✦</span>
         <input
           ref={inputRef}
           type="text"
@@ -141,6 +238,73 @@ export default function AIChat({ resumeContent }: AIChatProps) {
     </div>
   )
 }
+
+// ---------------------------------------------------------------------------
+// Suggestion card
+// ---------------------------------------------------------------------------
+
+interface SuggestionCardProps {
+  edit: Edit
+  onApply: () => void
+  onDismiss: () => void
+}
+
+function SuggestionCard({ edit, onApply, onDismiss }: SuggestionCardProps) {
+  return (
+    <div className="w-full max-w-[95%] rounded-xl border border-border bg-surface overflow-hidden text-xs">
+      {/* Header */}
+      <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border">
+        <span className="text-accent select-none" aria-hidden>✦</span>
+        <span className="font-medium text-text">
+          {edit.status === 'applied' ? 'Applied' : 'Suggested edit'}
+        </span>
+      </div>
+
+      {/* Diff */}
+      <div className="flex flex-col divide-y divide-border">
+        <div className="px-3 py-2">
+          <div className="text-[10px] uppercase tracking-wide text-faint mb-1.5">Before</div>
+          <pre className="whitespace-pre-wrap font-mono text-[11px] text-muted leading-relaxed">{edit.search}</pre>
+        </div>
+        <div className="px-3 py-2 bg-accent-muted">
+          <div className="text-[10px] uppercase tracking-wide text-accent mb-1.5">After</div>
+          <pre className="whitespace-pre-wrap font-mono text-[11px] text-text leading-relaxed">{edit.replace}</pre>
+        </div>
+      </div>
+
+      {/* Actions */}
+      {edit.status === 'pending' && (
+        <div className="flex justify-end gap-2 px-3 py-2 border-t border-border">
+          <button
+            onClick={onDismiss}
+            className="flex items-center gap-1 px-2 py-1 text-muted hover:text-text rounded-md hover:bg-surface-2 transition-colors duration-150"
+          >
+            <XIcon size={11} />
+            Dismiss
+          </button>
+          <button
+            onClick={onApply}
+            className="flex items-center gap-1 px-2.5 py-1 bg-accent text-accent-text rounded-md hover:opacity-90 transition-opacity duration-150"
+          >
+            <CheckIcon size={11} weight="bold" />
+            Apply
+          </button>
+        </div>
+      )}
+
+      {edit.status === 'applied' && (
+        <div className="flex items-center gap-1.5 px-3 py-2 border-t border-border text-accent">
+          <CheckIcon size={11} weight="bold" />
+          <span>Applied to resume</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Thinking indicator
+// ---------------------------------------------------------------------------
 
 function ThinkingDots() {
   return (

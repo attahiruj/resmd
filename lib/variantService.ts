@@ -238,6 +238,21 @@ export const deleteVariant = async (variantId: string): Promise<void> => {
   if (error) throw error
 }
 
+export const getVariantBySlug = async (slug: string): Promise<ResumeVariant | null> => {
+  const supabase = createSupabaseServerClient()
+
+  const { data, error } = await supabase
+    .from('resume_variants')
+    .select('*')
+    .eq('public_slug', slug)
+    .eq('is_public', true)
+    .single()
+
+  if (error) return null
+
+  return mapVariant(data)
+}
+
 export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
   const supabase = createSupabaseServerClient()
 

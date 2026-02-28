@@ -7,6 +7,7 @@ export default function Home() {
       <Hero />
       <HowItWorks />
       <Features />
+      <Support />
       <Footer />
     </div>
   )
@@ -20,6 +21,15 @@ function Nav() {
       <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
         <span className="font-display text-lg text-text">resmd</span>
         <div className="flex items-center gap-3">
+          <a
+            href="https://buymeacoffee.com/hattahiroo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:flex items-center gap-1.5 text-sm text-muted hover:text-text transition-colors duration-150"
+          >
+            <CoffeeIcon size={14} />
+            Support
+          </a>
           <Link
             href="/auth"
             className="text-sm text-muted hover:text-text transition-colors duration-150"
@@ -74,6 +84,7 @@ function Hero() {
               See how it works
             </a>
           </div>
+          <p className="text-xs text-faint mt-4">Free to use · No credit card · No watermarks</p>
         </div>
 
         {/* Editor + preview mockup */}
@@ -290,6 +301,41 @@ function Features() {
   )
 }
 
+/* ─── Support ────────────────────────────────────────────────────────────── */
+
+function Support() {
+  return (
+    <section className="py-20 px-6 border-t border-border" id="support">
+      <div className="max-w-5xl mx-auto">
+        <div className="max-w-md mx-auto text-center">
+          <div className="w-16 h-16 bg-accent-muted rounded-2xl flex items-center justify-center mx-auto mb-6 text-accent">
+            <CoffeeIcon size={28} />
+          </div>
+          <h2 className="font-display text-3xl sm:text-4xl text-text mb-4">
+            resmd is free.
+          </h2>
+          <p className="text-muted text-base leading-relaxed mb-8">
+            No credit card. No watermarks. No paywalls — for now.{' '}
+            If resmd has helped you land a job or save a few hours, a coffee means a lot.
+          </p>
+          <a
+            href="https://buymeacoffee.com/hattahiroo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2.5 px-6 py-3 bg-[#FFDD00] hover:bg-[#f0d000] text-[#1a1200] text-sm font-semibold rounded-lg transition-colors duration-150"
+          >
+            <CoffeeIcon size={16} />
+            Buy me a coffee
+          </a>
+          <p className="text-xs text-faint mt-4">
+            Every cup helps keep resmd free and actively maintained.
+          </p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 /* ─── Footer ─────────────────────────────────────────────────────────────── */
 
 function Footer() {
@@ -302,7 +348,12 @@ function Footer() {
         </div>
         <div className="flex items-center gap-6 text-sm text-muted">
           <Link href="/auth" className="hover:text-text transition-colors duration-150">Sign in</Link>
-          <Link href="/pricing" className="hover:text-text transition-colors duration-150">Pricing</Link>
+          <a
+            href="https://buymeacoffee.com/hattahiroo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-text transition-colors duration-150"
+          >Support</a>
         </div>
       </div>
     </footer>
@@ -311,10 +362,12 @@ function Footer() {
 
 /* ─── Icons ──────────────────────────────────────────────────────────────── */
 
-function CheckIcon({ className }: { className?: string }) {
+function CoffeeIcon({ size = 18, className }: { size?: number; className?: string }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className={className}>
-      <path d="M3 8L6.5 11.5L13 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8.5 3c0 1.5 1.5 1.5 1.5 3M13 3c0 1.5 1.5 1.5 1.5 3" />
+      <path d="M5 9h14l-1.5 10.5a1 1 0 01-1 .5H7.5a1 1 0 01-1-.5L5 9z" />
+      <path d="M19 11h1.5a2 2 0 010 4H19" />
     </svg>
   )
 }

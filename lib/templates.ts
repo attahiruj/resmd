@@ -63,7 +63,7 @@ export function getTemplate(id: string): TemplateDefinition | null {
 }
 
 export function getFreeTemplates(): TemplateDefinition[] {
-  return templates.filter(t => !t.isPro)
+  return templates
 }
 
 // Server-safe: dynamic import (no React.lazy) for use in API routes / renderToBuffer

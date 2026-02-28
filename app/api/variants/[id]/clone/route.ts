@@ -6,8 +6,9 @@ import { LIMITS } from '@/lib/limits'
 // POST /api/variants/[id]/clone — clone an existing variant into a new one
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const supabase = createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -32,7 +33,7 @@ export async function POST(
       return NextResponse.json({ error: 'Title is required' }, { status: 400 })
     }
 
-    const variant = await cloneVariant(params.id, title.trim(), user.id)
+    const variant = await cloneVariant(id, title.trim(), user.id)
     return NextResponse.json({ data: variant })
   } catch {
     return NextResponse.json({ error: 'Failed to clone variant' }, { status: 500 })

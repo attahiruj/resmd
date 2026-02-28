@@ -5,7 +5,7 @@ Email: jane@example.com
 Location: New York, NY
 
 # Experience
-## Engineer @ Acme | 2022 – Present
+## Engineer @ Google | 2022 - Present
 - Built and shipped core product features`
 
   return (

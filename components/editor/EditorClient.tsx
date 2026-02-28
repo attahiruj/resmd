@@ -6,10 +6,14 @@ import Toolbar from '@/components/editor/Toolbar'
 import PreviewPane from '@/components/preview/PreviewPane'
 import AIChat from '@/components/editor/AIChat'
 import SnapshotModal from '@/components/editor/SnapshotModal'
+import ErrorBoundary from '@/components/editor/ErrorBoundary'
 import type { ResumeVariant } from '@/types/resume'
 
 // CodeMirror is browser-only
 const Editor = dynamic(() => import('@/components/editor/Editor'), { ssr: false })
+
+// AI panel is lazy-loaded — only downloaded when the user opens it
+const AIPanel = dynamic(() => import('@/components/editor/AIPanel'), { ssr: false })
 
 const MIN_PANE_PX = 300
 const DEFAULT_SPLIT = 50
@@ -33,6 +37,8 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isMounted, setIsMounted] = useState(false)
+
+  const [jumpTarget, setJumpTarget] = useState<{ word: string; context: string } | null>(null)
 
   // Refs for 60fps split drag
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -91,6 +97,19 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
     scheduleAutosave()
   }, [scheduleAutosave])
 
+  const handleApplyEdit = useCallback((search: string, replace: string) => {
+    setRawContent(prev => {
+      if (!prev.includes(search)) return prev
+      return prev.replace(search, replace)
+    })
+    scheduleAutosave()
+  }, [scheduleAutosave])
+
+  const handlePreviewDoubleClick = useCallback((word: string, context: string) => {
+    setMobileTab('write')
+    setJumpTarget({ word, context })
+  }, [])
+
   const handleTemplateChange = useCallback((id: string) => {
     setTemplateId(id)
     localStorage.setItem('resmd_template', id)
@@ -147,6 +166,7 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
   }, [])
 
   return (
+    <ErrorBoundary>
     <div className="flex flex-col h-screen overflow-hidden bg-bg">
       <Toolbar
         lastSaved={lastSaved}
@@ -187,16 +207,18 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
         {mobileTab === 'write' ? (
           <div className="h-full flex flex-col bg-editor-bg">
             <div className="flex-1 min-h-0 overflow-hidden">
-              {isMounted && <Editor value={rawContent} onChange={handleContentChange} />}
+              {isMounted && <Editor value={rawContent} onChange={handleContentChange} jumpTarget={jumpTarget} onJumpComplete={() => setJumpTarget(null)} />}
             </div>
-            <AIChat resumeContent={rawContent} />
+            <AIChat resumeContent={rawContent} onApplyEdit={handleApplyEdit} />
           </div>
         ) : (
           <PreviewPane
             rawContent={rawContent}
             templateId={templateId}
             onTemplateChange={handleTemplateChange}
+            onContentChange={handleContentChange}
             isPro={isPro}
+            onTextDoubleClick={handlePreviewDoubleClick}
           />
         )}
       </div>
@@ -211,9 +233,9 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
             style={{ width: `${splitPct}%` }}
           >
             <div className="flex-1 min-h-0 overflow-hidden">
-              {isMounted && <Editor value={rawContent} onChange={handleContentChange} />}
+              {isMounted && <Editor value={rawContent} onChange={handleContentChange} jumpTarget={jumpTarget} onJumpComplete={() => setJumpTarget(null)} />}
             </div>
-            <AIChat resumeContent={rawContent} />
+            <AIChat resumeContent={rawContent} onApplyEdit={handleApplyEdit} />
           </div>
 
           {/* Drag divider */}
@@ -233,23 +255,16 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
               rawContent={rawContent}
               templateId={templateId}
               onTemplateChange={handleTemplateChange}
+              onContentChange={handleContentChange}
               isPro={isPro}
+              onTextDoubleClick={handlePreviewDoubleClick}
             />
           </div>
         </div>
       </div>
 
-      {/* AI panel placeholder — wired up in Stage 8 */}
       {showAIPanel && (
-        <div
-          className="fixed top-[61px] right-0 bottom-0 w-[380px] bg-surface border-l border-border z-40 flex items-center justify-center"
-          style={{ transform: 'translateX(0)', transition: 'transform 200ms ease-out' }}
-        >
-          <div className="text-center p-8">
-            <div className="text-4xl mb-3">✦</div>
-            <p className="text-sm text-muted">AI assistant coming in Stage 8</p>
-          </div>
-        </div>
+        <AIPanel rawContent={rawContent} onClose={() => setShowAIPanel(false)} onApplyEdit={handleApplyEdit} />
       )}
 
       {/* Snapshot modal */}
@@ -266,5 +281,6 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
         />
       )}
     </div>
+    </ErrorBoundary>
   )
 }

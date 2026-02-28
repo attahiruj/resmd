@@ -7,6 +7,7 @@ import type {
   KeyValueItem,
   EntryItem,
 } from '@/types/resume'
+import { DEFAULT_SETTINGS } from '@/types/resume'
 import { renderInlinePdf } from '@/lib/renderInlinePdf'
 
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position'])
@@ -70,11 +71,14 @@ const styles = StyleSheet.create({
   footerText: { fontSize: 8, color: '#BBBBBB' },
 })
 
+type RS = Required<typeof DEFAULT_SETTINGS>
+
 export default function MinimalPdf({ resume, isPro }: TemplateProps) {
   const { sections, meta } = resume
+  const s: RS = { ...DEFAULT_SETTINGS, ...resume.settings }
 
   const headerSection =
-    sections.find(s => s.hint === 'keyvalue' || s.title.toLowerCase() === 'bio') ??
+    sections.find(sec => sec.hint === 'keyvalue' || sec.title.toLowerCase() === 'bio') ??
     sections[0] ??
     null
 
@@ -83,11 +87,18 @@ export default function MinimalPdf({ resume, isPro }: TemplateProps) {
       i.kind === 'keyvalue' && !HEADER_META_KEYS.has(i.key.toLowerCase()),
   )
 
-  const bodySections = sections.filter(s => s !== headerSection)
+  const bodySections = sections.filter(sec => sec !== headerSection)
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={[styles.page, {
+        fontSize: s.fontSize,
+        lineHeight: s.lineHeight,
+        paddingTop: s.marginV,
+        paddingBottom: s.marginV,
+        paddingLeft: s.marginH,
+        paddingRight: s.marginH,
+      }]}>
         {/* Header */}
         <View style={styles.header}>
           {meta.name && <Text style={styles.name}>{meta.name}</Text>}
@@ -106,7 +117,7 @@ export default function MinimalPdf({ resume, isPro }: TemplateProps) {
 
         {/* Body sections */}
         {bodySections.map(section => (
-          <PdfSectionBlock key={section.id} section={section} />
+          <PdfSectionBlock key={section.id} section={section} s={s} />
         ))}
 
         {/* Watermark */}
@@ -120,13 +131,15 @@ export default function MinimalPdf({ resume, isPro }: TemplateProps) {
   )
 }
 
-function PdfSectionBlock({ section }: { section: ResumeSection }) {
+function PdfSectionBlock({ section, s }: { section: ResumeSection; s: RS }) {
   if (section.items.length === 0) return null
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{section.title}</Text>
+      <View minPresenceAhead={30}>
+        <Text style={styles.sectionTitle}>{section.title}</Text>
+      </View>
       {section.items.map((item, i) => (
-        <PdfItemBlock key={i} item={item} isKeyValueSection={section.hint === 'keyvalue'} />
+        <PdfItemBlock key={i} item={item} isKeyValueSection={section.hint === 'keyvalue'} s={s} />
       ))}
     </View>
   )
@@ -135,9 +148,11 @@ function PdfSectionBlock({ section }: { section: ResumeSection }) {
 function PdfItemBlock({
   item,
   isKeyValueSection,
+  s,
 }: {
   item: SectionItem
   isKeyValueSection: boolean
+  s: RS
 }) {
   switch (item.kind) {
     case 'keyvalue': {
@@ -158,49 +173,49 @@ function PdfItemBlock({
       }
       return (
         <View style={styles.kvRow}>
-          <Text style={styles.kvKey}>{item.key}:</Text>
-          <Text style={styles.kvValue}>{renderInlinePdf(item.value)}</Text>
+          <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>{item.key}:</Text>
+          <Text style={[styles.kvValue, { fontSize: s.fontSize }]}>{renderInlinePdf(item.value)}</Text>
         </View>
       )
     }
     case 'entry':
-      return <PdfEntryBlock entry={item} />
+      return <PdfEntryBlock entry={item} s={s} />
     case 'bullet':
       return (
         <View style={styles.bulletRow}>
-          <Text style={styles.bulletDash}>–</Text>
-          <Text style={styles.bulletText}>{renderInlinePdf(item.text)}</Text>
+          <Text style={[styles.bulletDash, { fontSize: s.fontSize, lineHeight: s.lineHeight }]}>–</Text>
+          <Text style={[styles.bulletText, { fontSize: s.fontSize, lineHeight: s.lineHeight }]}>{renderInlinePdf(item.text)}</Text>
         </View>
       )
     case 'text':
-      return <Text style={styles.textPara}>{renderInlinePdf(item.text)}</Text>
+      return <Text style={[styles.textPara, { fontSize: s.fontSize }]}>{renderInlinePdf(item.text)}</Text>
   }
 }
 
-function PdfEntryBlock({ entry }: { entry: EntryItem }) {
+function PdfEntryBlock({ entry, s }: { entry: EntryItem; s: RS }) {
   return (
-    <View style={styles.entry}>
+    <View style={[styles.entry, { marginBottom: s.entrySpacing }]} wrap={false}>
       <View style={styles.entryHeader}>
         <View style={styles.entryLeft}>
           {entry.role ? (
             <Text>
-              <Text style={styles.entryRole}>{renderInlinePdf(entry.role)}</Text>
+              <Text style={[styles.entryRole, { fontSize: s.fontSize }]}>{renderInlinePdf(entry.role)}</Text>
               {entry.organization && (
-                <Text style={styles.entryOrg}> @ {renderInlinePdf(entry.organization)}</Text>
+                <Text style={[styles.entryOrg, { fontSize: s.fontSize }]}> @ {renderInlinePdf(entry.organization)}</Text>
               )}
             </Text>
           ) : (
-            <Text style={styles.entryRole}>{renderInlinePdf(entry.heading)}</Text>
+            <Text style={[styles.entryRole, { fontSize: s.fontSize }]}>{renderInlinePdf(entry.heading)}</Text>
           )}
         </View>
         {entry.meta.length > 0 && (
-          <Text style={styles.entryMeta}>{entry.meta.join(' · ')}</Text>
+          <Text style={[styles.entryMeta, { fontSize: s.fontSize - 1 }]}>{entry.meta.join(' · ')}</Text>
         )}
       </View>
       {entry.children.length > 0 && (
         <View style={styles.entryChildren}>
           {entry.children.map((child, i) => (
-            <PdfItemBlock key={i} item={child} isKeyValueSection={false} />
+            <PdfItemBlock key={i} item={child} isKeyValueSection={false} s={s} />
           ))}
         </View>
       )}

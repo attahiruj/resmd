@@ -7,7 +7,10 @@ import type {
   KeyValueItem,
   EntryItem,
 } from '@/types/resume'
+import { DEFAULT_SETTINGS } from '@/types/resume'
 import { renderInlinePdf } from '@/lib/renderInlinePdf'
+
+type RS = Required<typeof DEFAULT_SETTINGS>
 
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position'])
 
@@ -125,9 +128,10 @@ const styles = StyleSheet.create({
 
 export default function TechnicalPdf({ resume, isPro }: TemplateProps) {
   const { sections, meta } = resume
+  const s: RS = { ...DEFAULT_SETTINGS, ...resume.settings }
 
   const headerSection =
-    sections.find(s => s.hint === 'keyvalue' || s.title.toLowerCase() === 'bio') ??
+    sections.find(sec => sec.hint === 'keyvalue' || sec.title.toLowerCase() === 'bio') ??
     sections[0] ??
     null
 
@@ -136,19 +140,33 @@ export default function TechnicalPdf({ resume, isPro }: TemplateProps) {
       i.kind === 'keyvalue' && !HEADER_META_KEYS.has(i.key.toLowerCase()),
   )
 
-  const bodySections = sections.filter(s => s !== headerSection)
+  // Prioritize GitHub/website/portfolio at the front
+  const priorityKeys = ['github', 'website', 'portfolio', 'linkedin']
+  const sortedContact = [
+    ...contactItems.filter(i => priorityKeys.includes(i.key.toLowerCase())),
+    ...contactItems.filter(i => !priorityKeys.includes(i.key.toLowerCase())),
+  ]
+
+  const bodySections = sections.filter(sec => sec !== headerSection)
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={[styles.page, {
+        fontSize: s.fontSize,
+        lineHeight: s.lineHeight,
+        paddingTop: s.marginV,
+        paddingBottom: s.marginV,
+        paddingLeft: s.marginH,
+        paddingRight: s.marginH,
+      }]}>
         {/* Header */}
         <View style={styles.header}>
           {meta.name && <Text style={styles.name}>{meta.name}</Text>}
-          {meta.title && <Text style={styles.jobTitle}>{meta.title}</Text>}
-          {contactItems.length > 0 && (
+          {meta.title && <Text style={[styles.jobTitle, { fontSize: s.fontSize + 0.5 }]}>{meta.title}</Text>}
+          {sortedContact.length > 0 && (
             <View style={styles.contactRow}>
-              {contactItems.map(item => (
-                <Text key={item.key} style={styles.contactChip}>
+              {sortedContact.map(item => (
+                <Text key={item.key} style={[styles.contactChip, { fontSize: s.fontSize - 1 }]}>
                   {item.key}: {item.value}
                 </Text>
               ))}
@@ -159,7 +177,7 @@ export default function TechnicalPdf({ resume, isPro }: TemplateProps) {
         <View style={styles.divider} />
 
         {bodySections.map(section => (
-          <TechSectionBlock key={section.id} section={section} />
+          <TechSectionBlock key={section.id} section={section} s={s} />
         ))}
 
         {!isPro && (
@@ -172,7 +190,7 @@ export default function TechnicalPdf({ resume, isPro }: TemplateProps) {
   )
 }
 
-function TechSectionBlock({ section }: { section: ResumeSection }) {
+function TechSectionBlock({ section, s }: { section: ResumeSection; s: RS }) {
   if (section.items.length === 0) return null
 
   if (isSkillsSection(section)) {
@@ -180,9 +198,11 @@ function TechSectionBlock({ section }: { section: ResumeSection }) {
     if (kvItems.length > 0) {
       return (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {'// ' + section.title}
-          </Text>
+          <View minPresenceAhead={30}>
+            <Text style={styles.sectionTitle}>
+              {'// ' + section.title}
+            </Text>
+          </View>
           <View style={styles.skillsGrid}>
             {kvItems.map(item => {
               const tags = item.value.split(',').map(v => v.trim()).filter(Boolean)
@@ -191,7 +211,7 @@ function TechSectionBlock({ section }: { section: ResumeSection }) {
                   <Text style={styles.skillGroupLabel}>{item.key}</Text>
                   <View style={styles.skillTagsRow}>
                     {tags.map(tag => (
-                      <Text key={tag} style={styles.skillTag}>{tag}</Text>
+                      <Text key={tag} style={[styles.skillTag, { fontSize: s.fontSize - 1.5 }]}>{tag}</Text>
                     ))}
                   </View>
                 </View>
@@ -208,17 +228,19 @@ function TechSectionBlock({ section }: { section: ResumeSection }) {
     if (entryItems.length > 0) {
       return (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{'// ' + section.title}</Text>
+          <View minPresenceAhead={30}>
+            <Text style={styles.sectionTitle}>{'// ' + section.title}</Text>
+          </View>
           {entryItems.map((entry, i) => (
-            <View key={i} style={styles.projectCard}>
+            <View key={i} style={[styles.projectCard, { marginBottom: s.entrySpacing }]} wrap={false}>
               <View style={styles.projectHeader}>
-                <Text style={styles.projectName}>{entry.heading.split('|')[0].trim()}</Text>
+                <Text style={[styles.projectName, { fontSize: s.fontSize }]}>{entry.heading.split('|')[0].trim()}</Text>
                 {entry.meta.length > 0 && (
-                  <Text style={styles.projectUrl}>{entry.meta[0]}</Text>
+                  <Text style={[styles.projectUrl, { fontSize: s.fontSize - 1.5 }]}>{entry.meta[0]}</Text>
                 )}
               </View>
               {entry.children.map((child, j) => (
-                <TechItemBlock key={j} item={child} isKeyValueSection={false} />
+                <TechItemBlock key={j} item={child} isKeyValueSection={false} s={s} />
               ))}
             </View>
           ))}
@@ -229,25 +251,27 @@ function TechSectionBlock({ section }: { section: ResumeSection }) {
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{'// ' + section.title}</Text>
+      <View minPresenceAhead={30}>
+        <Text style={styles.sectionTitle}>{'// ' + section.title}</Text>
+      </View>
       {section.items.map((item, i) => (
-        <TechItemBlock key={i} item={item} isKeyValueSection={section.hint === 'keyvalue'} />
+        <TechItemBlock key={i} item={item} isKeyValueSection={section.hint === 'keyvalue'} s={s} />
       ))}
     </View>
   )
 }
 
-function TechItemBlock({ item, isKeyValueSection }: { item: SectionItem; isKeyValueSection: boolean }) {
+function TechItemBlock({ item, isKeyValueSection, s }: { item: SectionItem; isKeyValueSection: boolean; s: RS }) {
   switch (item.kind) {
     case 'keyvalue': {
       if (isKeyValueSection) {
         const tags = item.value.split(',').map(v => v.trim()).filter(Boolean)
         return (
           <View style={{ flexDirection: 'row', marginBottom: 4 }}>
-            <Text style={styles.kvKey}>{item.key}:</Text>
+            <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>{item.key}:</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', flex: 1, gap: 3 }}>
               {tags.map(tag => (
-                <Text key={tag} style={styles.skillTag}>{tag}</Text>
+                <Text key={tag} style={[styles.skillTag, { fontSize: s.fontSize - 1.5 }]}>{tag}</Text>
               ))}
             </View>
           </View>
@@ -255,49 +279,49 @@ function TechItemBlock({ item, isKeyValueSection }: { item: SectionItem; isKeyVa
       }
       return (
         <View style={styles.kvRow}>
-          <Text style={styles.kvKey}>{item.key}:</Text>
-          <Text style={styles.kvValue}>{renderInlinePdf(item.value)}</Text>
+          <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>{item.key}:</Text>
+          <Text style={[styles.kvValue, { fontSize: s.fontSize }]}>{renderInlinePdf(item.value)}</Text>
         </View>
       )
     }
     case 'entry':
-      return <TechEntryBlock entry={item} />
+      return <TechEntryBlock entry={item} s={s} />
     case 'bullet':
       return (
         <View style={styles.bulletRow}>
-          <Text style={styles.bulletDash}>–</Text>
-          <Text style={styles.bulletText}>{renderInlinePdf(item.text)}</Text>
+          <Text style={[styles.bulletDash, { fontSize: s.fontSize }]}>–</Text>
+          <Text style={[styles.bulletText, { fontSize: s.fontSize }]}>{renderInlinePdf(item.text)}</Text>
         </View>
       )
     case 'text':
-      return <Text style={styles.textPara}>{renderInlinePdf(item.text)}</Text>
+      return <Text style={[styles.textPara, { fontSize: s.fontSize }]}>{renderInlinePdf(item.text)}</Text>
   }
 }
 
-function TechEntryBlock({ entry }: { entry: EntryItem }) {
+function TechEntryBlock({ entry, s }: { entry: EntryItem; s: RS }) {
   return (
-    <View style={styles.entry}>
+    <View style={[styles.entry, { marginBottom: s.entrySpacing }]} wrap={false}>
       <View style={styles.entryHeader}>
         <View style={{ flex: 1 }}>
           {entry.role ? (
             <Text>
-              <Text style={styles.entryRole}>{renderInlinePdf(entry.role)}</Text>
+              <Text style={[styles.entryRole, { fontSize: s.fontSize }]}>{renderInlinePdf(entry.role)}</Text>
               {entry.organization && (
-                <Text style={styles.entryOrg}> @ {renderInlinePdf(entry.organization)}</Text>
+                <Text style={[styles.entryOrg, { fontSize: s.fontSize }]}> @ {renderInlinePdf(entry.organization)}</Text>
               )}
             </Text>
           ) : (
-            <Text style={styles.entryRole}>{renderInlinePdf(entry.heading)}</Text>
+            <Text style={[styles.entryRole, { fontSize: s.fontSize }]}>{renderInlinePdf(entry.heading)}</Text>
           )}
         </View>
         {entry.meta.length > 0 && (
-          <Text style={styles.entryMetaBadge}>{entry.meta.join(' · ')}</Text>
+          <Text style={[styles.entryMetaBadge, { fontSize: s.fontSize - 1.5 }]}>{entry.meta.join(' · ')}</Text>
         )}
       </View>
       {entry.children.length > 0 && (
         <View style={styles.entryChildren}>
           {entry.children.map((child, i) => (
-            <TechItemBlock key={i} item={child} isKeyValueSection={false} />
+            <TechItemBlock key={i} item={child} isKeyValueSection={false} s={s} />
           ))}
         </View>
       )}

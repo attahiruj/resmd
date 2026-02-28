@@ -4,33 +4,31 @@ import { getVariant } from '@/lib/variantService'
 import EditorClient from '@/components/editor/EditorClient'
 
 interface Props {
-  params: { variantId: string }
+  params: Promise<{ variantId: string }>;
 }
 
 export default async function EditorPage({ params }: Props) {
-  const supabase = createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { variantId } = await params;
+  const supabase = createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/auth')
+    redirect("/auth");
   }
 
-  const variant = await getVariant(params.variantId)
+  const variant = await getVariant(variantId); 
 
   if (!variant || variant.userId !== user.id) {
-    redirect('/dashboard')
+    redirect("/dashboard");
   }
 
   const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_pro')
-    .eq('id', user.id)
-    .single()
+    .from("profiles")
+    .select("is_pro")
+    .eq("id", user.id)
+    .single();
 
-  return (
-    <EditorClient
-      variant={variant}
-      isPro={profile?.is_pro ?? false}
-    />
-  )
+  return <EditorClient variant={variant} isPro={profile?.is_pro ?? false} />;
 }

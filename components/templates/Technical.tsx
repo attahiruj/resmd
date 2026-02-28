@@ -8,10 +8,14 @@ import type {
   KeyValueItem,
   EntryItem,
 } from '@/types/resume'
+import { DEFAULT_SETTINGS } from '@/types/resume'
 import { renderInline } from '@/lib/renderInline'
 
 const FONT = "'Courier New', Courier, monospace"
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position'])
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TechStyles = Record<string, any>
 
 function isSkillsSection(section: ResumeSection): boolean {
   const lower = section.title.toLowerCase()
@@ -28,124 +32,126 @@ function isProjectsSection(section: ResumeSection): boolean {
   return section.title.toLowerCase().includes('project')
 }
 
-// Styles mirror pdf/Technical.tsx 1:1 (pt → px, identical numeric values)
-const S = {
-  page: {
-    fontFamily: FONT,
-    fontSize: 9.5,
-    color: '#1A1C23',
-    paddingTop: 38,
-    paddingBottom: 38,
-    paddingLeft: 48,
-    paddingRight: 48,
-    lineHeight: 1.5,
-    background: '#ffffff',
-  },
-  header: { marginBottom: 16 },
-  name: { fontSize: 22, fontWeight: 700, color: '#0A0C10', marginBottom: 2, lineHeight: 1.1 },
-  jobTitle: { fontSize: 10, color: '#555870', marginBottom: 6 },
-  contactRow: { display: 'flex', flexDirection: 'row' as const, flexWrap: 'wrap' as const, gap: 6 },
-  contactChip: {
-    fontSize: 8.5,
-    color: '#445577',
-    backgroundColor: '#EEF0F8',
-    paddingLeft: 6,
-    paddingRight: 6,
-    paddingTop: 2,
-    paddingBottom: 2,
-    borderRadius: 3,
-  },
-  divider: { borderBottom: '1px solid #D0D4E8', marginTop: 10, marginBottom: 10 },
-  section: { marginBottom: 12 },
-  sectionTitle: {
-    fontSize: 8,
-    fontWeight: 700,
-    color: '#445577',
-    marginBottom: 6,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '1px',
-  },
-  skillsGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 8,
-  },
-  skillGroupLabel: {
-    fontSize: 7.5,
-    fontWeight: 700,
-    color: '#778899',
-    marginBottom: 3,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.5px',
-  },
-  skillTagsRow: { display: 'flex', flexDirection: 'row' as const, flexWrap: 'wrap' as const, gap: 3 },
-  skillTag: {
-    fontSize: 8,
-    color: '#334466',
-    backgroundColor: '#F0F2F8',
-    border: '1px solid #D8DCF0',
-    paddingLeft: 5,
-    paddingRight: 5,
-    paddingTop: 1.5,
-    paddingBottom: 1.5,
-    borderRadius: 3,
-  },
-  entry: { marginBottom: 9 },
-  entryHeader: {
-    display: 'flex',
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  entryRole: { fontSize: 10, fontWeight: 700, color: '#0A0C10' },
-  entryOrg: { fontSize: 10, fontWeight: 400, color: '#445577' },
-  entryMetaBadge: {
-    fontSize: 8,
-    color: '#667799',
-    backgroundColor: '#EEF0F8',
-    paddingLeft: 5,
-    paddingRight: 5,
-    paddingTop: 2,
-    paddingBottom: 2,
-    borderRadius: 3,
-    whiteSpace: 'nowrap' as const,
-    flexShrink: 0,
-    marginLeft: 8,
-  },
-  entryChildren: { paddingLeft: 8, marginTop: 3, borderLeft: '1px solid #DDE0F0' },
-  projectCard: {
-    marginBottom: 8,
-    border: '1px solid #D8DCF0',
-    borderRadius: 4,
-    padding: 8,
-  },
-  projectHeader: {
-    display: 'flex',
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 3,
-  },
-  projectName: { fontSize: 10, fontWeight: 700, color: '#1A1C23' },
-  projectUrl: { fontSize: 8, color: '#778899', whiteSpace: 'nowrap' as const, flexShrink: 0, marginLeft: 8 },
-  bulletRow: { display: 'flex', flexDirection: 'row' as const, marginBottom: 2.5 },
-  bulletDash: { fontSize: 9.5, color: '#8899BB', marginRight: 5, flexShrink: 0 },
-  bulletText: { fontSize: 9.5, color: '#2A2C35', flex: 1 },
-  textPara: { fontSize: 9.5, color: '#445566', marginBottom: 3, lineHeight: 1.6 },
-  kvRow: { display: 'flex', flexDirection: 'row' as const, marginBottom: 3 },
-  kvKey: { fontSize: 8.5, color: '#778899', fontWeight: 700, width: 62, flexShrink: 0 },
-  kvValue: { fontSize: 9.5, color: '#333344', flex: 1 },
-  footer: { marginTop: 16, borderTop: '1px solid #D8DCF0', paddingTop: 5, textAlign: 'center' as const },
-  footerText: { fontSize: 7.5, color: '#AABBCC' },
-}
-
-export default function Technical({ resume, isPro }: TemplateProps) {
+export default function Technical({ resume, isPro, showHeader = true }: TemplateProps) {
   const { sections, meta } = resume
+  const s = { ...DEFAULT_SETTINGS, ...resume.settings }
 
-  const headerSection =
-    sections.find(s => s.hint === 'keyvalue' || s.title.toLowerCase() === 'bio') ??
-    sections[0] ??
-    null
+  // Styles mirror pdf/Technical.tsx 1:1 (pt → px). Dynamic values come from settings.
+  const S: TechStyles = {
+    page: {
+      fontFamily: FONT,
+      fontSize: s.fontSize,
+      color: '#1A1C23',
+      paddingTop: s.marginV,
+      paddingBottom: s.marginV,
+      paddingLeft: s.marginH,
+      paddingRight: s.marginH,
+      lineHeight: s.lineHeight,
+      background: '#ffffff',
+    },
+    header: { marginBottom: 16 },
+    name: { fontSize: 22, fontWeight: 700, color: '#0A0C10', marginBottom: 2, lineHeight: 1.1 },
+    jobTitle: { fontSize: s.fontSize + 0.5, color: '#555870', marginBottom: 6 },
+    contactRow: { display: 'flex', flexDirection: 'row' as const, flexWrap: 'wrap' as const, gap: 6 },
+    contactChip: {
+      fontSize: s.fontSize - 1,
+      color: '#445577',
+      backgroundColor: '#EEF0F8',
+      paddingLeft: 6,
+      paddingRight: 6,
+      paddingTop: 2,
+      paddingBottom: 2,
+      borderRadius: 3,
+    },
+    divider: { borderBottom: '1px solid #D0D4E8', marginTop: 10, marginBottom: 10 },
+    section: { marginBottom: 12 },
+    sectionTitle: {
+      fontSize: 8,
+      fontWeight: 700,
+      color: '#445577',
+      marginBottom: 6,
+      textTransform: 'uppercase' as const,
+      letterSpacing: '1px',
+    },
+    skillsGrid: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 8,
+    },
+    skillGroupLabel: {
+      fontSize: 7.5,
+      fontWeight: 700,
+      color: '#778899',
+      marginBottom: 3,
+      textTransform: 'uppercase' as const,
+      letterSpacing: '0.5px',
+    },
+    skillTagsRow: { display: 'flex', flexDirection: 'row' as const, flexWrap: 'wrap' as const, gap: 3 },
+    skillTag: {
+      fontSize: s.fontSize - 1.5,
+      color: '#334466',
+      backgroundColor: '#F0F2F8',
+      border: '1px solid #D8DCF0',
+      paddingLeft: 5,
+      paddingRight: 5,
+      paddingTop: 1.5,
+      paddingBottom: 1.5,
+      borderRadius: 3,
+    },
+    entry: { marginBottom: s.entrySpacing },
+    entryHeader: {
+      display: 'flex',
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+    },
+    entryRole: { fontSize: s.fontSize, fontWeight: 700, color: '#0A0C10' },
+    entryOrg: { fontSize: s.fontSize, fontWeight: 400, color: '#445577' },
+    entryMetaBadge: {
+      fontSize: s.fontSize - 1.5,
+      color: '#667799',
+      backgroundColor: '#EEF0F8',
+      paddingLeft: 5,
+      paddingRight: 5,
+      paddingTop: 2,
+      paddingBottom: 2,
+      borderRadius: 3,
+      whiteSpace: 'nowrap' as const,
+      flexShrink: 0,
+      marginLeft: 8,
+    },
+    entryChildren: { paddingLeft: 8, marginTop: 3, borderLeft: '1px solid #DDE0F0' },
+    projectCard: {
+      marginBottom: s.entrySpacing,
+      border: '1px solid #D8DCF0',
+      borderRadius: 4,
+      padding: 8,
+    },
+    projectHeader: {
+      display: 'flex',
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 3,
+    },
+    projectName: { fontSize: s.fontSize, fontWeight: 700, color: '#1A1C23' },
+    projectUrl: { fontSize: s.fontSize - 1.5, color: '#778899', whiteSpace: 'nowrap' as const, flexShrink: 0, marginLeft: 8 },
+    bulletRow: { display: 'flex', flexDirection: 'row' as const, marginBottom: 2.5 },
+    bulletDash: { fontSize: s.fontSize, color: '#8899BB', marginRight: 5, flexShrink: 0 },
+    bulletText: { fontSize: s.fontSize, color: '#2A2C35', flex: 1 },
+    textPara: { fontSize: s.fontSize, color: '#445566', marginBottom: 3, lineHeight: 1.6 },
+    kvRow: { display: 'flex', flexDirection: 'row' as const, marginBottom: 3 },
+    kvKey: { fontSize: s.fontSize - 1, color: '#778899', fontWeight: 700, width: 62, flexShrink: 0 },
+    kvValue: { fontSize: s.fontSize, color: '#333344', flex: 1 },
+    footer: { marginTop: 16, borderTop: '1px solid #D8DCF0', paddingTop: 5, textAlign: 'center' as const },
+    footerText: { fontSize: 7.5, color: '#AABBCC' },
+  }
+
+  const headerSection = showHeader
+    ? (sections.find(sec => sec.hint === 'keyvalue' || sec.title.toLowerCase() === 'bio') ??
+       sections[0] ??
+       null)
+    : null
 
   const contactItems = (headerSection?.items ?? []).filter(
     (i): i is KeyValueItem =>
@@ -159,28 +165,30 @@ export default function Technical({ resume, isPro }: TemplateProps) {
     ...contactItems.filter(i => !priorityKeys.includes(i.key.toLowerCase())),
   ]
 
-  const bodySections = sections.filter(s => s !== headerSection)
+  const bodySections = sections.filter(sec => sec !== headerSection)
 
   return (
     <article style={S.page}>
-      <header style={S.header}>
-        {meta.name && <h1 style={S.name}>{meta.name}</h1>}
-        {meta.title && <p style={S.jobTitle}>{meta.title}</p>}
-        {sortedContact.length > 0 && (
-          <div style={S.contactRow}>
-            {sortedContact.map(item => (
-              <span key={item.key} style={S.contactChip}>
-                {item.key}: {item.value}
-              </span>
-            ))}
-          </div>
-        )}
-      </header>
+      {showHeader && (
+        <header data-header style={S.header}>
+          {meta.name && <h1 style={S.name}>{meta.name}</h1>}
+          {meta.title && <p style={S.jobTitle}>{meta.title}</p>}
+          {sortedContact.length > 0 && (
+            <div style={S.contactRow}>
+              {sortedContact.map(item => (
+                <span key={item.key} style={S.contactChip}>
+                  {item.key}: {item.value}
+                </span>
+              ))}
+            </div>
+          )}
+        </header>
+      )}
 
-      <div style={S.divider} />
+      {showHeader && <div style={S.divider} />}
 
       {bodySections.map(section => (
-        <TechSectionBlock key={section.id} section={section} />
+        <TechSectionBlock key={section.id} section={section} S={S} />
       ))}
 
       {!isPro && (
@@ -192,14 +200,14 @@ export default function Technical({ resume, isPro }: TemplateProps) {
   )
 }
 
-function TechSectionBlock({ section }: { section: ResumeSection }) {
+function TechSectionBlock({ section, S }: { section: ResumeSection; S: TechStyles }) {
   if (section.items.length === 0) return null
 
   if (isSkillsSection(section)) {
     const kvItems = section.items.filter((i): i is KeyValueItem => i.kind === 'keyvalue')
     if (kvItems.length > 0) {
       return (
-        <section style={S.section}>
+        <section data-section={section.id} style={S.section}>
           <h2 style={S.sectionTitle}>{'// ' + section.title}</h2>
           <div style={S.skillsGrid}>
             {kvItems.map(item => {
@@ -225,10 +233,10 @@ function TechSectionBlock({ section }: { section: ResumeSection }) {
     const entryItems = section.items.filter((i): i is EntryItem => i.kind === 'entry')
     if (entryItems.length > 0) {
       return (
-        <section style={S.section}>
+        <section data-section={section.id} style={S.section}>
           <h2 style={S.sectionTitle}>{'// ' + section.title}</h2>
           {entryItems.map((entry, i) => (
-            <div key={i} style={S.projectCard}>
+            <div key={i} data-block="avoid" style={S.projectCard}>
               <div style={S.projectHeader}>
                 <span style={S.projectName}>{entry.heading.split('|')[0].trim()}</span>
                 {entry.meta.length > 0 && (
@@ -236,7 +244,7 @@ function TechSectionBlock({ section }: { section: ResumeSection }) {
                 )}
               </div>
               {entry.children.map((child, j) => (
-                <TechItemBlock key={j} item={child} isKeyValueSection={false} />
+                <TechItemBlock key={j} item={child} isKeyValueSection={false} S={S} />
               ))}
             </div>
           ))}
@@ -246,16 +254,16 @@ function TechSectionBlock({ section }: { section: ResumeSection }) {
   }
 
   return (
-    <section style={S.section}>
+    <section data-section={section.id} style={S.section}>
       <h2 style={S.sectionTitle}>{'// ' + section.title}</h2>
       {section.items.map((item, i) => (
-        <TechItemBlock key={i} item={item} isKeyValueSection={section.hint === 'keyvalue'} />
+        <TechItemBlock key={i} item={item} isKeyValueSection={section.hint === 'keyvalue'} S={S} />
       ))}
     </section>
   )
 }
 
-function TechItemBlock({ item, isKeyValueSection }: { item: SectionItem; isKeyValueSection: boolean }) {
+function TechItemBlock({ item, isKeyValueSection, S }: { item: SectionItem; isKeyValueSection: boolean; S: TechStyles }) {
   switch (item.kind) {
     case 'keyvalue': {
       if (isKeyValueSection) {
@@ -279,7 +287,7 @@ function TechItemBlock({ item, isKeyValueSection }: { item: SectionItem; isKeyVa
       )
     }
     case 'entry':
-      return <TechEntryBlock entry={item} />
+      return <TechEntryBlock entry={item} S={S} />
     case 'bullet':
       return (
         <div style={S.bulletRow}>
@@ -292,9 +300,9 @@ function TechItemBlock({ item, isKeyValueSection }: { item: SectionItem; isKeyVa
   }
 }
 
-function TechEntryBlock({ entry }: { entry: EntryItem }) {
+function TechEntryBlock({ entry, S }: { entry: EntryItem; S: TechStyles }) {
   return (
-    <div style={S.entry}>
+    <div data-block="avoid" style={S.entry}>
       <div style={S.entryHeader}>
         <div style={{ flex: 1 }}>
           {entry.role ? (
@@ -315,7 +323,7 @@ function TechEntryBlock({ entry }: { entry: EntryItem }) {
       {entry.children.length > 0 && (
         <div style={S.entryChildren}>
           {entry.children.map((child, i) => (
-            <TechItemBlock key={i} item={child} isKeyValueSection={false} />
+            <TechItemBlock key={i} item={child} isKeyValueSection={false} S={S} />
           ))}
         </div>
       )}

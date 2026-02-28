@@ -1,11 +1,20 @@
-import { 
-  ParsedResume, 
-  ResumeSection, 
-  ResumeMeta, 
-  SectionItem, 
+import {
+  ParsedResume,
+  ResumeSection,
+  ResumeMeta,
+  ResumeSettings,
+  SectionItem,
   SectionHint,
   EntryItem
 } from '../types/resume'
+
+const DIRECTIVE_MAP: Record<string, keyof ResumeSettings> = {
+  'font.size':     'fontSize',
+  'line.height':   'lineHeight',
+  'margin.h':      'marginH',
+  'margin.v':      'marginV',
+  'entry.spacing': 'entrySpacing',
+}
 
 /**
  * Pure TypeScript ResMarkup Parser
@@ -17,6 +26,7 @@ export function parseResume(raw: string): ParsedResume {
   const sections: ResumeSection[] = []
   let currentSection: ResumeSection | null = null
   let currentEntry: EntryItem | null = null
+  const settings: ResumeSettings = {}
 
   const slugify = (text: string) => 
     text.toLowerCase()
@@ -61,7 +71,22 @@ export function parseResume(raw: string): ParsedResume {
     // 1. Blank lines are ignored
     if (trimmedLine === '') continue
 
-    // 2. Sections (# )
+    // 2. Directives (!key: value) — extracted and stripped from rendered content
+    if (trimmedLine.startsWith('!')) {
+      const colonIdx = trimmedLine.indexOf(':')
+      if (colonIdx > 1) {
+        const key = trimmedLine.slice(1, colonIdx).trim()
+        const val = trimmedLine.slice(colonIdx + 1).trim()
+        const prop = DIRECTIVE_MAP[key]
+        if (prop !== undefined) {
+          const num = parseFloat(val)
+          if (!isNaN(num)) (settings as Record<string, number>)[prop] = num
+        }
+      }
+      continue
+    }
+
+    // 3. Sections (# )
     if (line.startsWith('# ')) {
       const title = line.substring(2).trim()
       currentSection = {
@@ -184,7 +209,8 @@ export function parseResume(raw: string): ParsedResume {
   return {
     sections,
     meta,
-    raw
+    raw,
+    settings,
   }
 }
 

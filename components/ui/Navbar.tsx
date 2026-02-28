@@ -25,7 +25,19 @@ export default function Navbar({ left, right }: NavbarProps) {
         </>
       )}
 
-      {right}
+      <div className="ml-auto flex items-center gap-3 flex-shrink-0">
+        <a
+          href="https://buymeacoffee.com/hattahiroo"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-muted hover:text-text transition-colors duration-150 hidden sm:block"
+          title="Support resmd"
+        >
+          ☕ Support
+        </a>
+
+        {right}
+      </div>
     </div>
   )
 }

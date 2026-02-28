@@ -1,9 +1,26 @@
 import React from 'react'
 
+export interface ResumeSettings {
+  fontSize?: number       // pt — base font size, default 10
+  lineHeight?: number     // ratio, default 1.5
+  marginH?: number        // left & right page margin (pt), default 50
+  marginV?: number        // top & bottom page margin (pt), default 40
+  entrySpacing?: number   // margin-bottom between entries (pt), default 8
+}
+
+export const DEFAULT_SETTINGS: Required<ResumeSettings> = {
+  fontSize: 10,
+  lineHeight: 1.5,
+  marginH: 50,
+  marginV: 40,
+  entrySpacing: 8,
+}
+
 export interface ParsedResume {
   sections: ResumeSection[]
   meta: ResumeMeta
   raw: string
+  settings: ResumeSettings
 }
 
 export interface ResumeMeta {
@@ -63,6 +80,8 @@ export interface TemplateDefinition {
 export interface TemplateProps {
   resume: ParsedResume
   isPro: boolean
+  /** When false, the template omits the name/title/contact header (for pages 2+) */
+  showHeader?: boolean
 }
 
 export interface ResumeVariant {

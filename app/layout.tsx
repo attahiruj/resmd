@@ -2,8 +2,23 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'resmd',
-  description: 'Plain text resume builder',
+  title: {
+    default: 'resmd',
+    template: '%s | resmd',
+  },
+  description: 'Write your resume in plain text. Render it through beautiful templates. Manage multiple tailored variants. Export to PDF.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://resmd.co'),
+  openGraph: {
+    type: 'website',
+    siteName: 'resmd',
+    title: 'resmd — Plain text resume builder',
+    description: 'Write your resume in plain text. Render it through beautiful templates.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'resmd — Plain text resume builder',
+    description: 'Write your resume in plain text. Render it through beautiful templates.',
+  },
 }
 
 /**

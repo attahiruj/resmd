@@ -162,10 +162,11 @@
    ResMarkup Syntax Highlighting
    All classes use CSS variables — no dark: overrides needed.
    ============================================================ */
-.cm-resmd-section { color: var(--color-accent); font-weight: 700; }
-.cm-resmd-entry   { color: var(--color-text); font-weight: 600; }
-.cm-resmd-key     { color: var(--color-accent); opacity: 0.8; }
-.cm-resmd-bullet  { color: var(--color-text-muted); }
+.cm-resmd-directive { color: var(--color-text-faint); font-style: italic; }
+.cm-resmd-section   { color: var(--color-accent); font-weight: 700; }
+.cm-resmd-entry     { color: var(--color-text); font-weight: 600; }
+.cm-resmd-key       { color: var(--color-accent); opacity: 0.8; }
+.cm-resmd-bullet    { color: var(--color-text-muted); }
 
 /* ============================================================
    CodeMirror structural

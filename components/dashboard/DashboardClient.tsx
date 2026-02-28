@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -13,6 +13,7 @@ import {
 import type { ResumeVariant } from '@/types/resume'
 import { LIMITS } from '@/lib/limits'
 import CloneModal from '@/components/variants/CloneModal'
+import OnboardingModal from '@/components/ui/OnboardingModal'
 import Navbar from '@/components/ui/Navbar'
 
 interface DashboardClientProps {
@@ -31,7 +32,14 @@ export default function DashboardClient({
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [cloneSource, setCloneSource] = useState<ResumeVariant | null>(null)
   const [cloning, setCloning] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    if (!localStorage.getItem('resmd_onboarded')) {
+      setShowOnboarding(true)
+    }
+  }, [])
 
   const atLimit = !isPro && variants.length >= LIMITS.FREE_VARIANTS
 
@@ -195,6 +203,10 @@ export default function DashboardClient({
           onConfirm={handleCloneConfirm}
           onClose={() => { if (!cloning) setCloneSource(null) }}
         />
+      )}
+
+      {showOnboarding && (
+        <OnboardingModal onClose={() => setShowOnboarding(false)} />
       )}
     </div>
   )

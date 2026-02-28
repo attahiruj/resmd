@@ -16,6 +16,8 @@ import { history, defaultKeymap, historyKeymap } from '@codemirror/commands'
 interface EditorProps {
   value: string
   onChange: (value: string) => void
+  jumpTarget?: { word: string; context: string } | null
+  onJumpComplete?: () => void
 }
 
 // ─── Format helpers (module-level, pure functions on EditorView) ─────────────
@@ -67,6 +69,40 @@ function applyHeadingToView(view: EditorView, level: number) {
   view.dispatch({ changes })
 }
 
+// ─── Preview → editor jump helper ────────────────────────────────────────────
+
+function findBestOccurrence(content: string, word: string, context: string): number {
+  // Extract meaningful words from context (length > 2 to skip noise)
+  const contextWords = context.toLowerCase().split(/\s+/).filter(w => w.length > 2)
+
+  let bestIdx = -1
+  let bestScore = -1
+  let searchFrom = 0
+
+  while (true) {
+    const idx = content.indexOf(word, searchFrom)
+    if (idx === -1) break
+
+    if (contextWords.length > 0) {
+      const lineStart = content.lastIndexOf('\n', idx) + 1
+      const lineEnd = content.indexOf('\n', idx)
+      const line = content.slice(lineStart, lineEnd === -1 ? content.length : lineEnd).toLowerCase()
+      const score = contextWords.filter(w => line.includes(w)).length
+      if (score > bestScore) {
+        bestScore = score
+        bestIdx = idx
+      }
+    } else {
+      // No context — take the first occurrence
+      return idx
+    }
+
+    searchFrom = idx + 1
+  }
+
+  return bestIdx
+}
+
 // ─── Syntax highlight plugin ─────────────────────────────────────────────────
 
 function buildDecorations(view: EditorView): DecorationSet {
@@ -77,7 +113,9 @@ function buildDecorations(view: EditorView): DecorationSet {
       const line = view.state.doc.lineAt(pos)
       const text = line.text
 
-      if (/^# .+/.test(text)) {
+      if (/^!/.test(text)) {
+        deco.push(Decoration.line({ class: 'cm-resmd-directive' }).range(line.from))
+      } else if (/^# .+/.test(text)) {
         deco.push(Decoration.line({ class: 'cm-resmd-section' }).range(line.from))
       } else if (/^## .+/.test(text)) {
         deco.push(Decoration.line({ class: 'cm-resmd-entry' }).range(line.from))
@@ -156,7 +194,7 @@ interface SelectionPopup {
   y: number
 }
 
-export default function Editor({ value, onChange }: EditorProps) {
+export default function Editor({ value, onChange, jumpTarget, onJumpComplete }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
   const onChangeRef = useRef(onChange)
@@ -171,6 +209,24 @@ export default function Editor({ value, onChange }: EditorProps) {
   const [selectionPopup, setSelectionPopup] = useState<SelectionPopup | null>(null)
 
   onChangeRef.current = onChange
+
+  // Jump to matching text when jumpTarget changes
+  useEffect(() => {
+    if (!jumpTarget) return
+    const view = viewRef.current
+    if (!view) return
+    const { word, context } = jumpTarget
+    const content = view.state.doc.toString()
+    const idx = findBestOccurrence(content, word, context)
+    if (idx !== -1) {
+      view.dispatch({
+        selection: { anchor: idx, head: idx + word.length },
+        scrollIntoView: true,
+      })
+      view.focus()
+    }
+    onJumpComplete?.()
+  }, [jumpTarget, onJumpComplete])
 
   const changeZoomRef = useRef((delta: number) => {
     const next = Math.max(10, Math.min(24, fontSizeRef.current + delta))
