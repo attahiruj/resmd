@@ -4,5 +4,5 @@ export default function Home() {
       <h1 className="text-4xl font-bold">resmd</h1>
       <p className="mt-4 text-gray-500 italic">Coming soon</p>
     </main>
-  );
+  )
 }

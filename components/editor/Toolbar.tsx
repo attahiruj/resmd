@@ -1,54 +1,70 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { SunIcon, MoonIcon, SparkleIcon, UserCircleIcon } from '@phosphor-icons/react'
+import { applyTheme, getStoredThemePrefs } from '@/lib/themes'
+import { useProfile } from '@/hooks/useProfile'
 
 interface ToolbarProps {
-  onSave: () => void
-  onExportPDF: () => void
-  isSaving: boolean
   lastSaved: Date | null
   showAIPanel: boolean
   onToggleAI: () => void
+  variantTitle?: string
+  onTitleChange?: (title: string) => void
 }
 
 export default function Toolbar({
   lastSaved,
   showAIPanel,
   onToggleAI,
+  variantTitle,
+  onTitleChange,
 }: ToolbarProps) {
-  const [isDark, setIsDark] = useState(false)
+  const [isDark, setIsDark] = useState(true)
+  const { user, profile } = useProfile()
 
   useEffect(() => {
-    const saved = localStorage.getItem('resmd_theme')
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    if (saved === 'dark' || (!saved && prefersDark)) {
-      setIsDark(true)
-      document.documentElement.classList.add('dark')
-    }
+    const { themeId, mode } = getStoredThemePrefs()
+    applyTheme(themeId, mode)
+    setIsDark(mode === 'dark')
   }, [])
 
   const toggleTheme = () => {
-    const newDark = !isDark
-    setIsDark(newDark)
-    if (newDark) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('resmd_theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('resmd_theme', 'light')
-    }
+    const newMode = isDark ? 'light' : 'dark'
+    const { themeId } = getStoredThemePrefs()
+    applyTheme(themeId, newMode)
+    setIsDark(!isDark)
   }
 
-  const lastSavedLabel = lastSaved
-    ? formatRelative(lastSaved)
-    : null
+  const lastSavedLabel = lastSaved ? formatRelative(lastSaved) : null
+  const userInitial =
+    (profile?.email?.[0] ?? user?.email?.[0] ?? '').toUpperCase() || null
 
   return (
-    <div className="h-[52px] border-b border-border bg-surface flex items-center px-4 gap-2 flex-shrink-0">
+    <div className="h-[60px] border-b border-border bg-surface flex items-center px-5 gap-2 flex-shrink-0">
       {/* Left: wordmark */}
-      <span className="text-sm font-semibold text-text select-none tracking-tight">
-        resmd
-      </span>
+      <Link
+        href="/dashboard"
+        className="text-base font-bold text-text select-none tracking-tight hover:opacity-80 transition-opacity"
+      >
+        res<span className="text-accent">md</span>
+      </Link>
+
+      {/* Title */}
+      {variantTitle !== undefined && onTitleChange && (
+        <>
+          <div className="w-px h-4 bg-border mx-1 flex-shrink-0" />
+          <input
+            value={variantTitle}
+            onChange={(e) => onTitleChange(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+            className="text-sm text-text bg-transparent px-1.5 py-0.5 rounded-md border border-transparent hover:border-border focus:border-accent focus:bg-surface-2 outline-none transition-colors duration-150 max-w-[220px]"
+            placeholder="Untitled"
+            title="Click to rename"
+          />
+        </>
+      )}
 
       {/* Right: actions */}
       <div className="flex items-center gap-1.5 ml-auto">
@@ -62,7 +78,7 @@ export default function Toolbar({
           className="p-2.5 rounded-full text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          {isDark ? <SunIcon /> : <MoonIcon />}
+          {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
         </button>
 
         {/* AI sparkle toggle */}
@@ -75,19 +91,10 @@ export default function Toolbar({
           }`}
           title="AI Assistant"
         >
-          <SparkleIcon />
+          <SparkleIcon size={18} />
         </button>
 
-        <div className="w-px h-5 bg-border mx-0.5" />
-
-        {/* Save — disabled until auth wired up in Stage 6 */}
-        <button
-          disabled
-          title="Sign in to save"
-          className="text-sm px-3 py-1.5 rounded-lg text-faint bg-surface-2 cursor-not-allowed select-none opacity-50"
-        >
-          Save
-        </button>
+        <div className="w-px h-5 bg-border mx-1" />
 
         {/* Export PDF — disabled until Stage 9 */}
         <button
@@ -97,6 +104,23 @@ export default function Toolbar({
         >
           Export PDF
         </button>
+
+        {/* User profile link */}
+        <Link
+          href="/dashboard"
+          title="Dashboard"
+          className="ml-0.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          {userInitial ? (
+            <div className="w-8 h-8 rounded-full bg-accent-muted text-accent flex items-center justify-center text-sm font-semibold hover:bg-accent-muted-hover transition-colors duration-150">
+              {userInitial}
+            </div>
+          ) : (
+            <div className="p-1.5 text-muted hover:text-text hover:bg-surface-2 rounded-full transition-colors duration-150">
+              <UserCircleIcon size={22} />
+            </div>
+          )}
+        </Link>
       </div>
     </div>
   )
@@ -108,38 +132,4 @@ function formatRelative(date: Date): string {
   if (diff < 60) return `Saved ${diff}s ago`
   if (diff < 3600) return `Saved ${Math.floor(diff / 60)}m ago`
   return `Saved ${Math.floor(diff / 3600)}h ago`
-}
-
-function SunIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="5" />
-      <line x1="12" y1="1" x2="12" y2="3" />
-      <line x1="12" y1="21" x2="12" y2="23" />
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-      <line x1="1" y1="12" x2="3" y2="12" />
-      <line x1="21" y1="12" x2="23" y2="12" />
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-    </svg>
-  )
-}
-
-function MoonIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-    </svg>
-  )
-}
-
-function SparkleIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74L12 2z" />
-      <path d="M5 3l.5 1.5L7 5l-1.5.5L5 7l-.5-1.5L3 5l1.5-.5L5 3z" />
-      <path d="M19 17l.5 1.5L21 19l-1.5.5L19 21l-.5-1.5L17 19l1.5-.5L19 17z" />
-    </svg>
-  )
 }

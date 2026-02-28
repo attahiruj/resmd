@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { SquaresFourIcon, CaretDownIcon } from '@phosphor-icons/react'
 import LivePreview from './LivePreview'
 import { getAllTemplates } from '@/lib/templates'
 
@@ -102,40 +103,12 @@ export default function PreviewPane({
           onClick={() => setShowPicker((v) => !v)}
           className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface border border-border shadow-lg text-sm text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
-          <TemplatesIcon />
+          <SquaresFourIcon size={13} className="text-muted" />
           <span>{current?.name ?? templateId}</span>
-          <ChevronIcon open={showPicker} />
+          <CaretDownIcon size={11} weight="bold" className={`text-muted transition-transform duration-150 ${showPicker ? 'rotate-180' : ''}`} />
         </button>
       </div>
     </div>
   )
 }
 
-function TemplatesIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted">
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="7" height="7" rx="1" />
-    </svg>
-  )
-}
-
-function ChevronIcon({ open }: { open: boolean }) {
-  return (
-    <svg
-      width="11"
-      height="11"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={`text-muted transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  )
-}

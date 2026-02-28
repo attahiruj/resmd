@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import Toolbar from '@/components/editor/Toolbar'
 import PreviewPane from '@/components/preview/PreviewPane'
+import AIChat from '@/components/editor/AIChat'
 
 // CodeMirror is browser-only
 const Editor = dynamic(() => import('@/components/editor/Editor'), { ssr: false })
@@ -162,8 +163,11 @@ export default function EditorPage() {
       {/* Mobile single-pane body */}
       <div className="md:hidden flex-1 overflow-hidden min-h-0">
         {mobileTab === 'write' ? (
-          <div className="h-full overflow-auto bg-editor-bg">
-            {isMounted && <Editor value={rawContent} onChange={setRawContent} />}
+          <div className="h-full flex flex-col bg-editor-bg">
+            <div className="flex-1 min-h-0 overflow-hidden">
+              {isMounted && <Editor value={rawContent} onChange={setRawContent} />}
+            </div>
+            <AIChat resumeContent={rawContent} />
           </div>
         ) : (
           <PreviewPane
@@ -183,7 +187,10 @@ export default function EditorPage() {
           className="flex flex-col overflow-hidden flex-shrink-0 bg-editor-bg"
           style={{ width: `${splitPct}%` }}
         >
-          {isMounted && <Editor value={rawContent} onChange={setRawContent} />}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            {isMounted && <Editor value={rawContent} onChange={setRawContent} />}
+          </div>
+          <AIChat resumeContent={rawContent} />
         </div>
 
         {/* Drag divider */}

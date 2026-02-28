@@ -2,92 +2,252 @@ import { ResumeVariant, VariantSnapshot, UserProfile } from '@/types/resume'
 import { LIMITS } from '@/lib/limits'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
-/**
- * Creates a new resume variant
- */
+// DB row → TypeScript type mappers (snake_case → camelCase)
+function mapVariant(row: Record<string, unknown>): ResumeVariant {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    title: row.title as string,
+    rawContent: row.raw_content as string,
+    templateId: row.template_id as string,
+    forkedFromId: (row.forked_from_id as string | null) ?? null,
+    isPublic: row.is_public as boolean,
+    publicSlug: (row.public_slug as string | null) ?? null,
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
+  }
+}
+
+function mapSnapshot(row: Record<string, unknown>): VariantSnapshot {
+  return {
+    id: row.id as string,
+    variantId: row.variant_id as string,
+    rawContent: row.raw_content as string,
+    message: row.message as string,
+    templateId: row.template_id as string,
+    createdAt: row.created_at as string,
+  }
+}
+
+function mapProfile(row: Record<string, unknown>): UserProfile {
+  return {
+    id: row.id as string,
+    email: row.email as string,
+    isPro: row.is_pro as boolean,
+    stripeCustomerId: (row.stripe_customer_id as string | null) ?? null,
+    proExpiresAt: (row.pro_expires_at as string | null) ?? null,
+    aiUsageThisMonth: row.ai_usage_this_month as number,
+    createdAt: row.created_at as string,
+  }
+}
+
 export const createVariant = async (
-  userId: string, 
-  title: string, 
-  rawContent: string, 
+  userId: string,
+  title: string,
+  rawContent: string,
   templateId: string
 ): Promise<ResumeVariant> => {
-  // This will be implemented in Stage 6
-  throw new Error('Not implemented yet')
+  const supabase = createSupabaseServerClient()
+
+  const { data, error } = await supabase
+    .from('resume_variants')
+    .insert({
+      user_id: userId,
+      title,
+      raw_content: rawContent,
+      template_id: templateId,
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+
+  const variant = mapVariant(data)
+
+  // Create initial snapshot
+  await supabase.from('variant_snapshots').insert({
+    variant_id: variant.id,
+    raw_content: rawContent,
+    message: 'Initial save',
+    template_id: templateId,
+  })
+
+  return variant
 }
 
-/**
- * Updates the content of an existing variant
- */
 export const updateVariantContent = async (
-  variantId: string, 
-  rawContent: string, 
-  templateId: string
+  variantId: string,
+  rawContent: string,
+  templateId: string,
+  title?: string
 ): Promise<void> => {
-  // This will be implemented in Stage 6
-  throw new Error('Not implemented yet')
+  const supabase = createSupabaseServerClient()
+
+  const { error } = await supabase
+    .from('resume_variants')
+    .update({
+      raw_content: rawContent,
+      template_id: templateId,
+      updated_at: new Date().toISOString(),
+      ...(title !== undefined ? { title } : {}),
+    })
+    .eq('id', variantId)
+
+  if (error) throw error
 }
 
-/**
- * Saves a snapshot of the current variant content
- */
 export const saveSnapshot = async (
-  variantId: string, 
-  rawContent: string, 
-  message: string, 
+  variantId: string,
+  rawContent: string,
+  message: string,
   templateId: string
 ): Promise<VariantSnapshot> => {
-  // This will be implemented in Stage 6
-  throw new Error('Not implemented yet')
+  const supabase = createSupabaseServerClient()
+
+  const { data, error } = await supabase
+    .from('variant_snapshots')
+    .insert({
+      variant_id: variantId,
+      raw_content: rawContent,
+      message,
+      template_id: templateId,
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+
+  // For free users: keep only the most recent FREE_SNAPSHOTS snapshots
+  const { data: variant } = await supabase
+    .from('resume_variants')
+    .select('user_id')
+    .eq('id', variantId)
+    .single()
+
+  if (variant) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_pro')
+      .eq('id', variant.user_id)
+      .single()
+
+    if (profile && !profile.is_pro) {
+      const { data: snapshots } = await supabase
+        .from('variant_snapshots')
+        .select('id')
+        .eq('variant_id', variantId)
+        .order('created_at', { ascending: false })
+
+      if (snapshots && snapshots.length > LIMITS.FREE_SNAPSHOTS) {
+        const toDelete = snapshots.slice(LIMITS.FREE_SNAPSHOTS).map((s: { id: string }) => s.id)
+        await supabase.from('variant_snapshots').delete().in('id', toDelete)
+      }
+    }
+  }
+
+  return mapSnapshot(data)
 }
 
-/**
- * Gets all variants for a user
- */
 export const getUserVariants = async (userId: string): Promise<ResumeVariant[]> => {
-  // This will be implemented in Stage 6
-  throw new Error('Not implemented yet')
+  const supabase = createSupabaseServerClient()
+
+  const { data, error } = await supabase
+    .from('resume_variants')
+    .select('*')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false })
+
+  if (error) throw error
+
+  return (data ?? []).map(mapVariant)
 }
 
-/**
- * Gets a specific variant by ID
- */
 export const getVariant = async (variantId: string): Promise<ResumeVariant | null> => {
-  // This will be implemented in Stage 6
-  throw new Error('Not implemented yet')
+  const supabase = createSupabaseServerClient()
+
+  const { data, error } = await supabase
+    .from('resume_variants')
+    .select('*')
+    .eq('id', variantId)
+    .single()
+
+  if (error) return null
+
+  return mapVariant(data)
 }
 
-/**
- * Gets all snapshots for a variant
- */
 export const getVariantSnapshots = async (variantId: string): Promise<VariantSnapshot[]> => {
-  // This will be implemented in Stage 6
-  throw new Error('Not implemented yet')
+  const supabase = createSupabaseServerClient()
+
+  const { data, error } = await supabase
+    .from('variant_snapshots')
+    .select('*')
+    .eq('variant_id', variantId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+
+  return (data ?? []).map(mapSnapshot)
 }
 
-/**
- * Forks an existing variant to create a new one
- */
 export const forkVariant = async (
-  sourceVariantId: string, 
-  newTitle: string, 
+  sourceVariantId: string,
+  newTitle: string,
   userId: string
 ): Promise<ResumeVariant> => {
-  // This will be implemented in Stage 6
-  throw new Error('Not implemented yet')
+  const supabase = createSupabaseServerClient()
+
+  const source = await getVariant(sourceVariantId)
+  if (!source) throw new Error('Source variant not found')
+
+  const { data, error } = await supabase
+    .from('resume_variants')
+    .insert({
+      user_id: userId,
+      title: newTitle,
+      raw_content: source.rawContent,
+      template_id: source.templateId,
+      forked_from_id: sourceVariantId,
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+
+  const newVariant = mapVariant(data)
+
+  // Create first snapshot with fork message
+  await supabase.from('variant_snapshots').insert({
+    variant_id: newVariant.id,
+    raw_content: source.rawContent,
+    message: `Forked from ${source.title}`,
+    template_id: source.templateId,
+  })
+
+  return newVariant
 }
 
-/**
- * Deletes a variant
- */
 export const deleteVariant = async (variantId: string): Promise<void> => {
-  // This will be implemented in Stage 6
-  throw new Error('Not implemented yet')
+  const supabase = createSupabaseServerClient()
+
+  const { error } = await supabase
+    .from('resume_variants')
+    .delete()
+    .eq('id', variantId)
+
+  if (error) throw error
 }
 
-/**
- * Gets user profile information
- */
 export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
-  // This will be implemented in Stage 6
-  throw new Error('Not implemented yet')
+  const supabase = createSupabaseServerClient()
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single()
+
+  if (error) return null
+
+  return mapProfile(data)
 }
