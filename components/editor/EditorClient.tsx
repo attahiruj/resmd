@@ -154,6 +154,8 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
         onToggleAI={() => setShowAIPanel((v) => !v)}
         variantTitle={variantTitle}
         onTitleChange={handleTitleChange}
+        variantId={variant.id}
+        isPro={isPro}
       />
 
       {/* Mobile tab bar (<md) */}
@@ -240,7 +242,7 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
       {/* AI panel placeholder — wired up in Stage 8 */}
       {showAIPanel && (
         <div
-          className="fixed top-[60px] right-0 bottom-0 w-[380px] bg-surface border-l border-border z-40 flex items-center justify-center"
+          className="fixed top-[61px] right-0 bottom-0 w-[380px] bg-surface border-l border-border z-40 flex items-center justify-center"
           style={{ transform: 'translateX(0)', transition: 'transform 200ms ease-out' }}
         >
           <div className="text-center p-8">

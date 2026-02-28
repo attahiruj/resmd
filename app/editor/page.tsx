@@ -128,9 +128,6 @@ export default function EditorPage() {
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-bg">
       <Toolbar
-        onSave={() => {}}
-        onExportPDF={() => {}}
-        isSaving={false}
         lastSaved={null}
         showAIPanel={showAIPanel}
         onToggleAI={() => setShowAIPanel((v) => !v)}

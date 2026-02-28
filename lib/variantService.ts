@@ -10,7 +10,7 @@ function mapVariant(row: Record<string, unknown>): ResumeVariant {
     title: row.title as string,
     rawContent: row.raw_content as string,
     templateId: row.template_id as string,
-    forkedFromId: (row.forked_from_id as string | null) ?? null,
+    clonedFromId: (row.forked_from_id as string | null) ?? null,
     isPublic: row.is_public as boolean,
     publicSlug: (row.public_slug as string | null) ?? null,
     createdAt: row.created_at as string,
@@ -190,7 +190,7 @@ export const getVariantSnapshots = async (variantId: string): Promise<VariantSna
   return (data ?? []).map(mapSnapshot)
 }
 
-export const forkVariant = async (
+export const cloneVariant = async (
   sourceVariantId: string,
   newTitle: string,
   userId: string
@@ -216,11 +216,11 @@ export const forkVariant = async (
 
   const newVariant = mapVariant(data)
 
-  // Create first snapshot with fork message
+  // Create first snapshot with clone message
   await supabase.from('variant_snapshots').insert({
     variant_id: newVariant.id,
     raw_content: source.rawContent,
-    message: `Forked from ${source.title}`,
+    message: `Cloned from ${source.title}`,
     template_id: source.templateId,
   })
 

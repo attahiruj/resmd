@@ -3,9 +3,17 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { PlusIcon, TrashIcon, SpinnerGapIcon } from '@phosphor-icons/react'
+import {
+  PlusIcon,
+  TrashIcon,
+  SpinnerGapIcon,
+  PencilSimpleIcon,
+  CopySimpleIcon,
+} from '@phosphor-icons/react'
 import type { ResumeVariant } from '@/types/resume'
 import { LIMITS } from '@/lib/limits'
+import CloneModal from '@/components/variants/CloneModal'
+import Navbar from '@/components/ui/Navbar'
 
 interface DashboardClientProps {
   initialVariants: ResumeVariant[]
@@ -21,6 +29,8 @@ export default function DashboardClient({
   const [variants, setVariants] = useState(initialVariants)
   const [creating, setCreating] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [cloneSource, setCloneSource] = useState<ResumeVariant | null>(null)
+  const [cloning, setCloning] = useState(false)
   const router = useRouter()
 
   const atLimit = !isPro && variants.length >= LIMITS.FREE_VARIANTS
@@ -43,12 +53,11 @@ export default function DashboardClient({
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this resume variant? This cannot be undone.')) return
     setDeletingId(id)
     try {
       const res = await fetch(`/api/variants/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed to delete')
-      setVariants((prev) => prev.filter((v) => v.id !== id))
+      setVariants(prev => prev.filter(v => v.id !== id))
     } catch {
       alert('Failed to delete variant')
     } finally {
@@ -56,28 +65,46 @@ export default function DashboardClient({
     }
   }
 
+  const handleCloneConfirm = async (title: string) => {
+    if (!cloneSource) return
+    setCloning(true)
+    try {
+      const res = await fetch(`/api/variants/${cloneSource.id}/clone`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Failed to clone')
+      router.push(`/editor/${data.data.id}`)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to clone variant')
+      setCloning(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-bg">
-      {/* Top nav */}
-      <div className="h-[52px] border-b border-border bg-surface flex items-center px-6 gap-4">
-        <span className="text-sm font-semibold text-text">resmd</span>
-        <div className="ml-auto flex items-center gap-3">
-          <span className="text-xs text-muted hidden sm:block">{userEmail}</span>
-          {isPro && (
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent-muted text-accent">
-              Pro
-            </span>
-          )}
-          <Link
-            href="/auth"
-            className="text-xs text-muted hover:text-text transition-colors duration-150"
-          >
-            Sign out
-          </Link>
-        </div>
-      </div>
+      <Navbar
+        right={
+          <div className="flex items-center gap-3 ml-auto">
+            <span className="text-xs text-muted hidden sm:block">{userEmail}</span>
+            {isPro && (
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent-muted text-accent">
+                Pro
+              </span>
+            )}
+            <Link
+              href="/auth"
+              className="text-xs text-muted hover:text-text transition-colors duration-150"
+            >
+              Sign out
+            </Link>
+          </div>
+        }
+      />
 
-      <div className="max-w-3xl mx-auto px-6 py-10">
+      <div className="max-w-5xl mx-auto px-6 py-10">
         {/* Header row */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -88,12 +115,10 @@ export default function DashboardClient({
                 : `${variants.length} / ${LIMITS.FREE_VARIANTS} free variants`}
             </p>
           </div>
+
           <div className="flex items-center gap-2">
             {atLimit && (
-              <Link
-                href="/pricing"
-                className="text-xs text-accent hover:underline"
-              >
+              <Link href="/pricing" className="text-xs text-accent hover:underline">
                 Upgrade for unlimited
               </Link>
             )}
@@ -104,12 +129,12 @@ export default function DashboardClient({
             >
               {creating ? (
                 <>
-                  <SpinnerGapIcon size={14} weight="bold" className="animate-spin" />
+                  <SpinnerGapIcon size={16} weight="bold" className="animate-spin" />
                   Creating…
                 </>
               ) : (
                 <>
-                  <PlusIcon size={14} weight="bold" />
+                  <PlusIcon size={16} weight="bold" />
                   New Resume
                 </>
               )}
@@ -117,7 +142,17 @@ export default function DashboardClient({
           </div>
         </div>
 
-        {/* Variants list */}
+        {/* Free tier upgrade nudge (when at limit) */}
+        {atLimit && variants.length > 0 && (
+          <div className="mb-6 p-4 bg-accent-muted border border-accent/20 rounded-xl text-sm text-text">
+            <span className="font-medium">Free plan limit reached.</span>{' '}
+            <Link href="/pricing" className="text-accent hover:underline">
+              Upgrade to Pro
+            </Link>{' '}
+            for unlimited resume variants.
+          </div>
+        )}
+
         {variants.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="text-[64px] text-faint mb-4 select-none">📄</div>
@@ -133,69 +168,101 @@ export default function DashboardClient({
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {variants.map((variant) => (
+            {variants.map(variant => (
               <VariantCard
                 key={variant.id}
                 variant={variant}
+                clonedFromTitle={
+                  variant.clonedFromId
+                    ? (variants.find(v => v.id === variant.clonedFromId)?.title ?? null)
+                    : null
+                }
                 isDeleting={deletingId === variant.id}
                 onDelete={() => handleDelete(variant.id)}
+                onClone={() => setCloneSource(variant)}
+                onOpen={() => router.push(`/editor/${variant.id}`)}
               />
             ))}
           </div>
         )}
-
-        {/* Free tier upgrade nudge */}
-        {atLimit && (
-          <div className="mt-6 p-4 bg-accent-muted border border-accent/20 rounded-xl text-sm text-text">
-            <span className="font-medium">Free plan limit reached.</span>{' '}
-            <Link href="/pricing" className="text-accent hover:underline">
-              Upgrade to Pro
-            </Link>{' '}
-            for unlimited resume variants.
-          </div>
-        )}
       </div>
+
+      {/* Clone modal */}
+      {cloneSource && (
+        <CloneModal
+          sourceVariant={cloneSource}
+          loading={cloning}
+          onConfirm={handleCloneConfirm}
+          onClose={() => { if (!cloning) setCloneSource(null) }}
+        />
+      )}
     </div>
   )
 }
 
 function VariantCard({
   variant,
+  clonedFromTitle,
   isDeleting,
   onDelete,
+  onClone,
+  onOpen,
 }: {
   variant: ResumeVariant
+  clonedFromTitle?: string | null
   isDeleting: boolean
   onDelete: () => void
+  onClone: () => void
+  onOpen: () => void
 }) {
   const updatedAt = new Date(variant.updatedAt)
   const relativeDate = formatRelative(updatedAt)
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-4 hover:border-border-strong transition-colors duration-150">
-      {/* Info */}
+    <div
+      onClick={onOpen}
+      className="bg-surface border border-border rounded-xl p-4 flex items-center gap-4 hover:border-border-strong transition-colors duration-150 cursor-pointer"
+    >
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-text truncate">{variant.title}</p>
         <p className="text-xs text-muted mt-0.5">
           {capitalize(variant.templateId)} template · Updated {relativeDate}
         </p>
+        {clonedFromTitle && (
+          <p className="text-xs text-muted mt-0.5 flex items-center gap-1">
+            <CopySimpleIcon size={11} />
+            Cloned from <span className="text-text font-medium">{clonedFromTitle}</span>
+          </p>
+        )}
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex items-center gap-1 flex-shrink-0">
         <Link
           href={`/editor/${variant.id}`}
-          className="px-3 py-1.5 text-xs font-medium bg-accent hover:bg-accent-hover text-accent-text rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          onClick={e => e.stopPropagation()}
+          className="p-2 text-muted hover:text-text hover:bg-surface-2 rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          title="Edit"
         >
-          Edit
+          <PencilSimpleIcon size={16} />
         </Link>
         <button
-          onClick={onDelete}
+          onClick={e => { e.stopPropagation(); onClone() }}
+          className="p-2 text-muted hover:text-text hover:bg-surface-2 rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          title="Clone variant"
+        >
+          <CopySimpleIcon size={16} />
+        </button>
+        <button
+          onClick={e => { e.stopPropagation(); onDelete() }}
           disabled={isDeleting}
-          className="p-1.5 text-muted hover:text-danger hover:bg-danger-bg rounded-lg transition-colors duration-150 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="p-2 text-muted hover:text-danger hover:bg-danger-bg rounded-lg transition-colors duration-150 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           title="Delete"
         >
-          {isDeleting ? <SpinnerGapIcon size={14} weight="bold" className="animate-spin" /> : <TrashIcon size={14} />}
+          {isDeleting ? (
+            <SpinnerGapIcon size={16} weight="bold" className="animate-spin" />
+          ) : (
+            <TrashIcon size={16} />
+          )}
         </button>
       </div>
     </div>
@@ -213,4 +280,3 @@ function formatRelative(date: Date): string {
 function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
-

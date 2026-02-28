@@ -71,7 +71,7 @@ export interface ResumeVariant {
   title: string
   rawContent: string
   templateId: string
-  forkedFromId: string | null
+  clonedFromId: string | null
   isPublic: boolean
   publicSlug: string | null
   createdAt: string

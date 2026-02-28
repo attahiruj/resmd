@@ -1,5 +1,292 @@
-import type { TemplateProps } from "@/types/resume";
+import React from 'react'
+import { Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer'
+import type {
+  TemplateProps,
+  ResumeSection,
+  SectionItem,
+  KeyValueItem,
+  EntryItem,
+} from '@/types/resume'
+import { renderInlinePdf } from '@/lib/renderInlinePdf'
 
-export default function ModernPdf(_props: TemplateProps) {
-  return null;
+const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position'])
+
+function isSidebarSection(section: ResumeSection): boolean {
+  const lower = section.title.toLowerCase()
+  return (
+    section.hint === 'keyvalue' ||
+    section.hint === 'list' ||
+    lower.includes('skill') ||
+    lower.includes('language') ||
+    lower.includes('tool') ||
+    lower.includes('certification') ||
+    lower === 'bio' ||
+    lower === 'contact'
+  )
+}
+
+const styles = StyleSheet.create({
+  page: {
+    fontFamily: 'Helvetica',
+    fontSize: 10,
+    color: '#1C1B18',
+    flexDirection: 'row',
+    lineHeight: 1.5,
+  },
+  sidebar: {
+    width: '30%',
+    backgroundColor: '#1E2330',
+    paddingTop: 36,
+    paddingBottom: 36,
+    paddingLeft: 18,
+    paddingRight: 18,
+  },
+  sidebarName: { fontSize: 16, fontFamily: 'Helvetica-Bold', color: '#FFFFFF', marginBottom: 3 },
+  sidebarJobTitle: { fontSize: 9.5, color: '#B0B8CC', marginBottom: 16 },
+  sidebarSectionTitle: {
+    fontSize: 7,
+    fontFamily: 'Helvetica-Bold',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    color: '#7A8299',
+    borderBottomWidth: 1,
+    borderBottomColor: '#2E3550',
+    paddingBottom: 3,
+    marginBottom: 6,
+    marginTop: 12,
+  },
+  sidebarKvRow: { flexDirection: 'row', marginBottom: 3 },
+  sidebarKvKey: { fontSize: 8, color: '#8890A8', width: 44 },
+  sidebarKvValue: { fontSize: 8.5, color: '#D0D6E8', flex: 1 },
+  sidebarBullet: { fontSize: 9, color: '#C0C8DC', marginBottom: 2.5 },
+  sidebarTag: {
+    fontSize: 7.5,
+    color: '#C8D0E8',
+    backgroundColor: '#252B3D',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 3,
+    marginBottom: 3,
+    marginRight: 3,
+  },
+  sidebarTagsRow: { flexDirection: 'row', flexWrap: 'wrap' },
+  sidebarSkillLabel: { fontSize: 8, color: '#8890A8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
+  main: {
+    flex: 1,
+    paddingTop: 36,
+    paddingBottom: 36,
+    paddingLeft: 24,
+    paddingRight: 28,
+  },
+  mainSectionTitle: {
+    fontSize: 8,
+    fontFamily: 'Helvetica-Bold',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    color: '#4A5070',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8E6E0',
+    paddingBottom: 3,
+    marginBottom: 8,
+    marginTop: 14,
+  },
+  entry: { marginBottom: 10 },
+  entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  entryRole: { fontSize: 10.5, fontFamily: 'Helvetica-Bold', color: '#1A1A2E' },
+  entryOrg: { fontSize: 10.5, fontFamily: 'Helvetica', color: '#444466' },
+  entryMeta: { fontSize: 8.5, color: '#888899' },
+  entryChildren: { paddingLeft: 8, marginTop: 3, borderLeftWidth: 1, borderLeftColor: '#EEECFF' },
+  bulletRow: { flexDirection: 'row', marginBottom: 2.5 },
+  bulletDash: { fontSize: 10, color: '#AAAACC', marginRight: 5 },
+  bulletText: { fontSize: 10, color: '#333344', flex: 1 },
+  textPara: { fontSize: 10, color: '#444455', marginBottom: 4, lineHeight: 1.6 },
+  kvRow: { flexDirection: 'row', marginBottom: 3 },
+  kvKey: { fontSize: 9, color: '#888899', width: 60 },
+  kvValue: { fontSize: 10, color: '#333344', flex: 1 },
+  kvSkillsRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 5 },
+  kvSkillsLabel: { fontSize: 8, color: '#888899', textTransform: 'uppercase', letterSpacing: 0.5, width: 55, paddingTop: 2 },
+  kvSkillsTags: { flexDirection: 'row', flexWrap: 'wrap', flex: 1, gap: 3 },
+  tag: { fontSize: 8, color: '#555566', backgroundColor: '#F0EFF8', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 3 },
+  footer: { marginTop: 20, borderTopWidth: 1, borderTopColor: '#E8E8E8', paddingTop: 6, textAlign: 'center' },
+  footerText: { fontSize: 8, color: '#BBBBCC' },
+})
+
+export default function ModernPdf({ resume, isPro }: TemplateProps) {
+  const { sections, meta } = resume
+
+  const headerSection =
+    sections.find(s => s.hint === 'keyvalue' || s.title.toLowerCase() === 'bio') ??
+    sections[0] ??
+    null
+
+  const contactItems = (headerSection?.items ?? []).filter(
+    (i): i is KeyValueItem =>
+      i.kind === 'keyvalue' && !HEADER_META_KEYS.has(i.key.toLowerCase()),
+  )
+
+  const bodySections = sections.filter(s => s !== headerSection)
+  const sidebarSections = bodySections.filter(isSidebarSection)
+  const mainSections = bodySections.filter(s => !isSidebarSection(s))
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* Sidebar */}
+        <View style={styles.sidebar}>
+          {meta.name && <Text style={styles.sidebarName}>{meta.name}</Text>}
+          {meta.title && <Text style={styles.sidebarJobTitle}>{meta.title}</Text>}
+
+          {contactItems.length > 0 && (
+            <View>
+              <Text style={styles.sidebarSectionTitle}>Contact</Text>
+              {contactItems.map(item => (
+                <View key={item.key} style={styles.sidebarKvRow}>
+                  <Text style={styles.sidebarKvKey}>{item.key}</Text>
+                  <Text style={styles.sidebarKvValue}>{renderInlinePdf(item.value)}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {sidebarSections.map(section => (
+            <View key={section.id}>
+              <Text style={styles.sidebarSectionTitle}>{section.title}</Text>
+              {section.items.map((item, i) => (
+                <SidebarItemBlock key={i} item={item} isKeyValueSection={section.hint === 'keyvalue'} />
+              ))}
+            </View>
+          ))}
+        </View>
+
+        {/* Main */}
+        <View style={styles.main}>
+          {mainSections.map((section, idx) => (
+            <View key={section.id}>
+              <Text style={[styles.mainSectionTitle, idx === 0 ? { marginTop: 0 } : {}]}>
+                {section.title}
+              </Text>
+              {section.items.map((item, i) => (
+                <MainItemBlock key={i} item={item} isKeyValueSection={section.hint === 'keyvalue'} />
+              ))}
+            </View>
+          ))}
+
+          {!isPro && (
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Created with resmd · resmd.app</Text>
+            </View>
+          )}
+        </View>
+      </Page>
+    </Document>
+  )
+}
+
+function SidebarItemBlock({ item, isKeyValueSection }: { item: SectionItem; isKeyValueSection: boolean }) {
+  switch (item.kind) {
+    case 'keyvalue': {
+      if (isKeyValueSection) {
+        const tags = item.value.split(',').map(v => v.trim()).filter(Boolean)
+        return (
+          <View style={{ marginBottom: 5 }}>
+            <Text style={styles.sidebarSkillLabel}>{item.key}</Text>
+            <View style={styles.sidebarTagsRow}>
+              {tags.map(tag => (
+                <Text key={tag} style={styles.sidebarTag}>{tag}</Text>
+              ))}
+            </View>
+          </View>
+        )
+      }
+      return (
+        <View style={styles.sidebarKvRow}>
+          <Text style={styles.sidebarKvKey}>{item.key}</Text>
+          <Text style={styles.sidebarKvValue}>{renderInlinePdf(item.value)}</Text>
+        </View>
+      )
+    }
+    case 'bullet':
+      return <Text style={styles.sidebarBullet}>· {renderInlinePdf(item.text)}</Text>
+    case 'text':
+      return <Text style={[styles.sidebarBullet, { lineHeight: 1.5 }]}>{renderInlinePdf(item.text)}</Text>
+    case 'entry':
+      return (
+        <View style={{ marginBottom: 5 }}>
+          <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: '#D0D6E8' }}>
+            {renderInlinePdf(item.role ?? item.heading)}
+          </Text>
+          {item.organization && (
+            <Text style={styles.sidebarKvKey}>{renderInlinePdf(item.organization)}</Text>
+          )}
+        </View>
+      )
+  }
+}
+
+function MainItemBlock({ item, isKeyValueSection }: { item: SectionItem; isKeyValueSection: boolean }) {
+  switch (item.kind) {
+    case 'keyvalue': {
+      if (isKeyValueSection) {
+        const tags = item.value.split(',').map(v => v.trim()).filter(Boolean)
+        return (
+          <View style={styles.kvSkillsRow}>
+            <Text style={styles.kvSkillsLabel}>{item.key}</Text>
+            <View style={styles.kvSkillsTags}>
+              {tags.map(tag => (
+                <View key={tag} style={styles.tag}><Text>{tag}</Text></View>
+              ))}
+            </View>
+          </View>
+        )
+      }
+      return (
+        <View style={styles.kvRow}>
+          <Text style={styles.kvKey}>{item.key}:</Text>
+          <Text style={styles.kvValue}>{renderInlinePdf(item.value)}</Text>
+        </View>
+      )
+    }
+    case 'entry':
+      return <MainEntryBlock entry={item} />
+    case 'bullet':
+      return (
+        <View style={styles.bulletRow}>
+          <Text style={styles.bulletDash}>–</Text>
+          <Text style={styles.bulletText}>{renderInlinePdf(item.text)}</Text>
+        </View>
+      )
+    case 'text':
+      return <Text style={styles.textPara}>{renderInlinePdf(item.text)}</Text>
+  }
+}
+
+function MainEntryBlock({ entry }: { entry: EntryItem }) {
+  return (
+    <View style={styles.entry}>
+      <View style={styles.entryHeader}>
+        <View style={{ flex: 1 }}>
+          {entry.role ? (
+            <Text>
+              <Text style={styles.entryRole}>{renderInlinePdf(entry.role)}</Text>
+              {entry.organization && (
+                <Text style={styles.entryOrg}> @ {renderInlinePdf(entry.organization)}</Text>
+              )}
+            </Text>
+          ) : (
+            <Text style={styles.entryRole}>{renderInlinePdf(entry.heading)}</Text>
+          )}
+        </View>
+        {entry.meta.length > 0 && (
+          <Text style={styles.entryMeta}>{entry.meta.join(' · ')}</Text>
+        )}
+      </View>
+      {entry.children.length > 0 && (
+        <View style={styles.entryChildren}>
+          {entry.children.map((child, i) => (
+            <MainItemBlock key={i} item={child} isKeyValueSection={false} />
+          ))}
+        </View>
+      )}
+    </View>
+  )
 }

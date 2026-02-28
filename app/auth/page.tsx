@@ -59,7 +59,7 @@ export default function AuthPage() {
       <div className="w-full max-w-sm">
         {/* Header */}
         <div className="text-center mb-8">
-          <span className="text-lg font-semibold text-text">resmd</span>
+          <span className="text-xl font-bold text-text">res<span className="text-accent">md</span></span>
           <p className="text-sm text-muted mt-1">
             {tab === 'signin' ? 'Welcome back' : 'Create your account'}
           </p>

@@ -18,7 +18,57 @@ interface EditorProps {
   onChange: (value: string) => void
 }
 
-// Build decorations for ResMarkup syntax — line-level classes + key mark
+// ─── Format helpers (module-level, pure functions on EditorView) ─────────────
+
+function applyInlineToView(view: EditorView, marker: string) {
+  const { from, to } = view.state.selection.main
+  if (from === to) return
+  const text = view.state.doc.sliceString(from, to)
+  // Toggle: unwrap if already wrapped, otherwise wrap
+  const isWrapped =
+    text.length > marker.length * 2 &&
+    text.startsWith(marker) &&
+    text.endsWith(marker)
+  if (isWrapped) {
+    const inner = text.slice(marker.length, -marker.length)
+    view.dispatch({
+      changes: { from, to, insert: inner },
+      selection: { anchor: from, head: from + inner.length },
+    })
+  } else {
+    view.dispatch({
+      changes: { from, to, insert: `${marker}${text}${marker}` },
+      selection: { anchor: from, head: to + marker.length * 2 },
+    })
+  }
+}
+
+function applyHeadingToView(view: EditorView, level: number) {
+  const prefix = '#'.repeat(level) + ' '
+  const { from, to } = view.state.selection.main
+  const startLine = view.state.doc.lineAt(from)
+  const endLine = view.state.doc.lineAt(to)
+
+  const lines = []
+  for (let n = startLine.number; n <= endLine.number; n++) {
+    lines.push(view.state.doc.line(n))
+  }
+
+  const allMatch = lines.every((l) => l.text.startsWith(prefix))
+
+  const changes = lines.map((line) => {
+    if (allMatch) {
+      return { from: line.from, to: line.from + prefix.length, insert: '' }
+    }
+    const stripped = line.text.replace(/^#{1,6} /, '')
+    return { from: line.from, to: line.to, insert: prefix + stripped }
+  })
+
+  view.dispatch({ changes })
+}
+
+// ─── Syntax highlight plugin ─────────────────────────────────────────────────
+
 function buildDecorations(view: EditorView): DecorationSet {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const deco: Range<any>[] = []
@@ -34,7 +84,6 @@ function buildDecorations(view: EditorView): DecorationSet {
       } else if (/^- /.test(text)) {
         deco.push(Decoration.line({ class: 'cm-resmd-bullet' }).range(line.from))
       } else {
-        // Key-value: only match lines not starting with # and with a short key (≤30 chars)
         const kvMatch = /^([A-Za-z][^:\n#]{1,30}):\s*.+/.exec(text)
         if (kvMatch && !text.startsWith('#')) {
           const colonIdx = text.indexOf(':')
@@ -67,7 +116,8 @@ const resMarkupHighlight = ViewPlugin.fromClass(
   { decorations: (v) => v.decorations }
 )
 
-// Build editor theme using CSS custom properties — adapts to dark/light automatically
+// ─── Editor theme ─────────────────────────────────────────────────────────────
+
 function makeTheme(fontSize: number) {
   return EditorView.theme({
     '&': {
@@ -97,7 +147,14 @@ function makeTheme(fontSize: number) {
   })
 }
 
+// ─── Component ────────────────────────────────────────────────────────────────
+
 const DEFAULT_FONT_SIZE = 14
+
+interface SelectionPopup {
+  x: number
+  y: number
+}
 
 export default function Editor({ value, onChange }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -107,14 +164,14 @@ export default function Editor({ value, onChange }: EditorProps) {
   const fontSizeRef = useRef(DEFAULT_FONT_SIZE)
   const themeCompartment = useRef(new Compartment())
   const zoomPillTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const rafRef = useRef<number | null>(null)
 
   const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE)
   const [showZoomPill, setShowZoomPill] = useState(false)
+  const [selectionPopup, setSelectionPopup] = useState<SelectionPopup | null>(null)
 
-  // Keep onChange ref current to avoid stale closures
   onChangeRef.current = onChange
 
-  // Stored in a ref so the keymap closure always calls the latest version
   const changeZoomRef = useRef((delta: number) => {
     const next = Math.max(10, Math.min(24, fontSizeRef.current + delta))
     if (next === fontSizeRef.current) return
@@ -131,6 +188,24 @@ export default function Editor({ value, onChange }: EditorProps) {
     zoomPillTimer.current = setTimeout(() => setShowZoomPill(false), 1500)
   })
 
+  // ── Formatting actions ──────────────────────────────────────────────────────
+
+  const applyInline = (marker: string) => {
+    const view = viewRef.current
+    if (!view) return
+    applyInlineToView(view, marker)
+    view.focus()
+  }
+
+  const applyHeading = (level: number) => {
+    const view = viewRef.current
+    if (!view) return
+    applyHeadingToView(view, level)
+    view.focus()
+  }
+
+  // ── Editor setup ────────────────────────────────────────────────────────────
+
   useEffect(() => {
     if (!containerRef.current) return
 
@@ -141,12 +216,28 @@ export default function Editor({ value, onChange }: EditorProps) {
       { key: 'Ctrl-0', run: () => { changeZoomRef.current(14 - fontSizeRef.current); return true } },
     ])
 
+    const formatKeymap = keymap.of([
+      {
+        key: 'Mod-b',
+        run: (view) => { applyInlineToView(view, '*'); return true },
+      },
+      {
+        key: 'Mod-i',
+        run: (view) => { applyInlineToView(view, '~'); return true },
+      },
+      {
+        key: 'Mod-u',
+        run: (view) => { applyInlineToView(view, '_'); return true },
+      },
+    ])
+
     const view = new EditorView({
       state: EditorState.create({
         doc: value,
         extensions: [
           history(),
           Prec.highest(zoomKeymap),
+          Prec.high(formatKeymap),
           keymap.of([...defaultKeymap, ...historyKeymap]),
           markdown(),
           EditorView.lineWrapping,
@@ -161,6 +252,38 @@ export default function Editor({ value, onChange }: EditorProps) {
                 localStorage.setItem('resmd_draft', newValue)
               }, 500)
             }
+
+            // ── Selection popup positioning ──────────────────────────────
+            if (update.selectionSet || update.docChanged || update.focusChanged) {
+              const sel = update.state.selection.main
+              const container = containerRef.current
+
+              if (!sel.empty && container && update.view.hasFocus) {
+                const fromCoords = update.view.coordsAtPos(sel.from)
+                const toCoords = update.view.coordsAtPos(sel.to)
+                if (fromCoords && toCoords) {
+                  const rect = container.getBoundingClientRect()
+                  // For multi-line selections, anchor popup to first line start
+                  const isMultiLine = toCoords.top - fromCoords.top > 4
+                  const rawX = isMultiLine
+                    ? fromCoords.left - rect.left
+                    : (fromCoords.left + toCoords.right) / 2 - rect.left
+                  // Clamp so popup stays inside container (popup ~190px wide → 95px half)
+                  const clampedX = Math.max(95, Math.min(rect.width - 95, rawX))
+                  const topY = fromCoords.top - rect.top
+
+                  if (rafRef.current) cancelAnimationFrame(rafRef.current)
+                  rafRef.current = requestAnimationFrame(() => {
+                    setSelectionPopup({ x: clampedX, y: topY })
+                  })
+                }
+              } else {
+                if (rafRef.current) cancelAnimationFrame(rafRef.current)
+                rafRef.current = requestAnimationFrame(() => {
+                  setSelectionPopup(null)
+                })
+              }
+            }
           }),
         ],
       }),
@@ -172,12 +295,13 @@ export default function Editor({ value, onChange }: EditorProps) {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
       if (zoomPillTimer.current) clearTimeout(zoomPillTimer.current)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
       view.destroy()
       viewRef.current = null
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Sync external value changes (e.g. AI suggestion applied from parent)
+  // Sync external value changes
   useEffect(() => {
     const view = viewRef.current
     if (!view) return
@@ -189,11 +313,81 @@ export default function Editor({ value, onChange }: EditorProps) {
     }
   }, [value])
 
+  // ── Render ──────────────────────────────────────────────────────────────────
+
   return (
     <div className="relative h-full">
       <div ref={containerRef} className="h-full" />
 
-      {/* Zoom level pill — fades in on zoom, disappears after 1.5s */}
+      {/* Floating selection toolbar */}
+      {selectionPopup && (
+        <div
+          className="absolute z-50 flex items-center gap-px px-1 py-1 rounded-lg border border-border bg-surface shadow-lg shadow-black/25 pointer-events-auto"
+          style={{
+            left: `${selectionPopup.x}px`,
+            top: `${selectionPopup.y}px`,
+            transform: 'translate(-50%, calc(-100% - 10px))',
+          }}
+        >
+          {/* Inline formats — markers match parseInline: *bold* ~italic~ _underline_ */}
+          <FormatBtn
+            title="Bold (Ctrl+B)  →  *text*"
+            onClick={() => applyInline('*')}
+            className="font-bold"
+          >
+            B
+          </FormatBtn>
+          <FormatBtn
+            title="Italic (Ctrl+I)  →  ~text~"
+            onClick={() => applyInline('~')}
+            className="italic"
+          >
+            I
+          </FormatBtn>
+          <FormatBtn
+            title="Underline  →  _text_"
+            onClick={() => applyInline('_')}
+            className="underline"
+          >
+            U
+          </FormatBtn>
+
+          {/* Divider */}
+          <div className="w-px h-4 bg-border mx-0.5 flex-shrink-0" />
+
+          {/* Heading levels */}
+          {([1, 2] as const).map((level) => (
+            <FormatBtn
+              key={level}
+              title={`Heading ${level}`}
+              onClick={() => applyHeading(level)}
+              className="text-[11px] font-semibold tracking-tight"
+            >
+              H{level}
+            </FormatBtn>
+          ))}
+
+          {/* Arrow notch */}
+          <span
+            className="absolute left-1/2 -bottom-[5px] -translate-x-1/2 w-0 h-0 block"
+            style={{
+              borderLeft: '5px solid transparent',
+              borderRight: '5px solid transparent',
+              borderTop: '5px solid var(--color-border)',
+            }}
+          />
+          <span
+            className="absolute left-1/2 -bottom-[4px] -translate-x-1/2 w-0 h-0 block"
+            style={{
+              borderLeft: '4px solid transparent',
+              borderRight: '4px solid transparent',
+              borderTop: '4px solid var(--color-surface)',
+            }}
+          />
+        </div>
+      )}
+
+      {/* Zoom level pill */}
       <div
         className={`absolute bottom-4 right-4 text-xs px-2 py-0.5 rounded-md bg-surface border border-border text-muted pointer-events-none select-none transition-opacity duration-300 ${
           showZoomPill ? 'opacity-100' : 'opacity-0'
@@ -202,5 +396,31 @@ export default function Editor({ value, onChange }: EditorProps) {
         {fontSize}px
       </div>
     </div>
+  )
+}
+
+// ─── Small helper component for toolbar buttons ───────────────────────────────
+
+function FormatBtn({
+  children,
+  onClick,
+  title,
+  className = '',
+}: {
+  children: React.ReactNode
+  onClick: () => void
+  title: string
+  className?: string
+}) {
+  return (
+    <button
+      title={title}
+      // Prevent the editor from losing focus on mousedown
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClick}
+      className={`min-w-[26px] h-[26px] flex items-center justify-center rounded text-sm text-text hover:bg-surface-2 active:bg-accent-muted transition-colors duration-100 ${className}`}
+    >
+      {children}
+    </button>
   )
 }

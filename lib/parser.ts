@@ -43,9 +43,21 @@ export function parseResume(raw: string): ParsedResume {
     }
   }
 
+  const ensureSection = () => {
+    if (!currentSection) {
+      currentSection = {
+        id: '',
+        title: '',
+        hint: 'mixed',
+        items: []
+      }
+      sections.push(currentSection)
+    }
+  }
+
   for (let line of lines) {
     const trimmedLine = line.trim()
-    
+
     // 1. Blank lines are ignored
     if (trimmedLine === '') continue
 
@@ -65,6 +77,7 @@ export function parseResume(raw: string): ParsedResume {
 
     // 3. Entries (## )
     if (line.startsWith('## ')) {
+      ensureSection()
       const rawEntry = line.substring(3).trim()
       const parts = rawEntry.split('|').map(p => p.trim())
       const headingWithOrg = parts[0] || ''
@@ -99,6 +112,7 @@ export function parseResume(raw: string): ParsedResume {
 
     // 4. Bullets (- )
     if (line.startsWith('- ')) {
+      ensureSection()
       pushItem({
         kind: 'bullet',
         text: line.substring(2).trim()
@@ -109,6 +123,7 @@ export function parseResume(raw: string): ParsedResume {
     // 5. KeyValueItems (Key: Value)
     const keyValueMatch = line.match(/^([A-Za-z][^:]+):\s*(.+)/)
     if (keyValueMatch) {
+      ensureSection()
       pushItem({
         kind: 'keyvalue',
         key: keyValueMatch[1].trim(),
@@ -118,6 +133,7 @@ export function parseResume(raw: string): ParsedResume {
     }
 
     // 6. Everything else -> TextItem
+    ensureSection()
     pushItem({
       kind: 'text',
       text: trimmedLine
