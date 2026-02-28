@@ -1,4 +1,3 @@
-
 import { ResumeVariant } from '@/types/resume'
 
 export interface PositionedNode {

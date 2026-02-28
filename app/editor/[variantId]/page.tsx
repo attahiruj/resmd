@@ -1,3 +1,1 @@
-export default function VariantEditorPage() {
-  return <div>Variant Editor Placeholder</div>;
-}
+export default function Page() { return <div>{"[variantId]"}</div> }

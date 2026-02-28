@@ -39,7 +39,7 @@ export default function LivePreview({ rawContent, templateId, isPro }: LivePrevi
 
   if (isEmpty || !template) {
     return (
-      <div className="flex items-center justify-center h-full p-8 bg-gray-100">
+      <div className="flex items-center justify-center h-full p-8 bg-surface-2">
         <EmptyState />
       </div>
     )
@@ -50,7 +50,7 @@ export default function LivePreview({ rawContent, templateId, isPro }: LivePrevi
   return (
     <div
       ref={containerRef}
-      className="bg-gray-100 h-full overflow-y-auto overflow-x-hidden flex flex-col items-center py-8"
+      className="h-full overflow-y-auto overflow-x-hidden flex flex-col items-center py-8 px-4"
     >
       <div
         style={{
@@ -59,12 +59,15 @@ export default function LivePreview({ rawContent, templateId, isPro }: LivePrevi
           transformOrigin: 'top center',
           // Collapse the extra vertical space caused by scaling down
           marginBottom: scale < 1 ? `${A4_WIDTH * (scale - 1)}px` : undefined,
+          // Resume always renders on white regardless of theme
+          background: '#ffffff',
+          color: '#1c1b18',
         }}
-        className="bg-white shadow-lg"
+        className="shadow-lg rounded-lg"
       >
         <Suspense
           fallback={
-            <div className="h-96 flex items-center justify-center text-gray-400 text-sm">
+            <div className="h-96 flex items-center justify-center text-sm" style={{ color: '#9b9891' }}>
               Loading template…
             </div>
           }

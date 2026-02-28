@@ -1,4 +1,3 @@
-
 import { ResumeVariant, VariantSnapshot, UserProfile } from '@/types/resume'
 import { LIMITS } from '@/lib/limits'
 import { createSupabaseServerClient } from '@/lib/supabase-server'

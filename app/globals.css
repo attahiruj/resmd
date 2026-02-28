@@ -1,3 +1,105 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* === Design Token System === */
+:root {
+  --color-bg: #f8f8f7;
+  --color-surface: #ffffff;
+  --color-surface-2: #f1f0ee;
+  --color-surface-3: #e8e7e3;
+  --color-border: #e2e1dd;
+  --color-border-strong: #c9c8c4;
+  --color-text: #1c1b18;
+  --color-text-muted: #6b6963;
+  --color-text-faint: #a8a49e;
+  --color-accent: #5b5bd6;
+  --color-accent-hover: #4747c2;
+  --color-accent-muted: #ededfc;
+  --color-success: #18794e;
+  --color-warning: #ad5700;
+  --color-danger: #cd2b3 --color-success-bg: #e9f9ee;
+  --color-danger-bg: #fff0f0;
+  --color-editor-bg: #fafaf9;
+  --color-editor-gutter: #e8e7e3;
+  --scrollbar-thumb: #d0cec9;
+  --scrollbar-track: transparent;
+}
+
+.dark {
+  --color-bg: #141413;
+  --color-surface: #1e1d1b;
+  --color-surface-2: #272624;
+  --color-surface-3: #302f2c;
+  --color-border: #302f2c;
+  --color-border-strong: #403e3a;
+  --color-text: #e8e6e --color-text-muted: #9b989 --color-text-faint: #5c5a55;
+  --color-accent: #7b7bf0;
+  --color-accent-hover: #9898f5;
+  --color-accent-muted: #1f1f3a;
+  --color-success: #4cc38a;
+  --color-warning: #f1a10d;
+  --color-danger: #ff6369;
+  --color-success-bg: #0d2b1d;
+  --color-danger-bg: #2b0d0d;
+  --color-editor-bg: #1a1917;
+  --color-editor-gutter: #272624;
+  --scrollbar-thumb: #3a3835;
+  --scrollbar-track: transparent;
+}
+
+/* === Thin Custom Scrollbars (global) === */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-strong);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* === ResMarkup Syntax Highlighting (CSS-variable-driven, no dark: overrides needed) === */
+.cm-resmd-section {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.cm-resmd-entry {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.cm-resmd-key {
+  color: var(--color-accent);
+  opacity: 0.85;
+}
+
+.cm-resmd-bullet {
+  color: var(--color-text-muted);
+}
+
+/* === CodeMirror structural === */
+.cm-editor {
+  height: 100%;
+}
+
+.cm-scroller {
+  overflow: auto;
+}

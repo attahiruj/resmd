@@ -1,3 +1,1 @@
-export default function AuthPage() {
-  return <div>Auth Placeholder</div>;
-}
+export default function Page() { return <div>{"auth"}</div> }
