@@ -514,6 +514,12 @@ function Footer() {
           <Link href="/auth" className="hover:text-text transition-colors">
             Sign in
           </Link>
+          <Link href="/privacy" className="hover:text-text transition-colors">
+            Privacy
+          </Link>
+          <Link href="/terms" className="hover:text-text transition-colors">
+            Terms
+          </Link>
           <a
             href="https://buymeacoffee.com/hattahiroo"
             target="_blank"
