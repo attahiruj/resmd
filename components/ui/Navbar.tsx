@@ -1,12 +1,12 @@
-import Link from 'next/link'
-import { ReactNode } from 'react'
-import { CoffeeIcon } from '@phosphor-icons/react'
+import Link from 'next/link';
+import { ReactNode } from 'react';
+import { CoffeeIcon } from '@phosphor-icons/react';
 
 interface NavbarProps {
   /** Content inserted after the wordmark, preceded by a separator */
-  left?: ReactNode
+  left?: ReactNode;
   /** Right-side content — consumer controls layout (ml-auto, flex, gap) */
-  right?: ReactNode
+  right?: ReactNode;
 }
 
 export default function Navbar({ left, right }: NavbarProps) {
@@ -41,5 +41,5 @@ export default function Navbar({ left, right }: NavbarProps) {
         {right}
       </div>
     </div>
-  )
+  );
 }

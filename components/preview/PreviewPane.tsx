@@ -1,29 +1,33 @@
-'use client'
+'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { SquaresFourIcon, CaretDownIcon, SlidersHorizontalIcon } from '@phosphor-icons/react'
-import LivePreview from './LivePreview'
-import SettingsPanel from './SettingsPanel'
-import { getAllTemplates } from '@/lib/templates'
-import { parseResume } from '@/lib/parser'
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  SquaresFourIcon,
+  CaretDownIcon,
+  SlidersHorizontalIcon,
+} from '@phosphor-icons/react';
+import LivePreview from './LivePreview';
+import SettingsPanel from './SettingsPanel';
+import { getAllTemplates } from '@/lib/templates';
+import { parseResume } from '@/lib/parser';
 
 interface PreviewPaneProps {
-  rawContent: string
-  templateId: string
-  onTemplateChange: (id: string) => void
-  onContentChange?: (value: string) => void
-  isPro?: boolean
-  onTextDoubleClick?: (word: string, context: string) => void
+  rawContent: string;
+  templateId: string;
+  onTemplateChange: (id: string) => void;
+  onContentChange?: (value: string) => void;
+  isPro?: boolean;
+  onTextDoubleClick?: (word: string, context: string) => void;
 }
 
 function upsertDirective(raw: string, key: string, value: number): string {
-  const escaped = key.replace(/\./g, '\\.')
-  const regex = new RegExp(`^!${escaped}:.*$`, 'm')
-  const line = `!${key}: ${value}`
+  const escaped = key.replace(/\./g, '\\.');
+  const regex = new RegExp(`^!${escaped}:.*$`, 'm');
+  const line = `!${key}: ${value}`;
   if (regex.test(raw)) {
-    return raw.replace(regex, line)
+    return raw.replace(regex, line);
   }
-  return line + '\n' + raw
+  return line + '\n' + raw;
 }
 
 export default function PreviewPane({
@@ -34,20 +38,20 @@ export default function PreviewPane({
   isPro = false,
   onTextDoubleClick,
 }: PreviewPaneProps) {
-  const [showPicker, setShowPicker] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
-  const pickerRef = useRef<HTMLDivElement>(null)
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  const settingsPanelRef = useRef<HTMLDivElement>(null)
-  const settingsTriggerRef = useRef<HTMLButtonElement>(null)
-  const templates = getAllTemplates()
-  const current = templates.find((t) => t.id === templateId)
+  const [showPicker, setShowPicker] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const settingsPanelRef = useRef<HTMLDivElement>(null);
+  const settingsTriggerRef = useRef<HTMLButtonElement>(null);
+  const templates = getAllTemplates();
+  const current = templates.find((t) => t.id === templateId);
 
-  const parsedResume = useMemo(() => parseResume(rawContent), [rawContent])
+  const parsedResume = useMemo(() => parseResume(rawContent), [rawContent]);
 
   // Close picker on outside click
   useEffect(() => {
-    if (!showPicker) return
+    if (!showPicker) return;
     const handler = (e: MouseEvent) => {
       if (
         pickerRef.current &&
@@ -55,16 +59,16 @@ export default function PreviewPane({
         triggerRef.current &&
         !triggerRef.current.contains(e.target as Node)
       ) {
-        setShowPicker(false)
+        setShowPicker(false);
       }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [showPicker])
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showPicker]);
 
   // Close settings panel on outside click
   useEffect(() => {
-    if (!showSettings) return
+    if (!showSettings) return;
     const handler = (e: MouseEvent) => {
       if (
         settingsPanelRef.current &&
@@ -72,23 +76,28 @@ export default function PreviewPane({
         settingsTriggerRef.current &&
         !settingsTriggerRef.current.contains(e.target as Node)
       ) {
-        setShowSettings(false)
+        setShowSettings(false);
       }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [showSettings])
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showSettings]);
 
   function handleSettingChange(key: string, value: number) {
-    if (!onContentChange) return
-    onContentChange(upsertDirective(rawContent, key, value))
+    if (!onContentChange) return;
+    onContentChange(upsertDirective(rawContent, key, value));
   }
 
   return (
     <div className="relative h-full flex flex-col bg-surface-2">
       {/* Resume preview scroll area */}
       <div className="flex-1 overflow-hidden">
-        <LivePreview rawContent={rawContent} templateId={templateId} isPro={isPro} onTextDoubleClick={onTextDoubleClick} />
+        <LivePreview
+          rawContent={rawContent}
+          templateId={templateId}
+          isPro={isPro}
+          onTextDoubleClick={onTextDoubleClick}
+        />
       </div>
 
       {/* Settings trigger — top-right corner */}
@@ -106,7 +115,7 @@ export default function PreviewPane({
         )}
         <button
           ref={settingsTriggerRef}
-          onClick={() => setShowSettings(v => !v)}
+          onClick={() => setShowSettings((v) => !v)}
           title="Layout settings"
           className={`flex items-center justify-center w-7 h-7 rounded-lg border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
             showSettings
@@ -120,7 +129,6 @@ export default function PreviewPane({
 
       {/* Template picker trigger — floating pill at bottom center */}
       <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-
         {/* Picker card — appears above the trigger */}
         {showPicker && (
           <div
@@ -129,16 +137,16 @@ export default function PreviewPane({
             style={{ scrollbarWidth: 'none' }}
           >
             {templates.map((tpl) => {
-              const isActive = tpl.id === templateId
-              const isLocked = tpl.isPro && !isPro
+              const isActive = tpl.id === templateId;
+              const isLocked = tpl.isPro && !isPro;
               return (
                 <button
                   key={tpl.id}
                   disabled={isLocked}
                   onClick={() => {
                     if (!isLocked) {
-                      onTemplateChange(tpl.id)
-                      setShowPicker(false)
+                      onTemplateChange(tpl.id);
+                      setShowPicker(false);
                     }
                   }}
                   title={isLocked ? 'Upgrade to Pro' : tpl.name}
@@ -150,7 +158,9 @@ export default function PreviewPane({
                         : 'border-border hover:bg-surface-2 cursor-pointer'
                   }`}
                 >
-                  <span className={`text-sm font-medium ${isActive ? 'text-accent' : 'text-text'}`}>
+                  <span
+                    className={`text-sm font-medium ${isActive ? 'text-accent' : 'text-text'}`}
+                  >
                     {tpl.name}
                   </span>
                   {tpl.isPro && (
@@ -159,10 +169,12 @@ export default function PreviewPane({
                     </span>
                   )}
                   {!tpl.isPro && (
-                    <span className="mt-0.5 text-[10px] text-faint">{tpl.category}</span>
+                    <span className="mt-0.5 text-[10px] text-faint">
+                      {tpl.category}
+                    </span>
                   )}
                 </button>
-              )
+              );
             })}
           </div>
         )}
@@ -175,9 +187,13 @@ export default function PreviewPane({
         >
           <SquaresFourIcon size={13} className="text-muted" />
           <span>{current?.name ?? templateId}</span>
-          <CaretDownIcon size={11} weight="bold" className={`text-muted transition-transform duration-150 ${showPicker ? 'rotate-180' : ''}`} />
+          <CaretDownIcon
+            size={11}
+            weight="bold"
+            className={`text-muted transition-transform duration-150 ${showPicker ? 'rotate-180' : ''}`}
+          />
         </button>
       </div>
     </div>
-  )
+  );
 }

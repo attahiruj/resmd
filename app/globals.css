@@ -11,146 +11,146 @@
 
 :root {
   /* --- Surfaces (dark default) --- */
-  --color-bg:              #1B1B1E;
-  --color-surface:         #222226;
-  --color-surface-2:       #2A2A2E;
-  --color-surface-3:       #313137;
+  --color-bg: #1b1b1e;
+  --color-surface: #222226;
+  --color-surface-2: #2a2a2e;
+  --color-surface-3: #313137;
   --color-surface-overlay: rgba(27, 27, 30, 0.85);
 
   /* --- Borders --- */
-  --color-border:          #2E2E34;
-  --color-border-strong:   #3A3A42;
-  --color-border-focus:    #C8F135;
+  --color-border: #2e2e34;
+  --color-border-strong: #3a3a42;
+  --color-border-focus: #c8f135;
 
   /* --- Text --- */
-  --color-text:            #E8E6DF;
-  --color-text-muted:      #8A8A92;
-  --color-text-faint:      #48484F;
-  --color-text-inverse:    #1B1B1E;
+  --color-text: #e8e6df;
+  --color-text-muted: #8a8a92;
+  --color-text-faint: #48484f;
+  --color-text-inverse: #1b1b1e;
 
   /* --- Primary Accent: Citron Spark --- */
-  --color-accent:          #C8F135;
-  --color-accent-hover:    #D4F84E;
-  --color-accent-active:   #B0DA20;
-  --color-accent-muted:    rgba(200, 241, 53, 0.10);
+  --color-accent: #c8f135;
+  --color-accent-hover: #d4f84e;
+  --color-accent-active: #b0da20;
+  --color-accent-muted: rgba(200, 241, 53, 0.1);
   --color-accent-muted-hover: rgba(200, 241, 53, 0.16);
-  --color-accent-text:     #0D0F14;
+  --color-accent-text: #0d0f14;
 
   /* --- Secondary Accent: Glacier Blue (AI moments) --- */
-  --color-secondary:         #4DAAFF;
-  --color-secondary-hover:   #69B8FF;
-  --color-secondary-active:  #3494E6;
-  --color-secondary-muted:   rgba(77, 170, 255, 0.10);
+  --color-secondary: #4daaff;
+  --color-secondary-hover: #69b8ff;
+  --color-secondary-active: #3494e6;
+  --color-secondary-muted: rgba(77, 170, 255, 0.1);
 
   /* --- Status Colors --- */
-  --color-success:           #4ADE80;
-  --color-success-bg:        rgba(74, 222, 128, 0.10);
-  --color-warning:           #FBBF24;
-  --color-warning-bg:        rgba(251, 191, 36, 0.10);
-  --color-danger:            #F87171;
-  --color-danger-bg:         rgba(248, 113, 113, 0.10);
-  --color-info:              #4DAAFF;
-  --color-info-bg:           rgba(77, 170, 255, 0.10);
+  --color-success: #4ade80;
+  --color-success-bg: rgba(74, 222, 128, 0.1);
+  --color-warning: #fbbf24;
+  --color-warning-bg: rgba(251, 191, 36, 0.1);
+  --color-danger: #f87171;
+  --color-danger-bg: rgba(248, 113, 113, 0.1);
+  --color-info: #4daaff;
+  --color-info-bg: rgba(77, 170, 255, 0.1);
 
   /* --- Editor --- */
-  --color-editor-bg:         #1B1B1E;
-  --color-editor-gutter:     #222226;
-  --color-editor-line-hl:    rgba(200, 241, 53, 0.04);
-  --color-editor-selection:  rgba(200, 241, 53, 0.15);
-  --color-editor-cursor:     #C8F135;
+  --color-editor-bg: #1b1b1e;
+  --color-editor-gutter: #222226;
+  --color-editor-line-hl: rgba(200, 241, 53, 0.04);
+  --color-editor-selection: rgba(200, 241, 53, 0.15);
+  --color-editor-cursor: #c8f135;
 
   /* --- Scrollbar --- */
-  --scrollbar-thumb:  #3A3A42;
-  --scrollbar-track:  transparent;
+  --scrollbar-thumb: #3a3a42;
+  --scrollbar-track: transparent;
 
   /* --- Elevation Shadows (dark) --- */
-  --shadow-sm:   0 1px 3px rgba(0,0,0,0.4);
-  --shadow-md:   0 4px 16px rgba(0,0,0,0.5);
-  --shadow-lg:   0 8px 32px rgba(0,0,0,0.6);
-  --shadow-xl:   0 16px 56px rgba(0,0,0,0.7);
-  --shadow-accent: 0 0 20px rgba(200, 241, 53, 0.20);
-  --shadow-accent-strong: 0 0 40px rgba(200, 241, 53, 0.30);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 16px 56px rgba(0, 0, 0, 0.7);
+  --shadow-accent: 0 0 20px rgba(200, 241, 53, 0.2);
+  --shadow-accent-strong: 0 0 40px rgba(200, 241, 53, 0.3);
 
   /* --- Radius --- */
-  --radius-sm:   6px;
-  --radius-md:   8px;
-  --radius-lg:   12px;
-  --radius-xl:   16px;
-  --radius-2xl:  24px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
   --radius-full: 9999px;
 
   /* --- Template Accent Colors --- */
-    --color-template-minimal: #8B8B8B;
-    --color-template-modern: #4DAAFF;
-    --color-template-executive: #C8F135;
-    --color-template-creative: #F472B6;
-    --color-template-technical: #A78BFA;
+  --color-template-minimal: #8b8b8b;
+  --color-template-modern: #4daaff;
+  --color-template-executive: #c8f135;
+  --color-template-creative: #f472b6;
+  --color-template-technical: #a78bfa;
   /* --- Typography --- */
   --font-display: 'Instrument Serif', Georgia, serif;
-  --font-ui:      'DM Sans', system-ui, sans-serif;
-  --font-mono:    'Geist Mono', 'Fira Code', monospace;
+  --font-ui: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'Fira Code', monospace;
 }
 
 /* ============================================================
    LIGHT MODE OVERRIDES
    ============================================================ */
 .light {
-  --color-bg:              #F9F8F5;
-  --color-surface:         #FFFFFF;
-  --color-surface-2:       #F3F2EE;
-  --color-surface-3:       #E8E6DF;
-  --color-surface-overlay: rgba(249, 248, 245, 0.90);
+  --color-bg: #f9f8f5;
+  --color-surface: #ffffff;
+  --color-surface-2: #f3f2ee;
+  --color-surface-3: #e8e6df;
+  --color-surface-overlay: rgba(249, 248, 245, 0.9);
 
-  --color-border:          #E2E0D8;
-  --color-border-strong:   #C8C5BA;
-  --color-border-focus:    #8BBF1A;
+  --color-border: #e2e0d8;
+  --color-border-strong: #c8c5ba;
+  --color-border-focus: #8bbf1a;
 
-  --color-text:            #1A1C23;
-  --color-text-muted:      #5A5E6E;
-  --color-text-faint:      #9CA3AF;
-  --color-text-inverse:    #FFFFFF;
+  --color-text: #1a1c23;
+  --color-text-muted: #5a5e6e;
+  --color-text-faint: #9ca3af;
+  --color-text-inverse: #ffffff;
 
-  --color-accent:          #7AA314;
-  --color-accent-hover:    #6A8F10;
-  --color-accent-active:   #5A7A0D;
-  --color-accent-muted:    rgba(122, 163, 20, 0.10);
+  --color-accent: #7aa314;
+  --color-accent-hover: #6a8f10;
+  --color-accent-active: #5a7a0d;
+  --color-accent-muted: rgba(122, 163, 20, 0.1);
   --color-accent-muted-hover: rgba(122, 163, 20, 0.16);
-  --color-accent-text:     #FFFFFF;
+  --color-accent-text: #ffffff;
 
-  --color-secondary:         #0073CC;
-  --color-secondary-hover:   #005FA8;
-  --color-secondary-active:  #004D8A;
-  --color-secondary-muted:   rgba(0, 115, 204, 0.08);
+  --color-secondary: #0073cc;
+  --color-secondary-hover: #005fa8;
+  --color-secondary-active: #004d8a;
+  --color-secondary-muted: rgba(0, 115, 204, 0.08);
 
-  --color-success:           #15803D;
-  --color-success-bg:        #DCFCE7;
-  --color-warning:           #B45309;
-  --color-warning-bg:        #FEF3C7;
-  --color-danger:            #DC2626;
-  --color-danger-bg:         #FEE2E2;
-  --color-info:              #0073CC;
-  --color-info-bg:           #DBEAFE;
+  --color-success: #15803d;
+  --color-success-bg: #dcfce7;
+  --color-warning: #b45309;
+  --color-warning-bg: #fef3c7;
+  --color-danger: #dc2626;
+  --color-danger-bg: #fee2e2;
+  --color-info: #0073cc;
+  --color-info-bg: #dbeafe;
 
-  --color-editor-bg:         #FAFAF8;
-  --color-editor-gutter:     #F0EFEB;
-  --color-editor-line-hl:    rgba(122, 163, 20, 0.05);
-  --color-editor-selection:  rgba(122, 163, 20, 0.12);
-  --color-editor-cursor:     #7AA314;
+  --color-editor-bg: #fafaf8;
+  --color-editor-gutter: #f0efeb;
+  --color-editor-line-hl: rgba(122, 163, 20, 0.05);
+  --color-editor-selection: rgba(122, 163, 20, 0.12);
+  --color-editor-cursor: #7aa314;
 
-  --scrollbar-thumb: #C8C5BA;
+  --scrollbar-thumb: #c8c5ba;
 
-  --shadow-sm:   0 1px 3px rgba(0,0,0,0.08);
-  --shadow-md:   0 4px 16px rgba(0,0,0,0.10);
-  --shadow-lg:   0 8px 32px rgba(0,0,0,0.12);
-  --shadow-xl:   0 16px 56px rgba(0,0,0,0.15);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 16px 56px rgba(0, 0, 0, 0.15);
   --shadow-accent: 0 0 20px rgba(122, 163, 20, 0.15);
   --shadow-accent-strong: 0 0 40px rgba(122, 163, 20, 0.25);
-/* --- Template Accent Colors --- */
-  --color-template-minimal: #6B6B6B;
-  --color-template-modern: #0073CC;
-  --color-template-executive: #5A8F0D;
-  --color-template-creative: #DB2777;
-  --color-template-technical: #7C3AED;
+  /* --- Template Accent Colors --- */
+  --color-template-minimal: #6b6b6b;
+  --color-template-modern: #0073cc;
+  --color-template-executive: #5a8f0d;
+  --color-template-creative: #db2777;
+  --color-template-technical: #7c3aed;
 }
 
 /* ============================================================
@@ -161,30 +161,57 @@
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
-*::-webkit-scrollbar          { width: 5px; height: 5px; }
-*::-webkit-scrollbar-track    { background: var(--scrollbar-track); }
-*::-webkit-scrollbar-thumb    {
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+*::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
   border-radius: 9999px;
 }
-*::-webkit-scrollbar-thumb:hover { background: var(--color-border-strong); }
-*::-webkit-scrollbar-corner   { background: transparent; }
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-strong);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
 
 /* ============================================================
    ResMarkup Syntax Highlighting
    All classes use CSS variables — no dark: overrides needed.
    ============================================================ */
-.cm-resmd-directive { color: var(--color-text-faint); font-style: italic; }
-.cm-resmd-section   { color: var(--color-accent); font-weight: 700; }
-.cm-resmd-entry     { color: var(--color-text); font-weight: 600; }
-.cm-resmd-key       { color: var(--color-accent); opacity: 0.8; }
-.cm-resmd-bullet    { color: var(--color-text-muted); }
+.cm-resmd-directive {
+  color: var(--color-text-faint);
+  font-style: italic;
+}
+.cm-resmd-section {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+.cm-resmd-entry {
+  color: var(--color-text);
+  font-weight: 600;
+}
+.cm-resmd-key {
+  color: var(--color-accent);
+  opacity: 0.8;
+}
+.cm-resmd-bullet {
+  color: var(--color-text-muted);
+}
 
 /* ============================================================
    CodeMirror structural
    ============================================================ */
-.cm-editor  { height: 100%; }
-.cm-scroller { overflow: auto; }
+.cm-editor {
+  height: 100%;
+}
+.cm-scroller {
+  overflow: auto;
+}
 
 /* ============================================================
    Glow utilities
@@ -201,28 +228,56 @@
    Animations
    ============================================================ */
 @keyframes modal-in {
-  from { opacity: 0; transform: scale(0.97); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes slide-in-right {
-  from { transform: translateX(100%); }
-  to   { transform: translateX(0); }
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes typing-bounce {
-  0%, 80%, 100% { transform: translateY(0); }
-  40%           { transform: translateY(-4px); }
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-4px);
+  }
 }
 
 @keyframes variant-node-in {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ============================================================
@@ -231,7 +286,6 @@
 
 /* Animated dot grid background */
 @keyframes grid-pulse {
-
   0%,
   100% {
     opacity: 0.03;
@@ -243,14 +297,17 @@
 }
 
 .bg-dot-grid {
-  background-image: radial-gradient(circle, var(--color-accent) 1px, transparent 1px);
+  background-image: radial-gradient(
+    circle,
+    var(--color-accent) 1px,
+    transparent 1px
+  );
   background-size: 32px 32px;
   animation: grid-pulse 4s ease-in-out infinite;
 }
 
 /* Floating decorative shapes */
 @keyframes float {
-
   0%,
   100% {
     transform: translateY(0) rotate(0deg);
@@ -262,7 +319,6 @@
 }
 
 @keyframes float-reverse {
-
   0%,
   100% {
     transform: translateY(0) rotate(0deg);
@@ -293,12 +349,14 @@
 
 /* Gradient text with shimmer */
 .text-gradient-shimmer {
-  background: linear-gradient(90deg,
-      var(--color-accent) 0%,
-      var(--color-secondary) 25%,
-      var(--color-accent) 50%,
-      var(--color-secondary) 75%,
-      var(--color-accent) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--color-accent) 0%,
+    var(--color-secondary) 25%,
+    var(--color-accent) 50%,
+    var(--color-secondary) 75%,
+    var(--color-accent) 100%
+  );
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -329,9 +387,17 @@
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, var(--color-accent), var(--color-secondary));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  background: linear-gradient(
+    135deg,
+    var(--color-accent),
+    var(--color-secondary)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   opacity: 0;
@@ -382,7 +448,6 @@
 
 /* Terminal cursor blink */
 @keyframes cursor-blink {
-
   0%,
   50% {
     opacity: 1;
@@ -400,7 +465,9 @@
 
 /* Card hover lift */
 .card-lift {
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  transition:
+    transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s ease;
 }
 
 .card-lift:hover {

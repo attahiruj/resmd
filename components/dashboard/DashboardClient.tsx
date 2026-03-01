@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useMemo, useRef, Suspense } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useState, useEffect, useMemo, useRef, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   PlusIcon,
   TrashIcon,
@@ -19,15 +19,15 @@ import {
   FileTextIcon,
   SunIcon,
   MoonIcon,
-} from "@phosphor-icons/react";
-import type { ResumeVariant } from "@/types/resume";
-import { parseResume } from "@/lib/parser";
-import { getTemplate } from "@/lib/templates";
-import { LIMITS } from "@/lib/limits";
-import { applyTheme, getStoredThemePrefs } from "@/lib/themes";
-import CloneModal from "@/components/variants/CloneModal";
-import OnboardingModal from "@/components/ui/OnboardingModal";
-import Navbar from "@/components/ui/Navbar";
+} from '@phosphor-icons/react';
+import type { ResumeVariant } from '@/types/resume';
+import { parseResume } from '@/lib/parser';
+import { getTemplate } from '@/lib/templates';
+import { LIMITS } from '@/lib/limits';
+import { applyTheme, getStoredThemePrefs } from '@/lib/themes';
+import CloneModal from '@/components/variants/CloneModal';
+import OnboardingModal from '@/components/ui/OnboardingModal';
+import Navbar from '@/components/ui/Navbar';
 
 interface DashboardClientProps {
   initialVariants: ResumeVariant[];
@@ -35,24 +35,24 @@ interface DashboardClientProps {
   userEmail: string;
 }
 
-type SortOption = "updatedAt" | "title" | "templateId";
-type SortDirection = "asc" | "desc";
-type ViewMode = "grid" | "list";
+type SortOption = 'updatedAt' | 'title' | 'templateId';
+type SortDirection = 'asc' | 'desc';
+type ViewMode = 'grid' | 'list';
 
 const TEMPLATE_INFO: Record<string, { name: string; color: string }> = {
-  minimal: { name: "Minimal", color: "var(--color-template-minimal)" },
-  modern: { name: "Modern", color: "var(--color-template-modern)" },
-  executive: { name: "Executive", color: "var(--color-template-executive)" },
-  creative: { name: "Creative", color: "var(--color-template-creative)" },
-  technical: { name: "Technical", color: "var(--color-template-technical)" },
+  minimal: { name: 'Minimal', color: 'var(--color-template-minimal)' },
+  modern: { name: 'Modern', color: 'var(--color-template-modern)' },
+  executive: { name: 'Executive', color: 'var(--color-template-executive)' },
+  creative: { name: 'Creative', color: 'var(--color-template-creative)' },
+  technical: { name: 'Technical', color: 'var(--color-template-technical)' },
 };
 
 const TEMPLATE_PREVIEWS = [
-  { id: "minimal", name: "Minimal", description: "Clean and simple design" },
-  { id: "modern", name: "Modern", description: "Contemporary layout" },
-  { id: "executive", name: "Executive", description: "Professional look" },
-  { id: "creative", name: "Creative", description: "Stand out from the crowd" },
-  { id: "technical", name: "Technical", description: "For tech roles" },
+  { id: 'minimal', name: 'Minimal', description: 'Clean and simple design' },
+  { id: 'modern', name: 'Modern', description: 'Contemporary layout' },
+  { id: 'executive', name: 'Executive', description: 'Professional look' },
+  { id: 'creative', name: 'Creative', description: 'Stand out from the crowd' },
+  { id: 'technical', name: 'Technical', description: 'For tech roles' },
 ];
 
 export default function DashboardClient({
@@ -66,10 +66,10 @@ export default function DashboardClient({
   const [cloneSource, setCloneSource] = useState<ResumeVariant | null>(null);
   const [cloning, setCloning] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<SortOption>("updatedAt");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('updatedAt');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [isDark, setIsDark] = useState(true);
   const router = useRouter();
@@ -77,18 +77,18 @@ export default function DashboardClient({
   useEffect(() => {
     const { themeId, mode } = getStoredThemePrefs();
     applyTheme(themeId, mode);
-    setIsDark(mode === "dark");
+    setIsDark(mode === 'dark');
   }, []);
 
   const toggleTheme = () => {
-    const newMode = isDark ? "light" : "dark";
+    const newMode = isDark ? 'light' : 'dark';
     const { themeId } = getStoredThemePrefs();
     applyTheme(themeId, newMode);
     setIsDark(!isDark);
   };
 
   useEffect(() => {
-    if (!localStorage.getItem("resmd_onboarded")) {
+    if (!localStorage.getItem('resmd_onboarded')) {
       setShowOnboarding(true);
     }
   }, []);
@@ -109,18 +109,18 @@ export default function DashboardClient({
     result.sort((a, b) => {
       let comparison = 0;
       switch (sortBy) {
-        case "title":
+        case 'title':
           comparison = a.title.localeCompare(b.title);
           break;
-        case "templateId":
+        case 'templateId':
           comparison = a.templateId.localeCompare(b.templateId);
           break;
-        case "updatedAt":
+        case 'updatedAt':
         default:
           comparison =
             new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
       }
-      return sortDirection === "asc" ? comparison : -comparison;
+      return sortDirection === 'asc' ? comparison : -comparison;
     });
 
     return result;
@@ -129,20 +129,20 @@ export default function DashboardClient({
   const handleNewResume = async () => {
     setCreating(true);
     try {
-      const res = await fetch("/api/variants", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/variants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: "My Resume",
-          rawContent: "",
-          templateId: "minimal",
+          title: 'My Resume',
+          rawContent: '',
+          templateId: 'minimal',
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to create variant");
+      if (!res.ok) throw new Error(data.error ?? 'Failed to create variant');
       router.push(`/editor/${data.data.id}`);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to create resume");
+      alert(err instanceof Error ? err.message : 'Failed to create resume');
       setCreating(false);
     }
   };
@@ -150,11 +150,11 @@ export default function DashboardClient({
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/variants/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete");
+      const res = await fetch(`/api/variants/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete');
       setVariants((prev) => prev.filter((v) => v.id !== id));
     } catch {
-      alert("Failed to delete variant");
+      alert('Failed to delete variant');
     } finally {
       setDeletingId(null);
     }
@@ -165,25 +165,25 @@ export default function DashboardClient({
     setCloning(true);
     try {
       const res = await fetch(`/api/variants/${cloneSource.id}/clone`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to clone");
+      if (!res.ok) throw new Error(data.error ?? 'Failed to clone');
       router.push(`/editor/${data.data.id}`);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to clone variant");
+      alert(err instanceof Error ? err.message : 'Failed to clone variant');
       setCloning(false);
     }
   };
 
   const toggleSort = (option: SortOption) => {
     if (sortBy === option) {
-      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortBy(option);
-      setSortDirection("desc");
+      setSortDirection('desc');
     }
   };
 
@@ -191,17 +191,17 @@ export default function DashboardClient({
     <div className="absolute right-0 top-full mt-2 w-48 bg-surface border border-border rounded-xl shadow-lg overflow-hidden z-20">
       <button
         onClick={() => {
-          toggleSort("updatedAt");
+          toggleSort('updatedAt');
           setShowSortMenu(false);
         }}
-        className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-surface-2 transition-colors ${sortBy === "updatedAt" ? "text-accent" : "text-text"}`}
+        className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-surface-2 transition-colors ${sortBy === 'updatedAt' ? 'text-accent' : 'text-text'}`}
       >
         <span className="flex items-center gap-2">
           <ClockIcon size={16} />
           Last Modified
         </span>
-        {sortBy === "updatedAt" &&
-          (sortDirection === "asc" ? (
+        {sortBy === 'updatedAt' &&
+          (sortDirection === 'asc' ? (
             <ArrowUpIcon size={14} />
           ) : (
             <ArrowDownIcon size={14} />
@@ -209,17 +209,17 @@ export default function DashboardClient({
       </button>
       <button
         onClick={() => {
-          toggleSort("title");
+          toggleSort('title');
           setShowSortMenu(false);
         }}
-        className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-surface-2 transition-colors ${sortBy === "title" ? "text-accent" : "text-text"}`}
+        className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-surface-2 transition-colors ${sortBy === 'title' ? 'text-accent' : 'text-text'}`}
       >
         <span className="flex items-center gap-2">
           <FileTextIcon size={16} />
           Title
         </span>
-        {sortBy === "title" &&
-          (sortDirection === "asc" ? (
+        {sortBy === 'title' &&
+          (sortDirection === 'asc' ? (
             <ArrowUpIcon size={14} />
           ) : (
             <ArrowDownIcon size={14} />
@@ -227,17 +227,17 @@ export default function DashboardClient({
       </button>
       <button
         onClick={() => {
-          toggleSort("templateId");
+          toggleSort('templateId');
           setShowSortMenu(false);
         }}
-        className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-surface-2 transition-colors ${sortBy === "templateId" ? "text-accent" : "text-text"}`}
+        className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between hover:bg-surface-2 transition-colors ${sortBy === 'templateId' ? 'text-accent' : 'text-text'}`}
       >
         <span className="flex items-center gap-2">
           <SquaresFourIcon size={16} />
           Template
         </span>
-        {sortBy === "templateId" &&
-          (sortDirection === "asc" ? (
+        {sortBy === 'templateId' &&
+          (sortDirection === 'asc' ? (
             <ArrowUpIcon size={14} />
           ) : (
             <ArrowDownIcon size={14} />
@@ -254,7 +254,7 @@ export default function DashboardClient({
             <button
               onClick={toggleTheme}
               className="p-2 rounded-full text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
             </button>
@@ -283,7 +283,7 @@ export default function DashboardClient({
             <h1 className="text-xl font-semibold text-text">My Resumes</h1>
             <p className="text-sm text-muted mt-0.5">
               {isPro
-                ? "Unlimited variants"
+                ? 'Unlimited variants'
                 : `${variants.length} / ${LIMITS.FREE_VARIANTS} free variants`}
             </p>
           </div>
@@ -324,10 +324,10 @@ export default function DashboardClient({
         {/* Free tier upgrade nudge */}
         {atLimit && variants.length > 0 && (
           <div className="mb-6 p-4 bg-accent-muted border border-accent/20 rounded-xl text-sm text-text">
-            <span className="font-medium">Free plan limit reached.</span>{" "}
+            <span className="font-medium">Free plan limit reached.</span>{' '}
             <Link href="/pricing" className="text-accent hover:underline">
               Upgrade to Pro
-            </Link>{" "}
+            </Link>{' '}
             for unlimited resume variants.
           </div>
         )}
@@ -370,7 +370,7 @@ export default function DashboardClient({
                   <div
                     className="w-12 h-16 rounded-md mb-3 flex items-center justify-center text-lg font-medium"
                     style={{
-                      backgroundColor: TEMPLATE_INFO[template.id]?.color + "20",
+                      backgroundColor: TEMPLATE_INFO[template.id]?.color + '20',
                       color: TEMPLATE_INFO[template.id]?.color,
                     }}
                   >
@@ -391,7 +391,7 @@ export default function DashboardClient({
               disabled={creating || atLimit}
               className="px-6 py-2.5 bg-accent hover:bg-accent-hover text-accent-text text-sm font-medium rounded-lg transition-colors duration-150 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
-              {creating ? "Creating…" : "Start with Blank Resume"}
+              {creating ? 'Creating…' : 'Start with Blank Resume'}
             </button>
           </div>
         ) : (
@@ -423,13 +423,13 @@ export default function DashboardClient({
                   >
                     <FunnelIcon size={16} />
                     <span className="hidden sm:inline">
-                      {sortBy === "updatedAt"
-                        ? "Modified"
-                        : sortBy === "title"
-                          ? "Title"
-                          : "Template"}
+                      {sortBy === 'updatedAt'
+                        ? 'Modified'
+                        : sortBy === 'title'
+                          ? 'Title'
+                          : 'Template'}
                     </span>
-                    {sortDirection === "asc" ? (
+                    {sortDirection === 'asc' ? (
                       <ArrowUpIcon size={14} />
                     ) : (
                       <ArrowDownIcon size={14} />
@@ -441,15 +441,15 @@ export default function DashboardClient({
                 {/* View Toggle */}
                 <div className="flex items-center bg-surface border border-border rounded-lg p-1 h-full">
                   <button
-                    onClick={() => setViewMode("grid")}
-                    className={`p-2 rounded-md transition-colors ${viewMode === "grid" ? "bg-accent text-accent-text" : "text-muted hover:text-text"}`}
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-accent text-accent-text' : 'text-muted hover:text-text'}`}
                     title="Grid view"
                   >
                     <SquaresFourIcon size={18} />
                   </button>
                   <button
-                    onClick={() => setViewMode("list")}
-                    className={`p-2 rounded-md transition-colors ${viewMode === "list" ? "bg-accent text-accent-text" : "text-muted hover:text-text"}`}
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-accent text-accent-text' : 'text-muted hover:text-text'}`}
                     title="List view"
                   >
                     <ListIcon size={18} />
@@ -462,10 +462,10 @@ export default function DashboardClient({
             {filteredVariants.length === 0 && searchQuery && (
               <div className="text-center py-12">
                 <p className="text-muted">
-                  No resumes found matching "{searchQuery}"
+                  No resumes found matching &quot;{searchQuery}&quot;
                 </p>
                 <button
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => setSearchQuery('')}
                   className="text-sm text-accent hover:underline mt-2"
                 >
                   Clear search
@@ -474,7 +474,7 @@ export default function DashboardClient({
             )}
 
             {/* Variants Display */}
-            {viewMode === "grid" ? (
+            {viewMode === 'grid' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredVariants.map((variant, index) => (
                   <VariantCard
@@ -544,20 +544,20 @@ export default function DashboardClient({
   async function handleNewResumeWithTemplate(templateId: string) {
     setCreating(true);
     try {
-      const res = await fetch("/api/variants", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/variants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: "My Resume",
-          rawContent: "",
+          title: 'My Resume',
+          rawContent: '',
           templateId,
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to create variant");
+      if (!res.ok) throw new Error(data.error ?? 'Failed to create variant');
       router.push(`/editor/${data.data.id}`);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to create resume");
+      alert(err instanceof Error ? err.message : 'Failed to create resume');
       setCreating(false);
     }
   }
@@ -604,7 +604,7 @@ function ResumeThumbnail({
       className="w-full h-full flex items-center justify-center text-3xl font-bold"
       style={{ color: templateInfo.color }}
     >
-      {variant.title.charAt(0).toUpperCase() || "R"}
+      {variant.title.charAt(0).toUpperCase() || 'R'}
     </div>
   );
 
@@ -615,9 +615,9 @@ function ResumeThumbnail({
           <div
             style={{
               width: RESUME_NATURAL_WIDTH,
-              transformOrigin: "top left",
+              transformOrigin: 'top left',
               transform: `scale(${scale})`,
-              pointerEvents: "none",
+              pointerEvents: 'none',
             }}
           >
             <TemplateComponent resume={parsedResume} isPro={isPro} />
@@ -643,7 +643,7 @@ function VariantCard({
 }: {
   variant: ResumeVariant;
   index: number;
-  viewMode: "grid" | "list";
+  viewMode: 'grid' | 'list';
   clonedFromTitle?: string | null;
   isDeleting: boolean;
   isPro: boolean;
@@ -655,10 +655,10 @@ function VariantCard({
   const relativeDate = formatRelative(updatedAt);
   const templateInfo = TEMPLATE_INFO[variant.templateId] || {
     name: variant.templateId,
-    color: "var(--color-template-minimal)",
+    color: 'var(--color-template-minimal)',
   };
 
-  if (viewMode === "grid") {
+  if (viewMode === 'grid') {
     return (
       <div
         onClick={onOpen}
@@ -676,7 +676,7 @@ function VariantCard({
             <span
               className="text-[10px] font-medium px-2 py-0.5 rounded-full"
               style={{
-                backgroundColor: templateInfo.color + "20",
+                backgroundColor: templateInfo.color + '20',
                 color: templateInfo.color,
               }}
             >
@@ -695,7 +695,7 @@ function VariantCard({
           {clonedFromTitle && (
             <p className="text-xs text-muted mt-1 flex items-center gap-1">
               <CopySimpleIcon size={11} />
-              Cloned from{" "}
+              Cloned from{' '}
               <span className="text-text font-medium">{clonedFromTitle}</span>
             </p>
           )}
@@ -759,11 +759,11 @@ function VariantCard({
       <div
         className="w-12 h-14 rounded-md flex-shrink-0 flex items-center justify-center text-lg font-bold"
         style={{
-          backgroundColor: "var(--color-surface-2)",
+          backgroundColor: 'var(--color-surface-2)',
           color: templateInfo.color,
         }}
       >
-        {variant.title.charAt(0).toUpperCase() || "R"}
+        {variant.title.charAt(0).toUpperCase() || 'R'}
       </div>
 
       <div className="flex-1 min-w-0">
@@ -774,7 +774,7 @@ function VariantCard({
           <span
             className="text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0"
             style={{
-              backgroundColor: templateInfo.color + "20",
+              backgroundColor: templateInfo.color + '20',
               color: templateInfo.color,
             }}
           >
@@ -785,7 +785,7 @@ function VariantCard({
         {clonedFromTitle && (
           <p className="text-xs text-muted mt-0.5 flex items-center gap-1">
             <CopySimpleIcon size={11} />
-            Cloned from{" "}
+            Cloned from{' '}
             <span className="text-text font-medium">{clonedFromTitle}</span>
           </p>
         )}
@@ -831,9 +831,9 @@ function VariantCard({
 }
 
 function formatRelative(date: Date): string {
-  const diff = Math.floor((Date.now() - date.getTime()) / 1000)
-  if (diff < 60) return 'just now'
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
-  return `${Math.floor(diff / 86400)}d ago`
+  const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
 }

@@ -1,11 +1,11 @@
-import type { Metadata } from 'next'
-import Link from 'next/link'
-import { LIMITS } from '@/lib/limits'
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { LIMITS } from '@/lib/limits';
 
 export const metadata: Metadata = {
   title: 'Pricing',
   description: `resmd is free during early access. ${LIMITS.FREE_VARIANTS} resumes, all templates, PDF export, and AI assistance — no credit card required.`,
-}
+};
 
 const FREE_FEATURES = [
   `Up to ${LIMITS.FREE_VARIANTS} resume variants`,
@@ -14,7 +14,7 @@ const FREE_FEATURES = [
   `AI assistant (${LIMITS.FREE_AI_PER_MONTH} uses/month)`,
   `${LIMITS.FREE_SNAPSHOTS} saved snapshots per resume`,
   'Public shareable link',
-]
+];
 
 const PRO_FEATURES = [
   'Unlimited resume variants',
@@ -23,7 +23,7 @@ const PRO_FEATURES = [
   'Unlimited AI assistant',
   'Unlimited snapshot history',
   'Priority support',
-]
+];
 
 const FAQ = [
   {
@@ -46,7 +46,7 @@ const FAQ = [
     q: 'How many resumes can I create?',
     a: `Up to ${LIMITS.FREE_VARIANTS} resume variants on the free plan. Clone any resume to create a targeted variant for a specific job application.`,
   },
-]
+];
 
 export default function PricingPage() {
   return (
@@ -210,7 +210,7 @@ export default function PricingPage() {
 
       <footer className="border-t border-border py-8 text-center">
         <p className="text-xs text-faint">
-          Everything is free while resmd is in early access.{" "}
+          Everything is free while resmd is in early access.{' '}
           <Link
             href="/dashboard"
             className="text-muted hover:text-text transition-colors duration-150"

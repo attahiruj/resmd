@@ -38,46 +38,47 @@ You may include multiple edit blocks in one response. After the blocks, add a on
 ## Current resume
 \`\`\`
 ${resumeContent || '(no resume content yet)'}
-\`\`\``
+\`\`\``;
 }
 
 /** OpenRouter model identifier — override via OPENROUTER_MODEL env var */
-export const AI_MODEL = process.env.OPENROUTER_MODEL ?? 'google/gemma-3n-e4b-it:free'
+export const AI_MODEL =
+  process.env.OPENROUTER_MODEL ?? 'google/gemma-3n-e4b-it:free';
 
 /** Max tokens to request from the model */
-export const AI_MAX_TOKENS = 1024
+export const AI_MAX_TOKENS = 1024;
 
 // ---------------------------------------------------------------------------
 // Edit parsing
 // ---------------------------------------------------------------------------
 
 export interface Edit {
-  search: string
-  replace: string
+  search: string;
+  replace: string;
 }
 
 export interface ParsedReply {
-  prose: string
-  edits: Edit[]
+  prose: string;
+  edits: Edit[];
 }
 
-const BLOCK_RE = /<<<SEARCH>>>([\s\S]*?)<<<REPLACE>>>([\s\S]*?)<<<END>>>/g
+const BLOCK_RE = /<<<SEARCH>>>([\s\S]*?)<<<REPLACE>>>([\s\S]*?)<<<END>>>/g;
 
 /**
  * Splits an AI reply into conversational prose and structured edit blocks.
  * Edit blocks are stripped from the prose so the chat bubble stays clean.
  */
 export function parseSuggestion(reply: string): ParsedReply {
-  const edits: Edit[] = []
-  let match: RegExpExecArray | null
+  const edits: Edit[] = [];
+  let match: RegExpExecArray | null;
 
-  BLOCK_RE.lastIndex = 0
+  BLOCK_RE.lastIndex = 0;
   while ((match = BLOCK_RE.exec(reply)) !== null) {
-    const search = match[1].trim()
-    const replace = match[2].trim()
-    if (search) edits.push({ search, replace })
+    const search = match[1].trim();
+    const replace = match[2].trim();
+    if (search) edits.push({ search, replace });
   }
 
-  const prose = reply.replace(/<<<SEARCH>>>[\s\S]*?<<<END>>>/g, '').trim()
-  return { prose, edits }
+  const prose = reply.replace(/<<<SEARCH>>>[\s\S]*?<<<END>>>/g, '').trim();
+  return { prose, edits };
 }

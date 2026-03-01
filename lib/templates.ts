@@ -1,5 +1,5 @@
-import React from 'react'
-import type { TemplateDefinition, TemplateProps } from '@/types/resume'
+import React from 'react';
+import type { TemplateDefinition, TemplateProps } from '@/types/resume';
 
 const templates: TemplateDefinition[] = [
   {
@@ -9,8 +9,12 @@ const templates: TemplateDefinition[] = [
     category: 'minimal',
     isPro: false,
     thumbnail: '',
-    component: React.lazy(() => import('@/components/templates/Minimal')) as React.ComponentType<TemplateProps>,
-    pdfComponent: React.lazy(() => import('@/components/templates/pdf/Minimal')) as React.ComponentType<TemplateProps>,
+    component: React.lazy(
+      () => import('@/components/templates/Minimal')
+    ) as React.ComponentType<TemplateProps>,
+    pdfComponent: React.lazy(
+      () => import('@/components/templates/pdf/Minimal')
+    ) as React.ComponentType<TemplateProps>,
   },
   {
     id: 'modern',
@@ -19,8 +23,12 @@ const templates: TemplateDefinition[] = [
     category: 'professional',
     isPro: false,
     thumbnail: '',
-    component: React.lazy(() => import('@/components/templates/Modern')) as React.ComponentType<TemplateProps>,
-    pdfComponent: React.lazy(() => import('@/components/templates/pdf/Modern')) as React.ComponentType<TemplateProps>,
+    component: React.lazy(
+      () => import('@/components/templates/Modern')
+    ) as React.ComponentType<TemplateProps>,
+    pdfComponent: React.lazy(
+      () => import('@/components/templates/pdf/Modern')
+    ) as React.ComponentType<TemplateProps>,
   },
   {
     id: 'technical',
@@ -29,8 +37,12 @@ const templates: TemplateDefinition[] = [
     category: 'technical',
     isPro: false,
     thumbnail: '',
-    component: React.lazy(() => import('@/components/templates/Technical')) as React.ComponentType<TemplateProps>,
-    pdfComponent: React.lazy(() => import('@/components/templates/pdf/Technical')) as React.ComponentType<TemplateProps>,
+    component: React.lazy(
+      () => import('@/components/templates/Technical')
+    ) as React.ComponentType<TemplateProps>,
+    pdfComponent: React.lazy(
+      () => import('@/components/templates/pdf/Technical')
+    ) as React.ComponentType<TemplateProps>,
   },
   {
     id: 'executive',
@@ -39,8 +51,12 @@ const templates: TemplateDefinition[] = [
     category: 'professional',
     isPro: true,
     thumbnail: '',
-    component: React.lazy(() => import('@/components/templates/Executive')) as React.ComponentType<TemplateProps>,
-    pdfComponent: React.lazy(() => import('@/components/templates/pdf/Minimal')) as React.ComponentType<TemplateProps>,
+    component: React.lazy(
+      () => import('@/components/templates/Executive')
+    ) as React.ComponentType<TemplateProps>,
+    pdfComponent: React.lazy(
+      () => import('@/components/templates/pdf/Minimal')
+    ) as React.ComponentType<TemplateProps>,
   },
   {
     id: 'creative',
@@ -49,32 +65,38 @@ const templates: TemplateDefinition[] = [
     category: 'creative',
     isPro: true,
     thumbnail: '',
-    component: React.lazy(() => import('@/components/templates/Creative')) as React.ComponentType<TemplateProps>,
-    pdfComponent: React.lazy(() => import('@/components/templates/pdf/Minimal')) as React.ComponentType<TemplateProps>,
+    component: React.lazy(
+      () => import('@/components/templates/Creative')
+    ) as React.ComponentType<TemplateProps>,
+    pdfComponent: React.lazy(
+      () => import('@/components/templates/pdf/Minimal')
+    ) as React.ComponentType<TemplateProps>,
   },
-]
+];
 
 export function getAllTemplates(): TemplateDefinition[] {
-  return templates
+  return templates;
 }
 
 export function getTemplate(id: string): TemplateDefinition | null {
-  return templates.find(t => t.id === id) ?? null
+  return templates.find((t) => t.id === id) ?? null;
 }
 
 export function getFreeTemplates(): TemplateDefinition[] {
-  return templates
+  return templates;
 }
 
 // Server-safe: dynamic import (no React.lazy) for use in API routes / renderToBuffer
-export async function getPdfComponent(templateId: string): Promise<React.ComponentType<TemplateProps>> {
+export async function getPdfComponent(
+  templateId: string
+): Promise<React.ComponentType<TemplateProps>> {
   switch (templateId) {
     case 'modern':
-      return (await import('@/components/templates/pdf/Modern')).default
+      return (await import('@/components/templates/pdf/Modern')).default;
     case 'technical':
-      return (await import('@/components/templates/pdf/Technical')).default
+      return (await import('@/components/templates/pdf/Technical')).default;
     case 'minimal':
     default:
-      return (await import('@/components/templates/pdf/Minimal')).default
+      return (await import('@/components/templates/pdf/Minimal')).default;
   }
 }

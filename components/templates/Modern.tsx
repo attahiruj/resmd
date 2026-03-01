@@ -1,19 +1,19 @@
-'use client'
+'use client';
 
-import React from 'react'
+import React from 'react';
 import type {
   TemplateProps,
   ResumeSection,
   SectionItem,
   KeyValueItem,
   EntryItem,
-} from '@/types/resume'
-import { DEFAULT_SETTINGS } from '@/types/resume'
-import { renderInline } from '@/lib/renderInline'
-import { isUrl, extractLink } from "@/lib/inline";
+} from '@/types/resume';
+import { DEFAULT_SETTINGS } from '@/types/resume';
+import { renderInline } from '@/lib/renderInline';
+import { isUrl, extractLink } from '@/lib/inline';
 
 const FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
-const HEADER_META_KEYS = new Set(["name", "title", "role", "position"]);
+const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ModernStyles = Record<string, any>;
@@ -21,14 +21,14 @@ type ModernStyles = Record<string, any>;
 function isSidebarSection(section: ResumeSection): boolean {
   const lower = section.title.toLowerCase();
   return (
-    section.hint === "keyvalue" ||
-    section.hint === "list" ||
-    lower.includes("skill") ||
-    lower.includes("language") ||
-    lower.includes("tool") ||
-    lower.includes("certification") ||
-    lower === "bio" ||
-    lower === "contact"
+    section.hint === 'keyvalue' ||
+    section.hint === 'list' ||
+    lower.includes('skill') ||
+    lower.includes('language') ||
+    lower.includes('tool') ||
+    lower.includes('certification') ||
+    lower === 'bio' ||
+    lower === 'contact'
   );
 }
 
@@ -45,17 +45,17 @@ export default function Modern({
     page: {
       fontFamily: FONT,
       fontSize: s.fontSize,
-      color: "#1C1B18",
-      display: "flex",
-      flexDirection: "row" as const,
+      color: '#1C1B18',
+      display: 'flex',
+      flexDirection: 'row' as const,
       lineHeight: s.lineHeight,
-      background: "#ffffff",
-      minHeight: "100%",
+      background: '#ffffff',
+      minHeight: '100%',
     },
     sidebar: {
-      width: "30%",
+      width: '30%',
       flexShrink: 0,
-      backgroundColor: "#1E2330",
+      backgroundColor: '#1E2330',
       paddingTop: s.marginV,
       paddingBottom: s.marginV,
       paddingLeft: s.marginH,
@@ -64,39 +64,39 @@ export default function Modern({
     sidebarName: {
       fontSize: 16,
       fontWeight: 700,
-      color: "#FFFFFF",
+      color: '#FFFFFF',
       marginBottom: 3,
       lineHeight: 1.2,
     },
-    sidebarJobTitle: { fontSize: 9.5, color: "#B0B8CC", marginBottom: 16 },
+    sidebarJobTitle: { fontSize: 9.5, color: '#B0B8CC', marginBottom: 16 },
     sidebarSectionTitle: {
       fontSize: 7,
       fontWeight: 700,
-      textTransform: "uppercase" as const,
-      letterSpacing: "1px",
-      color: "#7A8299",
-      borderBottom: "1px solid #2E3550",
+      textTransform: 'uppercase' as const,
+      letterSpacing: '1px',
+      color: '#7A8299',
+      borderBottom: '1px solid #2E3550',
       paddingBottom: 3,
       marginBottom: 6,
       marginTop: 12,
     },
     sidebarKvRow: {
-      display: "flex",
-      flexDirection: "row" as const,
+      display: 'flex',
+      flexDirection: 'row' as const,
       marginBottom: 3,
     },
-    sidebarKvKey: { fontSize: 8, color: "#8890A8", width: 44, flexShrink: 0 },
-    sidebarKvValue: { fontSize: 8.5, color: "#D0D6E8", flex: 1 },
-    sidebarBullet: { fontSize: 9, color: "#C0C8DC", marginBottom: 2.5 },
+    sidebarKvKey: { fontSize: 8, color: '#8890A8', width: 44, flexShrink: 0 },
+    sidebarKvValue: { fontSize: 8.5, color: '#D0D6E8', flex: 1 },
+    sidebarBullet: { fontSize: 9, color: '#C0C8DC', marginBottom: 2.5 },
     sidebarTagsRow: {
-      display: "flex",
-      flexDirection: "row" as const,
-      flexWrap: "wrap" as const,
+      display: 'flex',
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
     },
     sidebarTag: {
       fontSize: 7.5,
-      color: "#C8D0E8",
-      backgroundColor: "#252B3D",
+      color: '#C8D0E8',
+      backgroundColor: '#252B3D',
       paddingLeft: 5,
       paddingRight: 5,
       paddingTop: 2,
@@ -107,9 +107,9 @@ export default function Modern({
     },
     sidebarSkillLabel: {
       fontSize: 8,
-      color: "#8890A8",
-      textTransform: "uppercase" as const,
-      letterSpacing: "0.5px",
+      color: '#8890A8',
+      textTransform: 'uppercase' as const,
+      letterSpacing: '0.5px',
       marginBottom: 2,
     },
     main: {
@@ -122,10 +122,10 @@ export default function Modern({
     mainSectionTitle: {
       fontSize: 8,
       fontWeight: 700,
-      textTransform: "uppercase" as const,
-      letterSpacing: "1px",
-      color: "#4A5070",
-      borderBottom: "1px solid #E8E6E0",
+      textTransform: 'uppercase' as const,
+      letterSpacing: '1px',
+      color: '#4A5070',
+      borderBottom: '1px solid #E8E6E0',
       paddingBottom: 3,
       marginBottom: 8,
       marginTop: 14,
@@ -133,91 +133,91 @@ export default function Modern({
     mainSectionTitleFirst: {
       fontSize: 8,
       fontWeight: 700,
-      textTransform: "uppercase" as const,
-      letterSpacing: "1px",
-      color: "#4A5070",
-      borderBottom: "1px solid #E8E6E0",
+      textTransform: 'uppercase' as const,
+      letterSpacing: '1px',
+      color: '#4A5070',
+      borderBottom: '1px solid #E8E6E0',
       paddingBottom: 3,
       marginBottom: 8,
       marginTop: 0,
     },
     entry: { marginBottom: s.entrySpacing },
     entryHeader: {
-      display: "flex",
-      flexDirection: "row" as const,
-      justifyContent: "space-between",
-      alignItems: "flex-start",
+      display: 'flex',
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
     },
     entryRole: {
       fontSize: s.fontSize + 0.5,
       fontWeight: 700,
-      color: "#1A1A2E",
+      color: '#1A1A2E',
     },
-    entryOrg: { fontSize: s.fontSize + 0.5, fontWeight: 400, color: "#444466" },
+    entryOrg: { fontSize: s.fontSize + 0.5, fontWeight: 400, color: '#444466' },
     entryMeta: {
       fontSize: s.fontSize - 1.5,
-      color: "#888899",
-      whiteSpace: "nowrap" as const,
+      color: '#888899',
+      whiteSpace: 'nowrap' as const,
       flexShrink: 0,
       marginLeft: 8,
     },
     entryChildren: {
       paddingLeft: 8,
       marginTop: 3,
-      borderLeft: "1px solid #EEECFF",
+      borderLeft: '1px solid #EEECFF',
     },
     bulletRow: {
-      display: "flex",
-      flexDirection: "row" as const,
+      display: 'flex',
+      flexDirection: 'row' as const,
       marginBottom: 2.5,
     },
     bulletDash: {
       fontSize: s.fontSize,
-      color: "#AAAACC",
+      color: '#AAAACC',
       marginRight: 5,
       flexShrink: 0,
     },
-    bulletText: { fontSize: s.fontSize, color: "#333344", flex: 1 },
+    bulletText: { fontSize: s.fontSize, color: '#333344', flex: 1 },
     textPara: {
       fontSize: s.fontSize,
-      color: "#444455",
+      color: '#444455',
       marginBottom: 4,
       lineHeight: 1.6,
     },
-    kvRow: { display: "flex", flexDirection: "row" as const, marginBottom: 3 },
+    kvRow: { display: 'flex', flexDirection: 'row' as const, marginBottom: 3 },
     kvKey: {
       fontSize: s.fontSize - 1,
-      color: "#888899",
+      color: '#888899',
       width: 60,
       flexShrink: 0,
     },
-    kvValue: { fontSize: s.fontSize, color: "#333344", flex: 1 },
+    kvValue: { fontSize: s.fontSize, color: '#333344', flex: 1 },
     kvSkillsRow: {
-      display: "flex",
-      flexDirection: "row" as const,
-      alignItems: "flex-start",
+      display: 'flex',
+      flexDirection: 'row' as const,
+      alignItems: 'flex-start',
       marginBottom: 5,
     },
     kvSkillsLabel: {
       fontSize: 8,
-      color: "#888899",
-      textTransform: "uppercase" as const,
-      letterSpacing: "0.5px",
+      color: '#888899',
+      textTransform: 'uppercase' as const,
+      letterSpacing: '0.5px',
       width: 55,
       flexShrink: 0,
       paddingTop: 2,
     },
     kvSkillsTags: {
-      display: "flex",
-      flexDirection: "row" as const,
-      flexWrap: "wrap" as const,
+      display: 'flex',
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
       flex: 1,
       gap: 3,
     },
     tag: {
       fontSize: 8,
-      color: "#555566",
-      backgroundColor: "#F0EFF8",
+      color: '#555566',
+      backgroundColor: '#F0EFF8',
       paddingLeft: 5,
       paddingRight: 5,
       paddingTop: 2,
@@ -226,16 +226,16 @@ export default function Modern({
     },
     footer: {
       marginTop: 20,
-      borderTop: "1px solid #E8E8E8",
+      borderTop: '1px solid #E8E8E8',
       paddingTop: 6,
-      textAlign: "center" as const,
+      textAlign: 'center' as const,
     },
-    footerText: { fontSize: 8, color: "#BBBBCC" },
+    footerText: { fontSize: 8, color: '#BBBBCC' },
   };
 
   const headerSection = showHeader
     ? (sections.find(
-        (sec) => sec.hint === "keyvalue" || sec.title.toLowerCase() === "bio",
+        (sec) => sec.hint === 'keyvalue' || sec.title.toLowerCase() === 'bio'
       ) ??
       sections[0] ??
       null)
@@ -245,7 +245,7 @@ export default function Modern({
   const contactEntries: ContactEntry[] = (headerSection?.items ?? []).flatMap(
     (item) => {
       if (
-        item.kind === "keyvalue" &&
+        item.kind === 'keyvalue' &&
         !HEADER_META_KEYS.has(item.key.toLowerCase())
       ) {
         return [
@@ -256,13 +256,13 @@ export default function Modern({
           },
         ];
       }
-      if (item.kind === "text") {
+      if (item.kind === 'text') {
         const link = extractLink(item.text);
         if (link)
           return [{ key: link.text, href: link.href, rawValue: link.href }];
       }
       return [];
-    },
+    }
   );
 
   const bodySections = sections.filter((sec) => sec !== headerSection);
@@ -287,7 +287,7 @@ export default function Modern({
                         href={entry.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{ color: "inherit", textDecoration: "none" }}
+                        style={{ color: 'inherit', textDecoration: 'none' }}
                       >
                         <span style={S.sidebarKvKey}>↗ {entry.key}</span>
                       </a>
@@ -313,7 +313,7 @@ export default function Modern({
               <SidebarItemBlock
                 key={i}
                 item={item}
-                isKeyValueSection={section.hint === "keyvalue"}
+                isKeyValueSection={section.hint === 'keyvalue'}
                 S={S}
               />
             ))}
@@ -352,10 +352,10 @@ function SidebarItemBlock({
   S: ModernStyles;
 }) {
   switch (item.kind) {
-    case "keyvalue": {
+    case 'keyvalue': {
       if (isKeyValueSection) {
         const tags = item.value
-          .split(",")
+          .split(',')
           .map((v) => v.trim())
           .filter(Boolean);
         return (
@@ -378,7 +378,7 @@ function SidebarItemBlock({
               href={item.value}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "inherit", textDecoration: "none" }}
+              style={{ color: 'inherit', textDecoration: 'none' }}
             >
               <span style={S.sidebarKvKey}>↗ {item.key}</span>
             </a>
@@ -391,18 +391,18 @@ function SidebarItemBlock({
         </div>
       );
     }
-    case "bullet":
+    case 'bullet':
       return <p style={S.sidebarBullet}>· {renderInline(item.text)}</p>;
-    case "text":
+    case 'text':
       return (
         <p style={{ ...S.sidebarBullet, lineHeight: 1.5 }}>
           {renderInline(item.text)}
         </p>
       );
-    case "entry":
+    case 'entry':
       return (
         <div style={{ marginBottom: 5 }}>
-          <p style={{ fontSize: 9, fontWeight: 700, color: "#D0D6E8" }}>
+          <p style={{ fontSize: 9, fontWeight: 700, color: '#D0D6E8' }}>
             {renderInline(item.role ?? item.heading)}
           </p>
           {item.organization && (
@@ -432,7 +432,7 @@ function MainSectionBlock({
         <MainItemBlock
           key={i}
           item={item}
-          isKeyValueSection={section.hint === "keyvalue"}
+          isKeyValueSection={section.hint === 'keyvalue'}
           S={S}
         />
       ))}
@@ -450,10 +450,10 @@ function MainItemBlock({
   S: ModernStyles;
 }) {
   switch (item.kind) {
-    case "keyvalue": {
+    case 'keyvalue': {
       if (isKeyValueSection) {
         const tags = item.value
-          .split(",")
+          .split(',')
           .map((v) => v.trim())
           .filter(Boolean);
         return (
@@ -476,7 +476,7 @@ function MainItemBlock({
               href={item.value}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "inherit", textDecoration: "none" }}
+              style={{ color: 'inherit', textDecoration: 'none' }}
             >
               <span style={S.kvKey}>↗ {item.key}</span>
             </a>
@@ -489,16 +489,16 @@ function MainItemBlock({
         </div>
       );
     }
-    case "entry":
+    case 'entry':
       return <MainEntryBlock entry={item} S={S} />;
-    case "bullet":
+    case 'bullet':
       return (
         <div style={S.bulletRow}>
           <span style={S.bulletDash}>–</span>
           <span style={S.bulletText}>{renderInline(item.text)}</span>
         </div>
       );
-    case "text":
+    case 'text':
       return <p style={S.textPara}>{renderInline(item.text)}</p>;
   }
 }
@@ -512,7 +512,10 @@ function MainEntryBlock({ entry, S }: { entry: EntryItem; S: ModernStyles }) {
             <span>
               <span style={S.entryRole}>{renderInline(entry.role)}</span>
               {entry.organization && (
-                <span style={S.entryOrg}> @ {renderInline(entry.organization)}</span>
+                <span style={S.entryOrg}>
+                  {' '}
+                  @ {renderInline(entry.organization)}
+                </span>
               )}
             </span>
           ) : (
@@ -526,10 +529,15 @@ function MainEntryBlock({ entry, S }: { entry: EntryItem; S: ModernStyles }) {
       {entry.children.length > 0 && (
         <div style={S.entryChildren}>
           {entry.children.map((child, i) => (
-            <MainItemBlock key={i} item={child} isKeyValueSection={false} S={S} />
+            <MainItemBlock
+              key={i}
+              item={child}
+              isKeyValueSection={false}
+              S={S}
+            />
           ))}
         </div>
       )}
     </div>
-  )
+  );
 }

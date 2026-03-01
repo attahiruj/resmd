@@ -19,67 +19,67 @@
  *   3. It will be available in the theme picker automatically
  */
 
-export type ThemeMode = 'light' | 'dark'
+export type ThemeMode = 'light' | 'dark';
 
 export interface ThemeScale {
   // Surfaces
-  bg: string
-  surface: string
-  surface2: string
-  surface3: string
-  surfaceOverlay: string
+  bg: string;
+  surface: string;
+  surface2: string;
+  surface3: string;
+  surfaceOverlay: string;
   // Borders
-  border: string
-  borderStrong: string
-  borderFocus: string
+  border: string;
+  borderStrong: string;
+  borderFocus: string;
   // Text
-  text: string
-  textMuted: string
-  textFaint: string
-  textInverse: string
+  text: string;
+  textMuted: string;
+  textFaint: string;
+  textInverse: string;
   // Primary accent (CTA buttons, focus rings, highlights)
-  accent: string
-  accentHover: string
-  accentActive: string
-  accentMuted: string
-  accentMutedHover: string
-  accentText: string
+  accent: string;
+  accentHover: string;
+  accentActive: string;
+  accentMuted: string;
+  accentMutedHover: string;
+  accentText: string;
   // Secondary accent (Glacier Blue — AI moments)
-  secondary: string
-  secondaryHover: string
-  secondaryActive: string
-  secondaryMuted: string
+  secondary: string;
+  secondaryHover: string;
+  secondaryActive: string;
+  secondaryMuted: string;
   // Status
-  success: string
-  successBg: string
-  warning: string
-  warningBg: string
-  danger: string
-  dangerBg: string
-  info: string
-  infoBg: string
+  success: string;
+  successBg: string;
+  warning: string;
+  warningBg: string;
+  danger: string;
+  dangerBg: string;
+  info: string;
+  infoBg: string;
   // Editor
-  editorBg: string
-  editorGutter: string
-  editorLineHl: string
-  editorSelection: string
-  editorCursor: string
+  editorBg: string;
+  editorGutter: string;
+  editorLineHl: string;
+  editorSelection: string;
+  editorCursor: string;
   // Scrollbar
-  scrollbarThumb: string
+  scrollbarThumb: string;
   // Shadows
-  shadowSm: string
-  shadowMd: string
-  shadowLg: string
-  shadowXl: string
-  shadowAccent: string
-  shadowAccentStrong: string
+  shadowSm: string;
+  shadowMd: string;
+  shadowLg: string;
+  shadowXl: string;
+  shadowAccent: string;
+  shadowAccentStrong: string;
 }
 
 export interface Theme {
-  id: string
-  name: string
-  light: ThemeScale
-  dark: ThemeScale
+  id: string;
+  name: string;
+  light: ThemeScale;
+  dark: ThemeScale;
 }
 
 // ---------------------------------------------------------------------------
@@ -177,64 +177,64 @@ const INKGLOW: Theme = {
     shadowAccent: '0 0 20px rgba(122, 163, 20, 0.15)',
     shadowAccentStrong: '0 0 40px rgba(122, 163, 20, 0.25)',
   },
-}
+};
 
-export const THEMES: Theme[] = [INKGLOW]
+export const THEMES: Theme[] = [INKGLOW];
 
 // ---------------------------------------------------------------------------
 // Utilities
 // ---------------------------------------------------------------------------
 
 export function getTheme(id: string): Theme {
-  return THEMES.find((t) => t.id === id) ?? INKGLOW
+  return THEMES.find((t) => t.id === id) ?? INKGLOW;
 }
 
 /** Map a ThemeScale to CSS custom property names */
 function scaleToCSSVars(scale: ThemeScale): Record<string, string> {
   return {
-    '--color-bg':                scale.bg,
-    '--color-surface':           scale.surface,
-    '--color-surface-2':         scale.surface2,
-    '--color-surface-3':         scale.surface3,
-    '--color-surface-overlay':   scale.surfaceOverlay,
-    '--color-border':            scale.border,
-    '--color-border-strong':     scale.borderStrong,
-    '--color-border-focus':      scale.borderFocus,
-    '--color-text':              scale.text,
-    '--color-text-muted':        scale.textMuted,
-    '--color-text-faint':        scale.textFaint,
-    '--color-text-inverse':      scale.textInverse,
-    '--color-accent':            scale.accent,
-    '--color-accent-hover':      scale.accentHover,
-    '--color-accent-active':     scale.accentActive,
-    '--color-accent-muted':      scale.accentMuted,
-    '--color-accent-muted-hover':scale.accentMutedHover,
-    '--color-accent-text':       scale.accentText,
-    '--color-secondary':         scale.secondary,
-    '--color-secondary-hover':   scale.secondaryHover,
-    '--color-secondary-active':  scale.secondaryActive,
-    '--color-secondary-muted':   scale.secondaryMuted,
-    '--color-success':           scale.success,
-    '--color-success-bg':        scale.successBg,
-    '--color-warning':           scale.warning,
-    '--color-warning-bg':        scale.warningBg,
-    '--color-danger':            scale.danger,
-    '--color-danger-bg':         scale.dangerBg,
-    '--color-info':              scale.info,
-    '--color-info-bg':           scale.infoBg,
-    '--color-editor-bg':         scale.editorBg,
-    '--color-editor-gutter':     scale.editorGutter,
-    '--color-editor-line-hl':    scale.editorLineHl,
-    '--color-editor-selection':  scale.editorSelection,
-    '--color-editor-cursor':     scale.editorCursor,
-    '--scrollbar-thumb':         scale.scrollbarThumb,
-    '--shadow-sm':               scale.shadowSm,
-    '--shadow-md':               scale.shadowMd,
-    '--shadow-lg':               scale.shadowLg,
-    '--shadow-xl':               scale.shadowXl,
-    '--shadow-accent':           scale.shadowAccent,
-    '--shadow-accent-strong':    scale.shadowAccentStrong,
-  }
+    '--color-bg': scale.bg,
+    '--color-surface': scale.surface,
+    '--color-surface-2': scale.surface2,
+    '--color-surface-3': scale.surface3,
+    '--color-surface-overlay': scale.surfaceOverlay,
+    '--color-border': scale.border,
+    '--color-border-strong': scale.borderStrong,
+    '--color-border-focus': scale.borderFocus,
+    '--color-text': scale.text,
+    '--color-text-muted': scale.textMuted,
+    '--color-text-faint': scale.textFaint,
+    '--color-text-inverse': scale.textInverse,
+    '--color-accent': scale.accent,
+    '--color-accent-hover': scale.accentHover,
+    '--color-accent-active': scale.accentActive,
+    '--color-accent-muted': scale.accentMuted,
+    '--color-accent-muted-hover': scale.accentMutedHover,
+    '--color-accent-text': scale.accentText,
+    '--color-secondary': scale.secondary,
+    '--color-secondary-hover': scale.secondaryHover,
+    '--color-secondary-active': scale.secondaryActive,
+    '--color-secondary-muted': scale.secondaryMuted,
+    '--color-success': scale.success,
+    '--color-success-bg': scale.successBg,
+    '--color-warning': scale.warning,
+    '--color-warning-bg': scale.warningBg,
+    '--color-danger': scale.danger,
+    '--color-danger-bg': scale.dangerBg,
+    '--color-info': scale.info,
+    '--color-info-bg': scale.infoBg,
+    '--color-editor-bg': scale.editorBg,
+    '--color-editor-gutter': scale.editorGutter,
+    '--color-editor-line-hl': scale.editorLineHl,
+    '--color-editor-selection': scale.editorSelection,
+    '--color-editor-cursor': scale.editorCursor,
+    '--scrollbar-thumb': scale.scrollbarThumb,
+    '--shadow-sm': scale.shadowSm,
+    '--shadow-md': scale.shadowMd,
+    '--shadow-lg': scale.shadowLg,
+    '--shadow-xl': scale.shadowXl,
+    '--shadow-accent': scale.shadowAccent,
+    '--shadow-accent-strong': scale.shadowAccentStrong,
+  };
 }
 
 /**
@@ -246,37 +246,37 @@ function scaleToCSSVars(scale: ThemeScale): Record<string, string> {
  * - Persists selections to localStorage.
  */
 export function applyTheme(themeId: string, mode: ThemeMode): void {
-  if (typeof document === 'undefined') return
+  if (typeof document === 'undefined') return;
 
-  const root = document.documentElement
+  const root = document.documentElement;
 
   // Toggle .light class — dark is the default, light is opt-in
   if (mode === 'light') {
-    root.classList.add('light')
+    root.classList.add('light');
   } else {
-    root.classList.remove('light')
+    root.classList.remove('light');
   }
 
-  const theme = getTheme(themeId)
-  const ALL_VARS = Object.keys(scaleToCSSVars(theme.dark))
+  const theme = getTheme(themeId);
+  const ALL_VARS = Object.keys(scaleToCSSVars(theme.dark));
 
   if (themeId === 'inkglow') {
     // Default theme: CSS vars in globals.css are authoritative.
     // Clear any inline overrides from a previous non-default theme.
     for (const key of ALL_VARS) {
-      root.style.removeProperty(key)
+      root.style.removeProperty(key);
     }
   } else {
     // Non-default theme: write the active scale inline to override globals.css
-    const scale = mode === 'dark' ? theme.dark : theme.light
-    const vars = scaleToCSSVars(scale)
+    const scale = mode === 'dark' ? theme.dark : theme.light;
+    const vars = scaleToCSSVars(scale);
     for (const [key, value] of Object.entries(vars)) {
-      root.style.setProperty(key, value)
+      root.style.setProperty(key, value);
     }
   }
 
-  localStorage.setItem('resmd_theme', mode)
-  localStorage.setItem('resmd_theme_id', themeId)
+  localStorage.setItem('resmd_theme', mode);
+  localStorage.setItem('resmd_theme_id', themeId);
 }
 
 /**
@@ -285,16 +285,17 @@ export function applyTheme(themeId: string, mode: ThemeMode): void {
  * Default mode is dark (dark-first design).
  */
 export function getStoredThemePrefs(): { themeId: string; mode: ThemeMode } {
-  if (typeof window === 'undefined') return { themeId: 'inkglow', mode: 'dark' }
-  const themeId = localStorage.getItem('resmd_theme_id') ?? 'inkglow'
-  const stored = localStorage.getItem('resmd_theme')
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  if (typeof window === 'undefined')
+    return { themeId: 'inkglow', mode: 'dark' };
+  const themeId = localStorage.getItem('resmd_theme_id') ?? 'inkglow';
+  const stored = localStorage.getItem('resmd_theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   // Default to dark unless user has explicitly chosen light or prefers light
   const mode: ThemeMode =
     stored === 'dark' || stored === 'light'
       ? (stored as ThemeMode)
       : prefersDark
-      ? 'dark'
-      : 'light'
-  return { themeId, mode }
+        ? 'dark'
+        : 'light';
+  return { themeId, mode };
 }

@@ -1,25 +1,28 @@
-import type { Metadata } from 'next'
-import './globals.css'
+import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
   title: {
     default: 'resmd',
     template: '%s | resmd',
   },
-  description: 'Write your resume in plain text. Render it through beautiful templates. Manage multiple tailored variants. Export to PDF.',
+  description:
+    'Write your resume in plain text. Render it through beautiful templates. Manage multiple tailored variants. Export to PDF.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://resmd.co'),
   openGraph: {
     type: 'website',
     siteName: 'resmd',
     title: 'resmd — Plain text resume builder',
-    description: 'Write your resume in plain text. Render it through beautiful templates.',
+    description:
+      'Write your resume in plain text. Render it through beautiful templates.',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'resmd — Plain text resume builder',
-    description: 'Write your resume in plain text. Render it through beautiful templates.',
+    description:
+      'Write your resume in plain text. Render it through beautiful templates.',
   },
-}
+};
 
 /**
  * Inline script that runs before first paint to apply the stored theme mode.
@@ -39,12 +42,12 @@ const themeInitScript = `
     }
   } catch(e) {}
 })();
-`
+`;
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -54,5 +57,5 @@ export default function RootLayout({
       </head>
       <body className="bg-bg text-text antialiased">{children}</body>
     </html>
-  )
+  );
 }

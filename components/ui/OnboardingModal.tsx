@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState } from 'react';
 
 const STEPS = [
   {
@@ -18,25 +18,25 @@ const STEPS = [
     body: 'Clone any resume to create a tailored variant for a specific role. Each variant is fully independent — tweak one without affecting the others.',
     code: null,
   },
-]
+];
 
 interface OnboardingModalProps {
-  onClose: () => void
+  onClose: () => void;
 }
 
 export default function OnboardingModal({ onClose }: OnboardingModalProps) {
-  const [step, setStep] = useState(0)
-  const isLast = step === STEPS.length - 1
-  const current = STEPS[step]
+  const [step, setStep] = useState(0);
+  const isLast = step === STEPS.length - 1;
+  const current = STEPS[step];
 
   const handleNext = () => {
     if (isLast) {
-      localStorage.setItem('resmd_onboarded', '1')
-      onClose()
+      localStorage.setItem('resmd_onboarded', '1');
+      onClose();
     } else {
-      setStep(s => s + 1)
+      setStep((s) => s + 1);
     }
-  }
+  };
 
   return (
     <div
@@ -45,7 +45,7 @@ export default function OnboardingModal({ onClose }: OnboardingModalProps) {
     >
       <div
         className="bg-surface border border-border rounded-xl shadow-xl p-6 w-full max-w-sm"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Step progress bar */}
         <div className="flex gap-1.5 mb-5">
@@ -59,7 +59,9 @@ export default function OnboardingModal({ onClose }: OnboardingModalProps) {
           ))}
         </div>
 
-        <h2 className="text-sm font-semibold text-text mb-2">{current.title}</h2>
+        <h2 className="text-sm font-semibold text-text mb-2">
+          {current.title}
+        </h2>
         <p className="text-xs text-muted leading-relaxed">{current.body}</p>
 
         {current.code && (
@@ -69,11 +71,13 @@ export default function OnboardingModal({ onClose }: OnboardingModalProps) {
         )}
 
         <div className="flex items-center justify-between mt-5">
-          <span className="text-xs text-faint">{step + 1} / {STEPS.length}</span>
+          <span className="text-xs text-faint">
+            {step + 1} / {STEPS.length}
+          </span>
           <div className="flex gap-2">
             {step > 0 && (
               <button
-                onClick={() => setStep(s => s - 1)}
+                onClick={() => setStep((s) => s - 1)}
                 className="px-3 py-1.5 text-xs border border-border rounded-lg text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 Back
@@ -89,5 +93,5 @@ export default function OnboardingModal({ onClose }: OnboardingModalProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

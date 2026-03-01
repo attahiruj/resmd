@@ -5,21 +5,21 @@
  */
 
 export interface EnhanceOptions {
-  instruction: string
-  selectedText: string
-  resumeContext: string
-  onChunk: (text: string) => void
-  onDone: (fullText: string) => void
-  onError: (error: string) => void
+  instruction: string;
+  selectedText: string;
+  resumeContext: string;
+  onChunk: (text: string) => void;
+  onDone: (fullText: string) => void;
+  onError: (error: string) => void;
 }
 
 export interface ChatOptions {
-  message: string
-  resumeContent: string
-  history: Array<{ role: string; content: string }>
-  onChunk: (text: string) => void
-  onDone: (fullText: string) => void
-  onError: (error: string) => void
+  message: string;
+  resumeContent: string;
+  history: Array<{ role: string; content: string }>;
+  onChunk: (text: string) => void;
+  onDone: (fullText: string) => void;
+  onError: (error: string) => void;
 }
 
 /**
@@ -34,8 +34,8 @@ export function streamEnhance({
   onDone,
   onError,
 }: EnhanceOptions): AbortController {
-  const controller = new AbortController()
-  const signal = controller.signal
+  const controller = new AbortController();
+  const signal = controller.signal;
 
   const run = async () => {
     try {
@@ -48,45 +48,45 @@ export function streamEnhance({
           resumeContext,
         }),
         signal,
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        onError(errorData.error || `Request failed: ${response.status}`)
-        return
+        const errorData = await response.json().catch(() => ({}));
+        onError(errorData.error || `Request failed: ${response.status}`);
+        return;
       }
 
       if (!response.body) {
-        onError('No response body')
-        return
+        onError('No response body');
+        return;
       }
 
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let fullText = ''
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
 
       while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
+        const { done, value } = await reader.read();
+        if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true })
-        fullText += chunk
-        onChunk(chunk)
+        const chunk = decoder.decode(value, { stream: true });
+        fullText += chunk;
+        onChunk(chunk);
       }
 
-      onDone(fullText)
+      onDone(fullText);
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
         // Request was cancelled, don't treat as error
-        return
+        return;
       }
-      onError(err instanceof Error ? err.message : 'Unknown error')
+      onError(err instanceof Error ? err.message : 'Unknown error');
     }
-  }
+  };
 
-  run()
+  run();
 
-  return controller
+  return controller;
 }
 
 /**
@@ -100,8 +100,8 @@ export function streamChat({
   onDone,
   onError,
 }: ChatOptions): AbortController {
-  const controller = new AbortController()
-  const signal = controller.signal
+  const controller = new AbortController();
+  const signal = controller.signal;
 
   const run = async () => {
     try {
@@ -114,43 +114,43 @@ export function streamChat({
           history,
         }),
         signal,
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        onError(errorData.error || `Request failed: ${response.status}`)
-        return
+        const errorData = await response.json().catch(() => ({}));
+        onError(errorData.error || `Request failed: ${response.status}`);
+        return;
       }
 
       if (!response.body) {
-        onError('No response body')
-        return
+        onError('No response body');
+        return;
       }
 
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let fullText = ''
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
 
       while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
+        const { done, value } = await reader.read();
+        if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true })
-        fullText += chunk
-        onChunk(chunk)
+        const chunk = decoder.decode(value, { stream: true });
+        fullText += chunk;
+        onChunk(chunk);
       }
 
-      onDone(fullText)
+      onDone(fullText);
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
         // Request was cancelled, don't treat as error
-        return
+        return;
       }
-      onError(err instanceof Error ? err.message : 'Unknown error')
+      onError(err instanceof Error ? err.message : 'Unknown error');
     }
-  }
+  };
 
-  run()
+  run();
 
-  return controller
+  return controller;
 }

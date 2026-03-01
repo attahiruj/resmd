@@ -1,10 +1,10 @@
-import { notFound } from 'next/navigation'
-import { Suspense } from 'react'
-import type { Metadata } from 'next'
-import Link from 'next/link'
-import { getVariantBySlug } from '@/lib/variantService'
-import { getTemplate } from '@/lib/templates'
-import { parseResume } from '@/lib/parser'
+import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { getVariantBySlug } from '@/lib/variantService';
+import { getTemplate } from '@/lib/templates';
+import { parseResume } from '@/lib/parser';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -13,11 +13,11 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const variant = await getVariantBySlug(slug);
-  if (!variant) return { title: "Resume not found" };
+  if (!variant) return { title: 'Resume not found' };
 
   const parsed = parseResume(variant.rawContent);
   const name = parsed.meta.name ?? variant.title;
-  const jobTitle = parsed.meta.title ?? "";
+  const jobTitle = parsed.meta.title ?? '';
   const description = jobTitle
     ? `${name} — ${jobTitle}`
     : `${name}'s resume on resmd`;
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: name,
       description,
-      type: "profile",
+      type: 'profile',
     },
   };
 }
@@ -38,7 +38,7 @@ export default async function PublicResumePage({ params }: Props) {
   const variant = await getVariantBySlug(slug);
   if (!variant) notFound();
 
-  const template = getTemplate(variant.templateId) ?? getTemplate("minimal")!;
+  const template = getTemplate(variant.templateId) ?? getTemplate('minimal')!;
   const parsed = parseResume(variant.rawContent);
   const TemplateComponent = template.component;
 
@@ -64,7 +64,7 @@ export default async function PublicResumePage({ params }: Props) {
       <main className="flex-1 py-8 px-4 overflow-auto">
         <div
           className="max-w-[800px] mx-auto rounded-xl overflow-hidden"
-          style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.18)" }}
+          style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.18)' }}
         >
           <Suspense
             fallback={

@@ -122,74 +122,70 @@ The parser's job is **structure extraction**, not **semantic interpretation**. I
 // ─── Core parsed output ───────────────────────────────────────────────────
 
 export interface ParsedResume {
-  sections: ResumeSection[]   // ordered exactly as user wrote them
-  meta: ResumeMeta            // lightweight: only truly universal fields
-  raw: string                 // original ResMarkup, always preserved verbatim
+  sections: ResumeSection[]; // ordered exactly as user wrote them
+  meta: ResumeMeta; // lightweight: only truly universal fields
+  raw: string; // original ResMarkup, always preserved verbatim
 }
 
 // Meta exists only for things the platform needs regardless of template:
 // PDF filename, Open Graph tags, shareable link title, etc.
 // Extracted from the first section where Name: is found (usually Bio).
 export interface ResumeMeta {
-  name: string | null
-  email: string | null        // for PDF mailto links
-  title: string | null        // professional title/role
+  name: string | null;
+  email: string | null; // for PDF mailto links
+  title: string | null; // professional title/role
 }
 
 // ─── Section ──────────────────────────────────────────────────────────────
 
 export interface ResumeSection {
-  id: string                  // slugified title: "work-experience", "bio"
-  title: string               // exactly as user wrote: "Work Experience", "Bio"
-  hint: SectionHint           // parser's soft inference for template layout hints
-  items: SectionItem[]        // ordered list of everything in this section
+  id: string; // slugified title: "work-experience", "bio"
+  title: string; // exactly as user wrote: "Work Experience", "Bio"
+  hint: SectionHint; // parser's soft inference for template layout hints
+  items: SectionItem[]; // ordered list of everything in this section
 }
 
 // hint is the parser's best guess at the dominant content pattern.
 // Templates MAY use this to choose a layout. They are NOT required to.
 // User's section title always takes precedence over hint in any UI display.
 export type SectionHint =
-  | 'keyvalue'    // mostly Key: Value pairs (e.g. Bio, Languages)
-  | 'entries'     // mostly ## sub-entries (e.g. Experience, Education)
-  | 'list'        // mostly - bullet points (e.g. Skills as flat list)
-  | 'text'        // mostly plain paragraphs (e.g. Summary, Interests)
-  | 'mixed'       // combination — template decides how to render
+  | 'keyvalue' // mostly Key: Value pairs (e.g. Bio, Languages)
+  | 'entries' // mostly ## sub-entries (e.g. Experience, Education)
+  | 'list' // mostly - bullet points (e.g. Skills as flat list)
+  | 'text' // mostly plain paragraphs (e.g. Summary, Interests)
+  | 'mixed'; // combination — template decides how to render
 
 // ─── Section Items ────────────────────────────────────────────────────────
 
 // A section contains an ordered list of items. Each item is one of these types.
 // The discriminated union lets templates handle each type explicitly.
 
-export type SectionItem =
-  | KeyValueItem
-  | EntryItem
-  | BulletItem
-  | TextItem
+export type SectionItem = KeyValueItem | EntryItem | BulletItem | TextItem;
 
 export interface KeyValueItem {
-  kind: 'keyvalue'
-  key: string
-  value: string
+  kind: 'keyvalue';
+  key: string;
+  value: string;
 }
 
 export interface EntryItem {
-  kind: 'entry'
-  raw: string             // the full ## line exactly as written
-  heading: string         // everything before the first |
-  role: string | null     // extracted: part before @ in heading
-  organization: string | null  // extracted: part after @ in heading
-  meta: string[]          // remaining | separated fields (dates, URLs, etc.)
-  children: SectionItem[] // bullets and text nested under this entry
+  kind: 'entry';
+  raw: string; // the full ## line exactly as written
+  heading: string; // everything before the first |
+  role: string | null; // extracted: part before @ in heading
+  organization: string | null; // extracted: part after @ in heading
+  meta: string[]; // remaining | separated fields (dates, URLs, etc.)
+  children: SectionItem[]; // bullets and text nested under this entry
 }
 
 export interface BulletItem {
-  kind: 'bullet'
-  text: string
+  kind: 'bullet';
+  text: string;
 }
 
 export interface TextItem {
-  kind: 'text'
-  text: string
+  kind: 'text';
+  text: string;
 }
 ```
 
@@ -230,19 +226,19 @@ Templates are **renderers**. They receive `ParsedResume` and produce a visual la
 
 ```typescript
 export interface TemplateDefinition {
-  id: string
-  name: string
-  description: string
-  category: 'minimal' | 'professional' | 'creative' | 'technical' | 'academic'
-  isPro: boolean
-  thumbnail: string                                         // path to preview image
-  component: React.ComponentType<TemplateProps>             // screen renderer
-  pdfComponent: React.ComponentType<TemplateProps>          // @react-pdf/renderer version
+  id: string;
+  name: string;
+  description: string;
+  category: 'minimal' | 'professional' | 'creative' | 'technical' | 'academic';
+  isPro: boolean;
+  thumbnail: string; // path to preview image
+  component: React.ComponentType<TemplateProps>; // screen renderer
+  pdfComponent: React.ComponentType<TemplateProps>; // @react-pdf/renderer version
 }
 
 export interface TemplateProps {
-  resume: ParsedResume
-  isPro: boolean    // so template can conditionally show/hide watermark
+  resume: ParsedResume;
+  isPro: boolean; // so template can conditionally show/hide watermark
 }
 ```
 
@@ -293,13 +289,13 @@ The tree is rendered as a visual node graph in the dashboard — the centerpiece
 
 ### Variants vs Snapshots
 
-| | Variants | Snapshots |
-| --- | --- |
-| **What** | Distinct resume versions | Recovery points within one variant |
-| **When created** | User explicitly forks | User explicitly saves, or auto-save |
-| **Relationship** | Tree (parent/child) | Linear list per variant |
-| **User intent** | "I need a different resume for this" | "Save my progress" |
-| **UI** | Visual tree in dashboard | History panel in editor |
+|                  | Variants                             | Snapshots                           |
+| ---------------- | ------------------------------------ | ----------------------------------- |
+| **What**         | Distinct resume versions             | Recovery points within one variant  |
+| **When created** | User explicitly forks                | User explicitly saves, or auto-save |
+| **Relationship** | Tree (parent/child)                  | Linear list per variant             |
+| **User intent**  | "I need a different resume for this" | "Save my progress"                  |
+| **UI**           | Visual tree in dashboard             | History panel in editor             |
 
 ### Data Model
 
@@ -425,15 +421,15 @@ Modals / overlays   → surface + shadow-lg + surface-overlay
 
 ## Quick Reference — Key Files
 
-| Purpose | File |
-| --- | --- |
-| All types | `/types/resume.ts` |
-| Parser | `/lib/parser.ts` |
-| Templates | `/lib/templates.ts` |
-| DB ops | `/lib/variantService.ts` |
-| Limits | `/lib/limits.ts` |
-| AI helpers | `/lib/ai.ts` |
-| Themes | `/lib/themes.ts` |
+| Purpose    | File                     |
+| ---------- | ------------------------ |
+| All types  | `/types/resume.ts`       |
+| Parser     | `/lib/parser.ts`         |
+| Templates  | `/lib/templates.ts`      |
+| DB ops     | `/lib/variantService.ts` |
+| Limits     | `/lib/limits.ts`         |
+| AI helpers | `/lib/ai.ts`             |
+| Themes     | `/lib/themes.ts`         |
 
 ---
 

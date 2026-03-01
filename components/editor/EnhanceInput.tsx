@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import { useEffect, useRef, useState } from 'react'
-import { PaperPlaneTiltIcon, XIcon, SparkleIcon } from '@phosphor-icons/react'
-import { streamEnhance } from '@/lib/ai'
+import { useEffect, useRef, useState } from 'react';
+import { PaperPlaneTiltIcon, XIcon, SparkleIcon } from '@phosphor-icons/react';
+import { streamEnhance } from '@/lib/ai';
 
 interface EnhanceInputProps {
-  selectedText: string
-  resumeContext: string
-  bottomY: number  // container-relative Y of bottom of selected line
-  onClose: () => void
-  onApply: (replacement: string) => void
+  selectedText: string;
+  resumeContext: string;
+  bottomY: number; // container-relative Y of bottom of selected line
+  onClose: () => void;
+  onApply: (replacement: string) => void;
 }
 
 export default function EnhanceInput({
@@ -19,33 +19,33 @@ export default function EnhanceInput({
   onClose,
   onApply,
 }: EnhanceInputProps) {
-  const [instruction, setInstruction] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const cardRef = useRef<HTMLDivElement>(null)
-  const abortRef = useRef<AbortController | null>(null)
+  const [instruction, setInstruction] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   // Refs so event handlers always see current values without stale closure issues
-  const instructionRef = useRef(instruction)
-  instructionRef.current = instruction
-  const loadingRef = useRef(loading)
-  loadingRef.current = loading
+  const instructionRef = useRef(instruction);
+  instructionRef.current = instruction;
+  const loadingRef = useRef(loading);
+  loadingRef.current = loading;
 
   useEffect(() => {
-    textareaRef.current?.focus()
-  }, [])
+    textareaRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        abortRef.current?.abort()
-        onClose()
+        abortRef.current?.abort();
+        onClose();
       }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const shake = () => {
     cardRef.current?.animate(
@@ -58,24 +58,24 @@ export default function EnhanceInput({
         { transform: 'translateX(-50%)' },
       ],
       { duration: 280, easing: 'ease-in-out' }
-    )
-  }
+    );
+  };
 
   // Backdrop mousedown: close if empty, shake if text/loading
   const handleBackdropMouseDown = (e: React.MouseEvent) => {
     if (loadingRef.current || instructionRef.current.trim()) {
-      e.preventDefault() // keep focus in textarea, don't dismiss
-      shake()
+      e.preventDefault(); // keep focus in textarea, don't dismiss
+      shake();
     } else {
-      onClose()
+      onClose();
     }
-  }
+  };
 
   const handleSubmit = async () => {
-    if (!instruction.trim() || loading) return
+    if (!instruction.trim() || loading) return;
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     abortRef.current = streamEnhance({
       instruction: instruction.trim(),
@@ -83,24 +83,24 @@ export default function EnhanceInput({
       resumeContext,
       onChunk: () => {},
       onDone: (fullText) => {
-        setLoading(false)
-        const match = fullText.match(/<<<SUGGESTION>>>([\s\S]*?)<<<END>>>/)
-        const replacement = match ? match[1].trim() : fullText.trim()
-        onApply(replacement)
+        setLoading(false);
+        const match = fullText.match(/<<<SUGGESTION>>>([\s\S]*?)<<<END>>>/);
+        const replacement = match ? match[1].trim() : fullText.trim();
+        onApply(replacement);
       },
       onError: (errMsg) => {
-        setLoading(false)
-        setError(errMsg)
+        setLoading(false);
+        setError(errMsg);
       },
-    })
-  }
+    });
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit()
+      e.preventDefault();
+      handleSubmit();
     }
-  }
+  };
 
   return (
     <>
@@ -124,7 +124,9 @@ export default function EnhanceInput({
         <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-surface-2 rounded-t-xl">
           <div className="flex items-center gap-2">
             <SparkleIcon size={14} className="text-secondary" weight="fill" />
-            <span className="text-sm font-medium text-text">Enhance with AI</span>
+            <span className="text-sm font-medium text-text">
+              Enhance with AI
+            </span>
           </div>
           <button
             onClick={onClose}
@@ -137,7 +139,9 @@ export default function EnhanceInput({
 
         {/* Selected text context */}
         <div className="px-3 py-2 border-b border-border bg-surface-2">
-          <div className="text-[10px] uppercase tracking-wide text-faint mb-1">Selected text</div>
+          <div className="text-[10px] uppercase tracking-wide text-faint mb-1">
+            Selected text
+          </div>
           <div className="text-xs text-muted line-clamp-3 font-mono">
             {selectedText}
           </div>
@@ -195,5 +199,5 @@ export default function EnhanceInput({
         </div>
       </div>
     </>
-  )
+  );
 }

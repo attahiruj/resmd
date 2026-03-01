@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   EditorView,
   ViewPlugin,
@@ -8,12 +8,12 @@ import {
   type DecorationSet,
   type ViewUpdate,
   keymap,
-} from "@codemirror/view";
-import { EditorState, Compartment, Prec, type Range } from "@codemirror/state";
-import { markdown } from "@codemirror/lang-markdown";
-import { history, defaultKeymap, historyKeymap } from "@codemirror/commands";
-import { SparkleIcon } from "@phosphor-icons/react";
-import EnhanceInput from "@/components/editor/EnhanceInput";
+} from '@codemirror/view';
+import { EditorState, Compartment, Prec, type Range } from '@codemirror/state';
+import { markdown } from '@codemirror/lang-markdown';
+import { history, defaultKeymap, historyKeymap } from '@codemirror/commands';
+import { SparkleIcon } from '@phosphor-icons/react';
+import EnhanceInput from '@/components/editor/EnhanceInput';
 
 interface EditorProps {
   value: string;
@@ -50,7 +50,7 @@ function applyInlineToView(view: EditorView, marker: string) {
 }
 
 function applyHeadingToView(view: EditorView, level: number) {
-  const prefix = "#".repeat(level) + " ";
+  const prefix = '#'.repeat(level) + ' ';
   const { from, to } = view.state.selection.main;
   const startLine = view.state.doc.lineAt(from);
   const endLine = view.state.doc.lineAt(to);
@@ -64,9 +64,9 @@ function applyHeadingToView(view: EditorView, level: number) {
 
   const changes = lines.map((line) => {
     if (allMatch) {
-      return { from: line.from, to: line.from + prefix.length, insert: "" };
+      return { from: line.from, to: line.from + prefix.length, insert: '' };
     }
-    const stripped = line.text.replace(/^#{1,6} /, "");
+    const stripped = line.text.replace(/^#{1,6} /, '');
     return { from: line.from, to: line.to, insert: prefix + stripped };
   });
 
@@ -78,7 +78,7 @@ function applyHeadingToView(view: EditorView, level: number) {
 function findBestOccurrence(
   content: string,
   word: string,
-  context: string,
+  context: string
 ): number {
   // Extract meaningful words from context (length > 2 to skip noise)
   const contextWords = context
@@ -95,8 +95,8 @@ function findBestOccurrence(
     if (idx === -1) break;
 
     if (contextWords.length > 0) {
-      const lineStart = content.lastIndexOf("\n", idx) + 1;
-      const lineEnd = content.indexOf("\n", idx);
+      const lineStart = content.lastIndexOf('\n', idx) + 1;
+      const lineEnd = content.indexOf('\n', idx);
       const line = content
         .slice(lineStart, lineEnd === -1 ? content.length : lineEnd)
         .toLowerCase();
@@ -128,30 +128,30 @@ function buildDecorations(view: EditorView): DecorationSet {
 
       if (/^!/.test(text)) {
         deco.push(
-          Decoration.line({ class: "cm-resmd-directive" }).range(line.from),
+          Decoration.line({ class: 'cm-resmd-directive' }).range(line.from)
         );
       } else if (/^# .+/.test(text)) {
         deco.push(
-          Decoration.line({ class: "cm-resmd-section" }).range(line.from),
+          Decoration.line({ class: 'cm-resmd-section' }).range(line.from)
         );
       } else if (/^## .+/.test(text)) {
         deco.push(
-          Decoration.line({ class: "cm-resmd-entry" }).range(line.from),
+          Decoration.line({ class: 'cm-resmd-entry' }).range(line.from)
         );
       } else if (/^- /.test(text)) {
         deco.push(
-          Decoration.line({ class: "cm-resmd-bullet" }).range(line.from),
+          Decoration.line({ class: 'cm-resmd-bullet' }).range(line.from)
         );
       } else {
         const kvMatch = /^([A-Za-z][^:\n#]{1,30}):\s*.+/.exec(text);
-        if (kvMatch && !text.startsWith("#")) {
-          const colonIdx = text.indexOf(":");
+        if (kvMatch && !text.startsWith('#')) {
+          const colonIdx = text.indexOf(':');
           if (colonIdx > 0) {
             deco.push(
-              Decoration.mark({ class: "cm-resmd-key" }).range(
+              Decoration.mark({ class: 'cm-resmd-key' }).range(
                 line.from,
-                line.from + colonIdx,
-              ),
+                line.from + colonIdx
+              )
             );
           }
         }
@@ -175,39 +175,39 @@ const resMarkupHighlight = ViewPlugin.fromClass(
       }
     }
   },
-  { decorations: (v) => v.decorations },
+  { decorations: (v) => v.decorations }
 );
 
 // ─── Editor theme ─────────────────────────────────────────────────────────────
 
 function makeTheme(fontSize: number) {
   return EditorView.theme({
-    "&": {
-      height: "100%",
-      background: "var(--color-editor-bg)",
+    '&': {
+      height: '100%',
+      background: 'var(--color-editor-bg)',
     },
-    ".cm-scroller": {
+    '.cm-scroller': {
       fontFamily:
         'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
-      lineHeight: "1.75",
+      lineHeight: '1.75',
     },
-    ".cm-content": {
-      padding: "16px 24px",
-      caretColor: "var(--color-accent)",
-      color: "var(--color-text)",
+    '.cm-content': {
+      padding: '16px 24px',
+      caretColor: 'var(--color-accent)',
+      color: 'var(--color-text)',
       fontSize: `${fontSize}px`,
     },
-    ".cm-line": { padding: "0" },
-    "&.cm-focused": { outline: "none" },
-    "&.cm-focused .cm-cursor": { borderLeftColor: "var(--color-accent)" },
-    ".cm-selectionBackground": {
-      background: "var(--color-accent-muted) !important",
+    '.cm-line': { padding: '0' },
+    '&.cm-focused': { outline: 'none' },
+    '&.cm-focused .cm-cursor': { borderLeftColor: 'var(--color-accent)' },
+    '.cm-selectionBackground': {
+      background: 'var(--color-accent-muted) !important',
     },
-    "&.cm-focused .cm-selectionBackground": {
-      background: "var(--color-accent-muted) !important",
+    '&.cm-focused .cm-selectionBackground': {
+      background: 'var(--color-accent-muted) !important',
     },
-    ".cm-gutters": { display: "none" },
-    ".cm-activeLine": { backgroundColor: "transparent" },
+    '.cm-gutters': { display: 'none' },
+    '.cm-activeLine': { backgroundColor: 'transparent' },
   });
 }
 
@@ -216,8 +216,8 @@ function makeTheme(fontSize: number) {
 const DEFAULT_FONT_SIZE = 14;
 
 interface SelectionPopup {
-  x: number;       // container-relative X center (for toolbar)
-  y: number;       // container-relative top of selection (for toolbar)
+  x: number; // container-relative X center (for toolbar)
+  y: number; // container-relative top of selection (for toolbar)
   bottomY: number; // container-relative bottom of first selected line (for card)
   selectedText: string;
 }
@@ -227,7 +227,7 @@ export default function Editor({
   onChange,
   jumpTarget,
   onJumpComplete,
-  resumeContext = "",
+  resumeContext = '',
   onEnhance,
 }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -243,7 +243,7 @@ export default function Editor({
   const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE);
   const [showZoomPill, setShowZoomPill] = useState(false);
   const [selectionPopup, setSelectionPopup] = useState<SelectionPopup | null>(
-    null,
+    null
   );
   const [showEnhanceInput, setShowEnhanceInput] = useState(false);
   const showEnhanceInputRef = useRef(false);
@@ -276,7 +276,7 @@ export default function Editor({
       setShowEnhanceInput(false);
       setSelectionPopup(null);
     },
-    [selectionPopup],
+    [selectionPopup]
   );
   useEffect(() => {
     if (!jumpTarget) return;
@@ -334,28 +334,28 @@ export default function Editor({
 
     const zoomKeymap = keymap.of([
       {
-        key: "Ctrl-=",
+        key: 'Ctrl-=',
         run: () => {
           changeZoomRef.current(1);
           return true;
         },
       },
       {
-        key: "Ctrl-Shift-=",
+        key: 'Ctrl-Shift-=',
         run: () => {
           changeZoomRef.current(1);
           return true;
         },
       },
       {
-        key: "Ctrl--",
+        key: 'Ctrl--',
         run: () => {
           changeZoomRef.current(-1);
           return true;
         },
       },
       {
-        key: "Ctrl-0",
+        key: 'Ctrl-0',
         run: () => {
           changeZoomRef.current(14 - fontSizeRef.current);
           return true;
@@ -365,23 +365,23 @@ export default function Editor({
 
     const formatKeymap = keymap.of([
       {
-        key: "Mod-b",
+        key: 'Mod-b',
         run: (view) => {
-          applyInlineToView(view, "*");
+          applyInlineToView(view, '*');
           return true;
         },
       },
       {
-        key: "Mod-i",
+        key: 'Mod-i',
         run: (view) => {
-          applyInlineToView(view, "~");
+          applyInlineToView(view, '~');
           return true;
         },
       },
       {
-        key: "Mod-u",
+        key: 'Mod-u',
         run: (view) => {
-          applyInlineToView(view, "_");
+          applyInlineToView(view, '_');
           return true;
         },
       },
@@ -405,7 +405,7 @@ export default function Editor({
               onChangeRef.current(newValue);
               if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
               saveTimerRef.current = setTimeout(() => {
-                localStorage.setItem("resmd_draft", newValue);
+                localStorage.setItem('resmd_draft', newValue);
               }, 500);
             }
 
@@ -431,7 +431,7 @@ export default function Editor({
                   // Clamp so popup stays inside container (popup ~190px wide → 95px half)
                   const clampedX = Math.max(
                     95,
-                    Math.min(rect.width - 95, rawX),
+                    Math.min(rect.width - 95, rawX)
                   );
                   const topY = fromCoords.top - rect.top;
                   const bottomY = fromCoords.bottom - rect.top;
@@ -440,9 +440,14 @@ export default function Editor({
                   rafRef.current = requestAnimationFrame(() => {
                     const selectedText = update.state.doc.sliceString(
                       sel.from,
-                      sel.to,
+                      sel.to
                     );
-                    setSelectionPopup({ x: clampedX, y: topY, bottomY, selectedText });
+                    setSelectionPopup({
+                      x: clampedX,
+                      y: topY,
+                      bottomY,
+                      selectedText,
+                    });
                   });
                 }
               } else {
@@ -498,27 +503,27 @@ export default function Editor({
           style={{
             left: `${selectionPopup.x}px`,
             top: `${selectionPopup.y}px`,
-            transform: "translate(-50%, calc(-100% - 10px))",
+            transform: 'translate(-50%, calc(-100% - 10px))',
           }}
         >
           {/* Inline formats — markers match parseInline: *bold* ~italic~ _underline_ */}
           <FormatBtn
             title="Bold (Ctrl+B)  →  *text*"
-            onClick={() => applyInline("*")}
+            onClick={() => applyInline('*')}
             className="font-bold"
           >
             B
           </FormatBtn>
           <FormatBtn
             title="Italic (Ctrl+I)  →  ~text~"
-            onClick={() => applyInline("~")}
+            onClick={() => applyInline('~')}
             className="italic"
           >
             I
           </FormatBtn>
           <FormatBtn
             title="Underline  →  _text_"
-            onClick={() => applyInline("_")}
+            onClick={() => applyInline('_')}
             className="underline"
           >
             U
@@ -578,17 +583,17 @@ export default function Editor({
           <span
             className="absolute left-1/2 -bottom-[5px] -translate-x-1/2 w-0 h-0 block"
             style={{
-              borderLeft: "5px solid transparent",
-              borderRight: "5px solid transparent",
-              borderTop: "5px solid var(--color-border)",
+              borderLeft: '5px solid transparent',
+              borderRight: '5px solid transparent',
+              borderTop: '5px solid var(--color-border)',
             }}
           />
           <span
             className="absolute left-1/2 -bottom-[4px] -translate-x-1/2 w-0 h-0 block"
             style={{
-              borderLeft: "4px solid transparent",
-              borderRight: "4px solid transparent",
-              borderTop: "4px solid var(--color-surface)",
+              borderLeft: '4px solid transparent',
+              borderRight: '4px solid transparent',
+              borderTop: '4px solid var(--color-surface)',
             }}
           />
         </div>
@@ -611,7 +616,7 @@ export default function Editor({
       {/* Zoom level pill */}
       <div
         className={`absolute bottom-4 right-4 text-xs px-2 py-0.5 rounded-md bg-surface border border-border text-muted pointer-events-none select-none transition-opacity duration-300 ${
-          showZoomPill ? "opacity-100" : "opacity-0"
+          showZoomPill ? 'opacity-100' : 'opacity-0'
         }`}
       >
         {fontSize}px
@@ -628,10 +633,10 @@ function FormatBtn({
   title,
   className = '',
 }: {
-  children: React.ReactNode
-  onClick: () => void
-  title: string
-  className?: string
+  children: React.ReactNode;
+  onClick: () => void;
+  title: string;
+  className?: string;
 }) {
   return (
     <button
@@ -643,5 +648,5 @@ function FormatBtn({
     >
       {children}
     </button>
-  )
+  );
 }

@@ -27,5 +27,5 @@ export default function EditorLoading() {
       {/* Mobile skeleton */}
       <div className="md:hidden flex-1 bg-editor-bg" />
     </div>
-  )
+  );
 }

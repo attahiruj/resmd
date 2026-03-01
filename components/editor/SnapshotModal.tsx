@@ -1,16 +1,20 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState } from 'react';
 
 interface SnapshotModalProps {
-  variantId: string
-  rawContent: string
-  templateId: string
-  onClose: () => void
-  onSaved: () => void
+  variantId: string;
+  rawContent: string;
+  templateId: string;
+  onClose: () => void;
+  onSaved: () => void;
 }
 
-const SUGGESTIONS = ['Updated experience', 'Tailored for [Company]', 'Added new project']
+const SUGGESTIONS = [
+  'Updated experience',
+  'Tailored for [Company]',
+  'Added new project',
+];
 
 export default function SnapshotModal({
   variantId,
@@ -19,36 +23,40 @@ export default function SnapshotModal({
   onClose,
   onSaved,
 }: SnapshotModalProps) {
-  const [message, setMessage] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
+  const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
   const handleSave = async () => {
-    if (!message.trim() || saving) return
-    setSaving(true)
-    setError(null)
+    if (!message.trim() || saving) return;
+    setSaving(true);
+    setError(null);
 
     try {
       const res = await fetch(`/api/variants/${variantId}/snapshots`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rawContent, message: message.trim(), templateId }),
-      })
+        body: JSON.stringify({
+          rawContent,
+          message: message.trim(),
+          templateId,
+        }),
+      });
 
       if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error ?? 'Failed to save snapshot')
+        const data = await res.json();
+        throw new Error(data.error ?? 'Failed to save snapshot');
       }
 
-      setSaved(true)
-      setTimeout(() => onSaved(), 1200)
+      setSaved(true);
+      setTimeout(() => onSaved(), 1200);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save')
+      setError(err instanceof Error ? err.message : 'Failed to save');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   return (
     <div
@@ -66,7 +74,9 @@ export default function SnapshotModal({
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleSave();
+          }}
           placeholder="Describe this version…"
           autoFocus
           className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm text-text placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-accent transition-colors duration-150"
@@ -84,9 +94,7 @@ export default function SnapshotModal({
           ))}
         </div>
 
-        {error && (
-          <p className="text-xs text-danger mb-3">{error}</p>
-        )}
+        {error && <p className="text-xs text-danger mb-3">{error}</p>}
 
         <div className="flex gap-2 justify-end">
           <button
@@ -105,5 +113,5 @@ export default function SnapshotModal({
         </div>
       </div>
     </div>
-  )
+  );
 }

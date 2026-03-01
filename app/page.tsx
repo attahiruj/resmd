@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useState, useEffect } from "react";
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import {
   HeartIcon,
   TerminalIcon,
@@ -16,8 +16,8 @@ import {
   CoffeeIcon,
   SunIcon,
   MoonIcon,
-} from "@phosphor-icons/react";
-import { applyTheme, getStoredThemePrefs } from "@/lib/themes";
+} from '@phosphor-icons/react';
+import { applyTheme, getStoredThemePrefs } from '@/lib/themes';
 
 export default function Home() {
   return (
@@ -41,11 +41,11 @@ function Nav() {
   useEffect(() => {
     const { themeId, mode } = getStoredThemePrefs();
     applyTheme(themeId, mode);
-    setIsDark(mode === "dark");
+    setIsDark(mode === 'dark');
   }, []);
 
   const toggleTheme = () => {
-    const newMode = isDark ? "light" : "dark";
+    const newMode = isDark ? 'light' : 'dark';
     const { themeId } = getStoredThemePrefs();
     applyTheme(themeId, newMode);
     setIsDark(!isDark);
@@ -61,7 +61,7 @@ function Nav() {
           <button
             onClick={toggleTheme}
             className="p-2 rounded-full text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150"
-            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
           </button>
@@ -119,7 +119,7 @@ function Hero() {
             </div>
 
             <h1 className="reveal-up reveal-delay-1 font-display text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight text-text mb-6">
-              Write resumes{" "}
+              Write resumes{' '}
               <span className="text-gradient-shimmer">like code.</span>
               <br />
               <span className="text-muted text-4xl sm:text-5xl lg:text-6xl">
@@ -269,17 +269,17 @@ function CodeLine({
   type,
   children,
 }: {
-  type: "section" | "entry" | "kv" | "bullet";
+  type: 'section' | 'entry' | 'kv' | 'bullet';
   children: React.ReactNode;
 }) {
   const color =
-    type === "section"
-      ? "text-accent font-bold"
-      : type === "entry"
-        ? "text-text font-semibold"
-        : type === "kv"
-          ? "text-secondary"
-          : "text-muted";
+    type === 'section'
+      ? 'text-accent font-bold'
+      : type === 'entry'
+        ? 'text-text font-semibold'
+        : type === 'kv'
+          ? 'text-secondary'
+          : 'text-muted';
   return <div className={color}>{children}</div>;
 }
 
@@ -288,21 +288,21 @@ function CodeLine({
 function HowItWorks() {
   const steps = [
     {
-      n: "01",
-      title: "Write in plain text",
-      body: "Use ResMarkup syntax — sections, entries, key-value pairs. No forms, no drag-drop. Just you and your keyboard.",
-      code: "# Experience\n## Engineer @ Stripe\n• Built payment infra",
+      n: '01',
+      title: 'Write in plain text',
+      body: 'Use ResMarkup syntax — sections, entries, key-value pairs. No forms, no drag-drop. Just you and your keyboard.',
+      code: '# Experience\n## Engineer @ Stripe\n• Built payment infra',
       icon: <TerminalIcon className="w-5 h-5" />,
     },
     {
-      n: "02",
-      title: "Watch it live",
-      body: "Every keystroke updates the preview instantly. Switch templates in one click — same content, fresh look.",
+      n: '02',
+      title: 'Watch it live',
+      body: 'Every keystroke updates the preview instantly. Switch templates in one click — same content, fresh look.',
       icon: <EyeIcon className="w-5 h-5" />,
     },
     {
-      n: "03",
-      title: "Branch & tailor",
+      n: '03',
+      title: 'Branch & tailor',
       body: 'Clone variants for each application. Keep your "master" clean while customizing for specific roles.',
       icon: <GitBranchIcon className="w-5 h-5" />,
     },
@@ -369,31 +369,31 @@ function Features() {
   const features = [
     {
       icon: <FileTextIcon />,
-      label: "ResMarkup",
-      title: "Plain text you own",
-      body: "No proprietary format. ResMarkup is readable text you could write anywhere. The platform makes it beautiful.",
-      accent: "accent",
+      label: 'ResMarkup',
+      title: 'Plain text you own',
+      body: 'No proprietary format. ResMarkup is readable text you could write anywhere. The platform makes it beautiful.',
+      accent: 'accent',
     },
     {
       icon: <GitBranchIcon />,
-      label: "Variants",
-      title: "One base, many doors",
-      body: "Clone any variant to tailor for roles. Engineering CV, management track, freelance pitch — branched, not duplicated.",
-      accent: "secondary",
+      label: 'Variants',
+      title: 'One base, many doors',
+      body: 'Clone any variant to tailor for roles. Engineering CV, management track, freelance pitch — branched, not duplicated.',
+      accent: 'secondary',
     },
     {
       icon: <SparkleIcon />,
-      label: "AI",
-      title: "Enhance, never replace",
-      body: "Bullet optimizer, section reviewer, job match scorer. Every AI suggestion shown as diff — you decide what stays.",
-      accent: "secondary",
+      label: 'AI',
+      title: 'Enhance, never replace',
+      body: 'Bullet optimizer, section reviewer, job match scorer. Every AI suggestion shown as diff — you decide what stays.',
+      accent: 'secondary',
     },
     {
       icon: <PaletteIcon />,
-      label: "Templates",
-      title: "Swap skin instantly",
-      body: "Minimal, Modern, Technical, Executive, Creative. Switch templates in one click — content adapts automatically.",
-      accent: "accent",
+      label: 'Templates',
+      title: 'Swap skin instantly',
+      body: 'Minimal, Modern, Technical, Executive, Creative. Switch templates in one click — content adapts automatically.',
+      accent: 'accent',
     },
   ];
 
@@ -425,18 +425,18 @@ function Features() {
           {features.map((f, i) => (
             <div
               key={f.title}
-              className={`reveal-up reveal-delay-${i + 1} group relative bg-surface border border-border rounded-2xl p-6 hover:-translate-y-2 transition-all duration-300 ${f.accent === "accent" ? "hover:border-accent/50" : "hover:border-secondary/50"}`}
+              className={`reveal-up reveal-delay-${i + 1} group relative bg-surface border border-border rounded-2xl p-6 hover:-translate-y-2 transition-all duration-300 ${f.accent === 'accent' ? 'hover:border-accent/50' : 'hover:border-secondary/50'}`}
             >
               <div
-                className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity ${f.accent === "accent" ? "bg-accent/5" : "bg-secondary/5"}`}
+                className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity ${f.accent === 'accent' ? 'bg-accent/5' : 'bg-secondary/5'}`}
               />
               <div
-                className={`relative w-11 h-11 rounded-xl flex items-center justify-center mb-5 ${f.accent === "accent" ? "bg-accent/10 text-accent" : "bg-secondary/10 text-secondary"}`}
+                className={`relative w-11 h-11 rounded-xl flex items-center justify-center mb-5 ${f.accent === 'accent' ? 'bg-accent/10 text-accent' : 'bg-secondary/10 text-secondary'}`}
               >
                 {f.icon}
               </div>
               <div
-                className={`relative text-xs font-medium mb-2 ${f.accent === "accent" ? "text-accent" : "text-secondary"}`}
+                className={`relative text-xs font-medium mb-2 ${f.accent === 'accent' ? 'text-accent' : 'text-secondary'}`}
               >
                 {f.label}
               </div>

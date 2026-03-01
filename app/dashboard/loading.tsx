@@ -22,7 +22,7 @@ export default function DashboardLoading() {
 
         {/* Skeleton variant cards */}
         <div className="flex flex-col gap-3">
-          {[0, 1, 2].map(i => (
+          {[0, 1, 2].map((i) => (
             <div
               key={i}
               className="bg-surface border border-border rounded-xl p-4 flex items-center gap-4"
@@ -41,5 +41,5 @@ export default function DashboardLoading() {
         </div>
       </div>
     </div>
-  )
+  );
 }

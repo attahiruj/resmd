@@ -1,30 +1,37 @@
-'use client'
+'use client';
 
-import { useEffect, useRef, useState } from 'react'
-import { ArrowCounterClockwiseIcon, CheckIcon, CopyIcon, MinusIcon, PaperPlaneTiltIcon, XIcon } from '@phosphor-icons/react'
-import { parseSuggestion } from '@/lib/prompts'
+import { useEffect, useRef, useState } from 'react';
+import {
+  ArrowCounterClockwiseIcon,
+  CheckIcon,
+  CopyIcon,
+  MinusIcon,
+  PaperPlaneTiltIcon,
+  XIcon,
+} from '@phosphor-icons/react';
+import { parseSuggestion } from '@/lib/prompts';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-type EditStatus = 'pending' | 'applied' | 'dismissed'
+type EditStatus = 'pending' | 'applied' | 'dismissed';
 
 interface Edit {
-  search: string
-  replace: string
-  status: EditStatus
+  search: string;
+  replace: string;
+  status: EditStatus;
 }
 
 interface Message {
-  role: 'user' | 'assistant'
-  prose: string
-  edits: Edit[]
+  role: 'user' | 'assistant';
+  prose: string;
+  edits: Edit[];
 }
 
 interface AIChatProps {
-  resumeContent: string
-  onApplyEdit?: (search: string, replace: string) => void
+  resumeContent: string;
+  onApplyEdit?: (search: string, replace: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -32,76 +39,90 @@ interface AIChatProps {
 // ---------------------------------------------------------------------------
 
 export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
-  const [minimized, setMinimized] = useState(false)
-  const historyRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [minimized, setMinimized] = useState(false);
+  const historyRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (historyRef.current) {
-      historyRef.current.scrollTop = historyRef.current.scrollHeight
+      historyRef.current.scrollTop = historyRef.current.scrollHeight;
     }
-  }, [messages, loading])
+  }, [messages, loading]);
 
-  const updateEditStatus = (msgIdx: number, editIdx: number, status: EditStatus) => {
-    setMessages(prev =>
+  const updateEditStatus = (
+    msgIdx: number,
+    editIdx: number,
+    status: EditStatus
+  ) => {
+    setMessages((prev) =>
       prev.map((m, mi) =>
-        mi !== msgIdx ? m : {
-          ...m,
-          edits: m.edits.map((e, ei) => ei === editIdx ? { ...e, status } : e),
-        }
+        mi !== msgIdx
+          ? m
+          : {
+              ...m,
+              edits: m.edits.map((e, ei) =>
+                ei === editIdx ? { ...e, status } : e
+              ),
+            }
       )
-    )
-  }
+    );
+  };
 
   const handleApply = (msgIdx: number, editIdx: number) => {
-    const edit = messages[msgIdx]?.edits[editIdx]
-    if (!edit || edit.status !== 'pending') return
-    onApplyEdit?.(edit.search, edit.replace)
-    updateEditStatus(msgIdx, editIdx, 'applied')
-  }
+    const edit = messages[msgIdx]?.edits[editIdx];
+    if (!edit || edit.status !== 'pending') return;
+    onApplyEdit?.(edit.search, edit.replace);
+    updateEditStatus(msgIdx, editIdx, 'applied');
+  };
 
   const handleDismiss = (msgIdx: number, editIdx: number) => {
-    updateEditStatus(msgIdx, editIdx, 'dismissed')
-  }
+    updateEditStatus(msgIdx, editIdx, 'dismissed');
+  };
 
   const handleApplyAll = (msgIdx: number) => {
-    const msg = messages[msgIdx]
-    if (!msg) return
+    const msg = messages[msgIdx];
+    if (!msg) return;
     msg.edits.forEach((edit, ei) => {
       if (edit.status === 'pending') {
-        onApplyEdit?.(edit.search, edit.replace)
+        onApplyEdit?.(edit.search, edit.replace);
       }
-    })
-    setMessages(prev =>
+    });
+    setMessages((prev) =>
       prev.map((m, mi) =>
-        mi !== msgIdx ? m : {
-          ...m,
-          edits: m.edits.map(e => e.status === 'pending' ? { ...e, status: 'applied' as EditStatus } : e),
-        }
+        mi !== msgIdx
+          ? m
+          : {
+              ...m,
+              edits: m.edits.map((e) =>
+                e.status === 'pending'
+                  ? { ...e, status: 'applied' as EditStatus }
+                  : e
+              ),
+            }
       )
-    )
-  }
+    );
+  };
 
   const handleCopy = (text: string, idx: number) => {
-    navigator.clipboard.writeText(text)
-    setCopiedIdx(idx)
-    setTimeout(() => setCopiedIdx(null), 1500)
-  }
+    navigator.clipboard.writeText(text);
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 1500);
+  };
 
   const send = async (overrideText?: string, historyOverride?: Message[]) => {
-    const text = (overrideText ?? input).trim()
-    if (!text || loading) return
+    const text = (overrideText ?? input).trim();
+    if (!text || loading) return;
 
-    const history = historyOverride ?? messages
-    const userMsg: Message = { role: 'user', prose: text, edits: [] }
-    const next = [...history, userMsg]
-    setMessages(next)
-    if (!overrideText) setInput('')
-    setLoading(true)
+    const history = historyOverride ?? messages;
+    const userMsg: Message = { role: 'user', prose: text, edits: [] };
+    const next = [...history, userMsg];
+    setMessages(next);
+    if (!overrideText) setInput('');
+    setLoading(true);
 
     try {
       const res = await fetch('/api/ai/chat', {
@@ -111,74 +132,91 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
           message: text,
           resumeContent,
           // Send only prose for history — the full resume is always in the preamble
-          history: history.map(m => ({ role: m.role, content: m.prose })),
+          history: history.map((m) => ({ role: m.role, content: m.prose })),
         }),
-      })
+      });
 
       if (res.status === 429) {
-        const after = res.headers.get('Retry-After')
-        setMessages([...next, {
-          role: 'assistant',
-          prose: `Slow down — try again${after ? ` in ${after}s` : ' in a moment'}.`,
-          edits: [],
-        }])
-        return
+        const after = res.headers.get('Retry-After');
+        setMessages([
+          ...next,
+          {
+            role: 'assistant',
+            prose: `Slow down — try again${after ? ` in ${after}s` : ' in a moment'}.`,
+            edits: [],
+          },
+        ]);
+        return;
       }
 
-      const data = await res.json()
+      const data = await res.json();
       if (data.reply) {
-        const { prose, edits } = parseSuggestion(data.reply)
-        setMessages([...next, {
-          role: 'assistant',
-          prose,
-          edits: edits.map(e => ({ ...e, status: 'pending' as EditStatus })),
-        }])
+        const { prose, edits } = parseSuggestion(data.reply);
+        setMessages([
+          ...next,
+          {
+            role: 'assistant',
+            prose,
+            edits: edits.map((e) => ({
+              ...e,
+              status: 'pending' as EditStatus,
+            })),
+          },
+        ]);
       } else {
-        setMessages([...next, {
-          role: 'assistant',
-          prose: 'Something went wrong. Please try again.',
-          edits: [],
-        }])
+        setMessages([
+          ...next,
+          {
+            role: 'assistant',
+            prose: 'Something went wrong. Please try again.',
+            edits: [],
+          },
+        ]);
       }
     } catch {
-      setMessages([...next, {
-        role: 'assistant',
-        prose: 'Failed to reach the AI. Check your connection.',
-        edits: [],
-      }])
+      setMessages([
+        ...next,
+        {
+          role: 'assistant',
+          prose: 'Failed to reach the AI. Check your connection.',
+          edits: [],
+        },
+      ]);
     } finally {
-      setLoading(false)
-      inputRef.current?.focus()
+      setLoading(false);
+      inputRef.current?.focus();
     }
-  }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      send()
+      e.preventDefault();
+      send();
     }
-  }
+  };
 
   const handleRetry = (msgIdx: number, text: string) => {
-    send(text, messages.slice(0, msgIdx))
-  }
+    send(text, messages.slice(0, msgIdx));
+  };
 
   const handleInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
-    const el = e.currentTarget
-    el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
-  }
+    const el = e.currentTarget;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
 
   return (
     <div className="flex flex-col border-t border-border bg-editor-bg flex-shrink-0">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-border">
         <span className="flex items-center gap-1.5 text-xs text-faint select-none">
-          <span className="text-accent" aria-hidden>✦</span>
+          <span className="text-accent" aria-hidden>
+            ✦
+          </span>
           AI Assistant
         </span>
         <button
-          onClick={() => setMinimized(m => !m)}
+          onClick={() => setMinimized((m) => !m)}
           className="p-1 rounded text-faint hover:text-text hover:bg-surface-2 transition-colors duration-150"
           title={minimized ? 'Expand' : 'Minimize'}
         >
@@ -220,7 +258,11 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
                     className="p-1 rounded text-faint hover:text-text hover:bg-surface-2 transition-colors duration-150"
                     title="Copy"
                   >
-                    {copiedIdx === mi ? <CheckIcon size={11} weight="bold" /> : <CopyIcon size={11} />}
+                    {copiedIdx === mi ? (
+                      <CheckIcon size={11} weight="bold" />
+                    ) : (
+                      <CopyIcon size={11} />
+                    )}
                   </button>
                   <button
                     onClick={() => handleRetry(mi, msg.prose)}
@@ -244,13 +286,14 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
                 )
               )}
 
-              {msg.edits.filter(e => e.status === 'pending').length > 1 && (
+              {msg.edits.filter((e) => e.status === 'pending').length > 1 && (
                 <button
                   onClick={() => handleApplyAll(mi)}
                   className="self-start flex items-center gap-1.5 px-3 py-1.5 text-xs bg-accent text-accent-text rounded-lg hover:opacity-90 transition-opacity duration-150"
                 >
                   <CheckIcon size={12} weight="bold" />
-                  Apply all ({msg.edits.filter(e => e.status === 'pending').length})
+                  Apply all (
+                  {msg.edits.filter((e) => e.status === 'pending').length})
                 </button>
               )}
             </div>
@@ -258,7 +301,9 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
 
           {loading && (
             <div className="flex flex-col gap-0.5 items-start">
-              <span className="text-[10px] uppercase tracking-wide text-faint select-none">AI</span>
+              <span className="text-[10px] uppercase tracking-wide text-faint select-none">
+                AI
+              </span>
               <div className="text-sm rounded-xl px-3 py-1.5 bg-surface border border-border text-muted">
                 <ThinkingDots />
               </div>
@@ -270,7 +315,12 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
       {/* Input row */}
       {!minimized && (
         <div className="flex items-end gap-2 px-3 py-2">
-          <span className="text-accent select-none text-sm flex-shrink-0 pb-1.5" aria-hidden>✦</span>
+          <span
+            className="text-accent select-none text-sm flex-shrink-0 pb-1.5"
+            aria-hidden
+          >
+            ✦
+          </span>
           <textarea
             ref={inputRef}
             rows={1}
@@ -293,7 +343,7 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -301,9 +351,9 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
 // ---------------------------------------------------------------------------
 
 interface SuggestionCardProps {
-  edit: Edit
-  onApply: () => void
-  onDismiss: () => void
+  edit: Edit;
+  onApply: () => void;
+  onDismiss: () => void;
 }
 
 function SuggestionCard({ edit, onApply, onDismiss }: SuggestionCardProps) {
@@ -311,7 +361,9 @@ function SuggestionCard({ edit, onApply, onDismiss }: SuggestionCardProps) {
     <div className="w-full max-w-[95%] rounded-xl border border-border bg-surface overflow-hidden text-xs">
       {/* Header */}
       <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border">
-        <span className="text-accent select-none" aria-hidden>✦</span>
+        <span className="text-accent select-none" aria-hidden>
+          ✦
+        </span>
         <span className="font-medium text-text">
           {edit.status === 'applied' ? 'Applied' : 'Suggested edit'}
         </span>
@@ -320,12 +372,20 @@ function SuggestionCard({ edit, onApply, onDismiss }: SuggestionCardProps) {
       {/* Diff */}
       <div className="flex flex-col divide-y divide-border">
         <div className="px-3 py-2">
-          <div className="text-[10px] uppercase tracking-wide text-faint mb-1.5">Before</div>
-          <pre className="whitespace-pre-wrap font-mono text-[11px] text-muted leading-relaxed">{edit.search}</pre>
+          <div className="text-[10px] uppercase tracking-wide text-faint mb-1.5">
+            Before
+          </div>
+          <pre className="whitespace-pre-wrap font-mono text-[11px] text-muted leading-relaxed">
+            {edit.search}
+          </pre>
         </div>
         <div className="px-3 py-2 bg-accent-muted">
-          <div className="text-[10px] uppercase tracking-wide text-accent mb-1.5">After</div>
-          <pre className="whitespace-pre-wrap font-mono text-[11px] text-text leading-relaxed">{edit.replace}</pre>
+          <div className="text-[10px] uppercase tracking-wide text-accent mb-1.5">
+            After
+          </div>
+          <pre className="whitespace-pre-wrap font-mono text-[11px] text-text leading-relaxed">
+            {edit.replace}
+          </pre>
         </div>
       </div>
 
@@ -356,7 +416,7 @@ function SuggestionCard({ edit, onApply, onDismiss }: SuggestionCardProps) {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -366,9 +426,18 @@ function SuggestionCard({ edit, onApply, onDismiss }: SuggestionCardProps) {
 function ThinkingDots() {
   return (
     <span className="inline-flex gap-1 items-center h-4">
-      <span className="w-1.5 h-1.5 rounded-full bg-muted animate-bounce" style={{ animationDelay: '0ms' }} />
-      <span className="w-1.5 h-1.5 rounded-full bg-muted animate-bounce" style={{ animationDelay: '150ms' }} />
-      <span className="w-1.5 h-1.5 rounded-full bg-muted animate-bounce" style={{ animationDelay: '300ms' }} />
+      <span
+        className="w-1.5 h-1.5 rounded-full bg-muted animate-bounce"
+        style={{ animationDelay: '0ms' }}
+      />
+      <span
+        className="w-1.5 h-1.5 rounded-full bg-muted animate-bounce"
+        style={{ animationDelay: '150ms' }}
+      />
+      <span
+        className="w-1.5 h-1.5 rounded-full bg-muted animate-bounce"
+        style={{ animationDelay: '300ms' }}
+      />
     </span>
-  )
+  );
 }

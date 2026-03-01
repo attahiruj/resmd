@@ -1,32 +1,46 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
-import { getVariant, saveSnapshot } from '@/lib/variantService'
+import { NextRequest, NextResponse } from 'next/server';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getVariant, saveSnapshot } from '@/lib/variantService';
 
 interface Params {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }
 
 // POST /api/variants/[id]/snapshots — save a snapshot
 export async function POST(req: NextRequest, { params }: Params) {
-  const { id } = await params
-  const supabase = createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { id } = await params;
+  const supabase = createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const variant = await getVariant(id)
+    const variant = await getVariant(id);
     if (!variant || variant.userId !== user.id) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    const { rawContent, message, templateId } = await req.json()
+    const { rawContent, message, templateId } = await req.json();
     if (!message?.trim()) {
-      return NextResponse.json({ error: 'Message is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Message is required' },
+        { status: 400 }
+      );
     }
 
-    const snapshot = await saveSnapshot(id, rawContent, message.trim(), templateId)
-    return NextResponse.json({ data: snapshot })
+    const snapshot = await saveSnapshot(
+      id,
+      rawContent,
+      message.trim(),
+      templateId
+    );
+    return NextResponse.json({ data: snapshot });
   } catch {
-    return NextResponse.json({ error: 'Failed to save snapshot' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to save snapshot' },
+      { status: 500 }
+    );
   }
 }

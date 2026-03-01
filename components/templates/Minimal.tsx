@@ -1,19 +1,19 @@
-'use client'
+'use client';
 
-import React from 'react'
+import React from 'react';
 import type {
   TemplateProps,
   ResumeSection,
   SectionItem,
   EntryItem,
   KeyValueItem,
-} from '@/types/resume'
-import { DEFAULT_SETTINGS } from '@/types/resume'
-import { renderInline } from '@/lib/renderInline'
-import { isUrl, extractLink } from "@/lib/inline";
+} from '@/types/resume';
+import { DEFAULT_SETTINGS } from '@/types/resume';
+import { renderInline } from '@/lib/renderInline';
+import { isUrl, extractLink } from '@/lib/inline';
 
 const FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
-const HEADER_META_KEYS = new Set(["name", "title", "role", "position"]);
+const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
 
 export default function Minimal({
   resume,
@@ -28,33 +28,33 @@ export default function Minimal({
     page: {
       fontFamily: FONT,
       fontSize: s.fontSize,
-      color: "#1C1B18",
+      color: '#1C1B18',
       paddingTop: s.marginV,
       paddingBottom: s.marginV,
       paddingLeft: s.marginH,
       paddingRight: s.marginH,
       lineHeight: s.lineHeight,
-      background: "#ffffff",
+      background: '#ffffff',
     },
     header: { marginBottom: 20 },
     name: {
       fontSize: 24,
       fontWeight: 700,
-      color: "#1A1A1A",
+      color: '#1A1A1A',
       marginBottom: 3,
       lineHeight: 1.1,
     },
-    jobTitle: { fontSize: 11, color: "#666666", marginBottom: 6 },
+    jobTitle: { fontSize: 11, color: '#666666', marginBottom: 6 },
     contactRow: {
-      display: "flex",
-      flexDirection: "row" as const,
-      flexWrap: "wrap" as const,
+      display: 'flex',
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
       gap: 4,
     },
-    contactItem: { fontSize: 9, color: "#555555" },
+    contactItem: { fontSize: 9, color: '#555555' },
     contactSep: {
       fontSize: 9,
-      color: "#CCCCCC",
+      color: '#CCCCCC',
       marginLeft: 4,
       marginRight: 4,
     },
@@ -62,98 +62,98 @@ export default function Minimal({
     sectionTitle: {
       fontSize: 7.5,
       fontWeight: 700,
-      textTransform: "uppercase" as const,
-      letterSpacing: "1.2px",
-      color: "#888888",
-      borderBottom: "1px solid #E0E0E0",
+      textTransform: 'uppercase' as const,
+      letterSpacing: '1.2px',
+      color: '#888888',
+      borderBottom: '1px solid #E0E0E0',
       paddingBottom: 3,
       marginBottom: 7,
     },
     entry: { marginBottom: s.entrySpacing },
     entryHeader: {
-      display: "flex",
-      flexDirection: "row" as const,
-      justifyContent: "space-between",
-      alignItems: "flex-start",
+      display: 'flex',
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
     },
-    entryRole: { fontSize: s.fontSize, fontWeight: 700, color: "#1A1A1A" },
-    entryOrg: { fontSize: s.fontSize, fontWeight: 400, color: "#444444" },
+    entryRole: { fontSize: s.fontSize, fontWeight: 700, color: '#1A1A1A' },
+    entryOrg: { fontSize: s.fontSize, fontWeight: 400, color: '#444444' },
     entryMeta: {
       fontSize: s.fontSize - 1,
-      color: "#888888",
-      whiteSpace: "nowrap" as const,
+      color: '#888888',
+      whiteSpace: 'nowrap' as const,
       flexShrink: 0,
       marginLeft: 8,
     },
     entryChildren: {
       paddingLeft: 10,
       marginTop: 3,
-      borderLeft: "1px solid #EEEEEE",
+      borderLeft: '1px solid #EEEEEE',
     },
     bulletRow: {
-      display: "flex",
-      flexDirection: "row" as const,
+      display: 'flex',
+      flexDirection: 'row' as const,
       marginBottom: 2.5,
     },
     bulletDash: {
       fontSize: s.fontSize,
-      color: "#AAAAAA",
+      color: '#AAAAAA',
       marginRight: 5,
       lineHeight: s.lineHeight,
       flexShrink: 0,
     },
     bulletText: {
       fontSize: s.fontSize,
-      color: "#333333",
+      color: '#333333',
       flex: 1,
       lineHeight: s.lineHeight,
     },
     textPara: {
       fontSize: s.fontSize,
-      color: "#444444",
+      color: '#444444',
       marginBottom: 4,
       lineHeight: 1.6,
     },
     kvRow: {
-      display: "flex",
-      flexDirection: "row" as const,
+      display: 'flex',
+      flexDirection: 'row' as const,
       marginBottom: 3,
       gap: 6,
     },
     kvKey: {
       fontSize: s.fontSize - 1,
-      color: "#888888",
+      color: '#888888',
       width: 60,
       flexShrink: 0,
     },
-    kvValue: { fontSize: s.fontSize, color: "#333333", flex: 1 },
+    kvValue: { fontSize: s.fontSize, color: '#333333', flex: 1 },
     kvSkillsRow: {
-      display: "flex",
-      flexDirection: "row" as const,
-      alignItems: "flex-start",
+      display: 'flex',
+      flexDirection: 'row' as const,
+      alignItems: 'flex-start',
       marginBottom: 5,
-      flexWrap: "wrap" as const,
+      flexWrap: 'wrap' as const,
     },
     kvSkillsLabel: {
       fontSize: 8,
-      color: "#888888",
-      textTransform: "uppercase" as const,
-      letterSpacing: "0.5px",
+      color: '#888888',
+      textTransform: 'uppercase' as const,
+      letterSpacing: '0.5px',
       width: 55,
       flexShrink: 0,
       paddingTop: 2,
     },
     kvSkillsTags: {
-      display: "flex",
-      flexDirection: "row" as const,
-      flexWrap: "wrap" as const,
+      display: 'flex',
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
       flex: 1,
       gap: 3,
     },
     tag: {
       fontSize: 8,
-      color: "#555555",
-      backgroundColor: "#F3F3F3",
+      color: '#555555',
+      backgroundColor: '#F3F3F3',
       paddingLeft: 5,
       paddingRight: 5,
       paddingTop: 2,
@@ -162,16 +162,16 @@ export default function Minimal({
     },
     footer: {
       marginTop: 24,
-      borderTop: "1px solid #E8E8E8",
+      borderTop: '1px solid #E8E8E8',
       paddingTop: 6,
-      textAlign: "center" as const,
+      textAlign: 'center' as const,
     },
-    footerText: { fontSize: 8, color: "#BBBBBB" },
+    footerText: { fontSize: 8, color: '#BBBBBB' },
   };
 
   const headerSection = showHeader
     ? (sections.find(
-        (sec) => sec.hint === "keyvalue" || sec.title.toLowerCase() === "bio",
+        (sec) => sec.hint === 'keyvalue' || sec.title.toLowerCase() === 'bio'
       ) ??
       sections[0] ??
       null)
@@ -181,7 +181,7 @@ export default function Minimal({
   const contactEntries: ContactEntry[] = (headerSection?.items ?? []).flatMap(
     (item) => {
       if (
-        item.kind === "keyvalue" &&
+        item.kind === 'keyvalue' &&
         !HEADER_META_KEYS.has(item.key.toLowerCase())
       ) {
         return [
@@ -192,13 +192,13 @@ export default function Minimal({
           },
         ];
       }
-      if (item.kind === "text") {
+      if (item.kind === 'text') {
         const link = extractLink(item.text);
         if (link)
           return [{ key: link.text, href: link.href, rawValue: link.href }];
       }
       return [];
-    },
+    }
   );
 
   const bodySections = sections.filter((sec) => sec !== headerSection);
@@ -219,7 +219,7 @@ export default function Minimal({
                       href={entry.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ color: "inherit", textDecoration: "none" }}
+                      style={{ color: 'inherit', textDecoration: 'none' }}
                     >
                       <span style={S.contactItem}>↗ {entry.key}</span>
                     </a>
@@ -264,7 +264,7 @@ function SectionBlock({
         <ItemBlock
           key={i}
           item={item}
-          isKeyValueSection={section.hint === "keyvalue"}
+          isKeyValueSection={section.hint === 'keyvalue'}
           S={S}
         />
       ))}
@@ -282,10 +282,10 @@ function ItemBlock({
   S: MinimalStyles;
 }) {
   switch (item.kind) {
-    case "keyvalue": {
+    case 'keyvalue': {
       if (isKeyValueSection) {
         const tags = item.value
-          .split(",")
+          .split(',')
           .map((v) => v.trim())
           .filter(Boolean);
         return (
@@ -308,7 +308,7 @@ function ItemBlock({
               href={item.value}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "inherit", textDecoration: "none" }}
+              style={{ color: 'inherit', textDecoration: 'none' }}
             >
               <span style={S.kvKey}>↗ {item.key}</span>
             </a>
@@ -321,16 +321,16 @@ function ItemBlock({
         </div>
       );
     }
-    case "entry":
+    case 'entry':
       return <EntryBlock entry={item} S={S} />;
-    case "bullet":
+    case 'bullet':
       return (
         <div style={S.bulletRow}>
           <span style={S.bulletDash}>–</span>
           <span style={S.bulletText}>{renderInline(item.text)}</span>
         </div>
       );
-    case "text":
+    case 'text':
       return <p style={S.textPara}>{renderInline(item.text)}</p>;
   }
 }
@@ -344,7 +344,10 @@ function EntryBlock({ entry, S }: { entry: EntryItem; S: MinimalStyles }) {
             <span>
               <span style={S.entryRole}>{renderInline(entry.role)}</span>
               {entry.organization && (
-                <span style={S.entryOrg}> @ {renderInline(entry.organization)}</span>
+                <span style={S.entryOrg}>
+                  {' '}
+                  @ {renderInline(entry.organization)}
+                </span>
               )}
             </span>
           ) : (
@@ -363,5 +366,5 @@ function EntryBlock({ entry, S }: { entry: EntryItem; S: MinimalStyles }) {
         </div>
       )}
     </div>
-  )
+  );
 }
