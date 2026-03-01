@@ -1,5 +1,5 @@
 import React from 'react'
-import { Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer'
+import { Document, Page, View, Text, Link, StyleSheet } from '@react-pdf/renderer'
 import type {
   TemplateProps,
   ResumeSection,
@@ -9,6 +9,7 @@ import type {
 } from '@/types/resume'
 import { DEFAULT_SETTINGS } from '@/types/resume'
 import { renderInlinePdf } from '@/lib/renderInlinePdf'
+import { isUrl, extractLink } from '@/lib/inline'
 
 type RS = Required<typeof DEFAULT_SETTINGS>
 
@@ -135,16 +136,23 @@ export default function TechnicalPdf({ resume, isPro }: TemplateProps) {
     sections[0] ??
     null
 
-  const contactItems = (headerSection?.items ?? []).filter(
-    (i): i is KeyValueItem =>
-      i.kind === 'keyvalue' && !HEADER_META_KEYS.has(i.key.toLowerCase()),
-  )
+  type ContactEntry = { key: string; href: string | null; rawValue: string }
+  const contactEntries: ContactEntry[] = (headerSection?.items ?? []).flatMap(item => {
+    if (item.kind === 'keyvalue' && !HEADER_META_KEYS.has(item.key.toLowerCase())) {
+      return [{ key: item.key, href: isUrl(item.value) ? item.value : null, rawValue: item.value }]
+    }
+    if (item.kind === 'text') {
+      const link = extractLink(item.text)
+      if (link) return [{ key: link.text, href: link.href, rawValue: link.href }]
+    }
+    return []
+  })
 
   // Prioritize GitHub/website/portfolio at the front
   const priorityKeys = ['github', 'website', 'portfolio', 'linkedin']
   const sortedContact = [
-    ...contactItems.filter(i => priorityKeys.includes(i.key.toLowerCase())),
-    ...contactItems.filter(i => !priorityKeys.includes(i.key.toLowerCase())),
+    ...contactEntries.filter(e => priorityKeys.includes(e.key.toLowerCase())),
+    ...contactEntries.filter(e => !priorityKeys.includes(e.key.toLowerCase())),
   ]
 
   const bodySections = sections.filter(sec => sec !== headerSection)
@@ -165,10 +173,16 @@ export default function TechnicalPdf({ resume, isPro }: TemplateProps) {
           {meta.title && <Text style={[styles.jobTitle, { fontSize: s.fontSize + 0.5 }]}>{meta.title}</Text>}
           {sortedContact.length > 0 && (
             <View style={styles.contactRow}>
-              {sortedContact.map(item => (
-                <Text key={item.key} style={[styles.contactChip, { fontSize: s.fontSize - 1 }]}>
-                  {item.key}: {item.value}
-                </Text>
+              {sortedContact.map(entry => (
+                entry.href ? (
+                  <Link key={entry.key} src={entry.href} style={{ color: 'inherit', textDecoration: 'none' }}>
+                    <Text style={[styles.contactChip, { fontSize: s.fontSize - 1 }]}>↗ {entry.key}</Text>
+                  </Link>
+                ) : (
+                  <Text key={entry.key} style={[styles.contactChip, { fontSize: s.fontSize - 1 }]}>
+                    {entry.key}: {entry.rawValue}
+                  </Text>
+                )
               ))}
             </View>
           )}
@@ -279,8 +293,16 @@ function TechItemBlock({ item, isKeyValueSection, s }: { item: SectionItem; isKe
       }
       return (
         <View style={styles.kvRow}>
-          <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>{item.key}:</Text>
-          <Text style={[styles.kvValue, { fontSize: s.fontSize }]}>{renderInlinePdf(item.value)}</Text>
+          {isUrl(item.value) ? (
+            <Link src={item.value} style={{ color: 'inherit', textDecoration: 'none' }}>
+              <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>↗ {item.key}</Text>
+            </Link>
+          ) : (
+            <>
+              <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>{item.key}:</Text>
+              <Text style={[styles.kvValue, { fontSize: s.fontSize }]}>{renderInlinePdf(item.value)}</Text>
+            </>
+          )}
         </View>
       )
     }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { CheckIcon, PaperPlaneTiltIcon, XIcon } from '@phosphor-icons/react'
+import { ArrowCounterClockwiseIcon, CheckIcon, CopyIcon, MinusIcon, PaperPlaneTiltIcon, XIcon } from '@phosphor-icons/react'
 import { parseSuggestion } from '@/lib/prompts'
 
 // ---------------------------------------------------------------------------
@@ -35,8 +35,10 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
+  const [minimized, setMinimized] = useState(false)
   const historyRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     if (historyRef.current) {
@@ -84,14 +86,21 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
     )
   }
 
-  const send = async () => {
-    const text = input.trim()
+  const handleCopy = (text: string, idx: number) => {
+    navigator.clipboard.writeText(text)
+    setCopiedIdx(idx)
+    setTimeout(() => setCopiedIdx(null), 1500)
+  }
+
+  const send = async (overrideText?: string, historyOverride?: Message[]) => {
+    const text = (overrideText ?? input).trim()
     if (!text || loading) return
 
+    const history = historyOverride ?? messages
     const userMsg: Message = { role: 'user', prose: text, edits: [] }
-    const next = [...messages, userMsg]
+    const next = [...history, userMsg]
     setMessages(next)
-    setInput('')
+    if (!overrideText) setInput('')
     setLoading(true)
 
     try {
@@ -102,7 +111,7 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
           message: text,
           resumeContent,
           // Send only prose for history — the full resume is always in the preamble
-          history: messages.map(m => ({ role: m.role, content: m.prose })),
+          history: history.map(m => ({ role: m.role, content: m.prose })),
         }),
       })
 
@@ -143,16 +152,41 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
     }
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       send()
     }
   }
 
+  const handleRetry = (msgIdx: number, text: string) => {
+    send(text, messages.slice(0, msgIdx))
+  }
+
+  const handleInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
+    const el = e.currentTarget
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }
+
   return (
     <div className="flex flex-col border-t border-border bg-editor-bg flex-shrink-0">
-      {messages.length > 0 && (
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border">
+        <span className="flex items-center gap-1.5 text-xs text-faint select-none">
+          <span className="text-accent" aria-hidden>✦</span>
+          AI Assistant
+        </span>
+        <button
+          onClick={() => setMinimized(m => !m)}
+          className="p-1 rounded text-faint hover:text-text hover:bg-surface-2 transition-colors duration-150"
+          title={minimized ? 'Expand' : 'Minimize'}
+        >
+          <MinusIcon size={12} />
+        </button>
+      </div>
+
+      {!minimized && messages.length > 0 && (
         <div
           ref={historyRef}
           className="overflow-y-auto px-4 py-3 flex flex-col gap-3"
@@ -161,7 +195,7 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
           {messages.map((msg, mi) => (
             <div
               key={mi}
-              className={`flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+              className={`group flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
             >
               <span className="text-[10px] uppercase tracking-wide text-faint select-none">
                 {msg.role === 'user' ? 'You' : 'AI'}
@@ -176,6 +210,26 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
                   }`}
                 >
                   {msg.prose}
+                </div>
+              )}
+
+              {msg.role === 'user' && (
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                  <button
+                    onClick={() => handleCopy(msg.prose, mi)}
+                    className="p-1 rounded text-faint hover:text-text hover:bg-surface-2 transition-colors duration-150"
+                    title="Copy"
+                  >
+                    {copiedIdx === mi ? <CheckIcon size={11} weight="bold" /> : <CopyIcon size={11} />}
+                  </button>
+                  <button
+                    onClick={() => handleRetry(mi, msg.prose)}
+                    disabled={loading}
+                    className="p-1 rounded text-faint hover:text-text hover:bg-surface-2 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
+                    title="Retry"
+                  >
+                    <ArrowCounterClockwiseIcon size={11} />
+                  </button>
                 </div>
               )}
 
@@ -214,27 +268,30 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
       )}
 
       {/* Input row */}
-      <div className="flex items-center gap-2 px-3 py-2">
-        <span className="text-accent select-none text-sm flex-shrink-0" aria-hidden>✦</span>
-        <input
-          ref={inputRef}
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask AI to improve your resume…"
-          disabled={loading}
-          className="flex-1 bg-transparent text-sm text-text placeholder:text-faint outline-none disabled:opacity-50"
-        />
-        <button
-          onClick={send}
-          disabled={!input.trim() || loading}
-          className="flex-shrink-0 p-1.5 rounded-lg text-accent hover:bg-accent-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          title="Send (Enter)"
-        >
-          <PaperPlaneTiltIcon size={16} weight="fill" />
-        </button>
-      </div>
+      {!minimized && (
+        <div className="flex items-end gap-2 px-3 py-2">
+          <span className="text-accent select-none text-sm flex-shrink-0 pb-1.5" aria-hidden>✦</span>
+          <textarea
+            ref={inputRef}
+            rows={1}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onInput={handleInput}
+            placeholder="Ask AI to improve your resume…"
+            disabled={loading}
+            className="flex-1 bg-transparent text-sm text-text placeholder:text-faint outline-none disabled:opacity-50 resize-none overflow-y-auto max-h-36 leading-5"
+          />
+          <button
+            onClick={() => send()}
+            disabled={!input.trim() || loading}
+            className="flex-shrink-0 p-1.5 rounded-lg text-accent hover:bg-accent-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            title="Send (Enter)"
+          >
+            <PaperPlaneTiltIcon size={16} weight="fill" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

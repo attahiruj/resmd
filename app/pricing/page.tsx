@@ -85,10 +85,13 @@ export default function PricingPage() {
           <div className="inline-block text-xs font-medium bg-accent-muted text-accent px-3 py-1 rounded-full mb-4">
             Early access — everything free
           </div>
-          <h1 className="text-3xl font-bold text-text mb-3">Simple, honest pricing</h1>
+          <h1 className="text-3xl font-bold text-text mb-3">
+            Simple, honest pricing
+          </h1>
           <p className="text-muted max-w-md mx-auto text-sm leading-relaxed">
-            resmd is free while we&apos;re in early access. Pro features will be introduced later —
-            early users will be the first to know and get a discount.
+            resmd is free while we&apos;re in early access. Pro features will be
+            introduced later — early users will be the first to know and get a
+            discount.
           </p>
         </div>
 
@@ -97,7 +100,9 @@ export default function PricingPage() {
           {/* Free */}
           <div className="bg-surface border border-border rounded-xl p-6">
             <div className="mb-5">
-              <p className="text-xs text-muted font-medium uppercase tracking-wider mb-1">Free</p>
+              <p className="text-xs text-muted font-medium uppercase tracking-wider mb-1">
+                Free
+              </p>
               <div className="flex items-end gap-1">
                 <span className="text-3xl font-bold text-text">$0</span>
                 <span className="text-muted text-sm mb-1">/ month</span>
@@ -106,8 +111,11 @@ export default function PricingPage() {
             </div>
 
             <ul className="space-y-2.5 mb-6">
-              {FREE_FEATURES.map(f => (
-                <li key={f} className="flex items-start gap-2.5 text-sm text-text">
+              {FREE_FEATURES.map((f) => (
+                <li
+                  key={f}
+                  className="flex items-start gap-2.5 text-sm text-text"
+                >
                   <span className="text-accent mt-0.5 flex-shrink-0">✓</span>
                   {f}
                 </li>
@@ -128,17 +136,26 @@ export default function PricingPage() {
               Coming soon
             </div>
             <div className="mb-5">
-              <p className="text-xs text-muted font-medium uppercase tracking-wider mb-1">Pro</p>
+              <p className="text-xs text-muted font-medium uppercase tracking-wider mb-1">
+                Pro
+              </p>
               <div className="flex items-end gap-1">
-                <span className="text-3xl font-bold text-text">${LIMITS.PRO_PRICE_MONTHLY}</span>
+                <span className="text-3xl font-bold text-text">
+                  ${LIMITS.PRO_PRICE_MONTHLY}
+                </span>
                 <span className="text-muted text-sm mb-1">/ month</span>
               </div>
-              <p className="text-xs text-muted mt-1">Early users get a discount</p>
+              <p className="text-xs text-muted mt-1">
+                Early users get a discount
+              </p>
             </div>
 
             <ul className="space-y-2.5 mb-6">
-              {PRO_FEATURES.map(f => (
-                <li key={f} className="flex items-start gap-2.5 text-sm text-text">
+              {PRO_FEATURES.map((f) => (
+                <li
+                  key={f}
+                  className="flex items-start gap-2.5 text-sm text-text"
+                >
                   <span className="text-accent mt-0.5 flex-shrink-0">✓</span>
                   {f}
                 </li>
@@ -163,7 +180,7 @@ export default function PricingPage() {
             href="https://buymeacoffee.com/hattahiroo"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2 bg-[#FFDD00] text-[#000000] text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-2 px-5 py-2 bg-warning text-warning-bg text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
           >
             ☕ Buy me a coffee
           </a>
@@ -179,7 +196,10 @@ export default function PricingPage() {
           </h2>
           <div className="space-y-4 max-w-2xl mx-auto">
             {FAQ.map(({ q, a }) => (
-              <div key={q} className="border border-border rounded-xl p-5 bg-surface">
+              <div
+                key={q}
+                className="border border-border rounded-xl p-5 bg-surface"
+              >
                 <p className="text-sm font-medium text-text mb-1.5">{q}</p>
                 <p className="text-sm text-muted leading-relaxed">{a}</p>
               </div>
@@ -190,12 +210,15 @@ export default function PricingPage() {
 
       <footer className="border-t border-border py-8 text-center">
         <p className="text-xs text-faint">
-          Everything is free while resmd is in early access.{' '}
-          <Link href="/dashboard" className="text-muted hover:text-text transition-colors duration-150">
+          Everything is free while resmd is in early access.{" "}
+          <Link
+            href="/dashboard"
+            className="text-muted hover:text-text transition-colors duration-150"
+          >
             Start building →
           </Link>
         </p>
       </footer>
     </div>
-  )
+  );
 }

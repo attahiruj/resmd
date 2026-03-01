@@ -28,6 +28,12 @@ export async function POST(req: NextRequest) {
   try {
     const { message, resumeContent, history } = await req.json()
 
+    if (!resumeContent || !resumeContent.trim()) {
+      return NextResponse.json({
+        reply: "Your resume editor is empty. Please add some content to your resume first, then I can help you improve it.",
+      })
+    }
+
     // Gemma doesn't support the 'system' role — inject context as a user/assistant
     // preamble so the model understands its role before the real conversation.
     const messages = [
@@ -40,6 +46,7 @@ export async function POST(req: NextRequest) {
     console.log('[AI] →', {
       model: AI_MODEL,
       historyLength: (history ?? []).length,
+      resumeContentLength: resumeContent.length,
       userMessage: message,
     })
 

@@ -167,90 +167,64 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
 
   return (
     <ErrorBoundary>
-    <div className="flex flex-col h-screen overflow-hidden bg-bg">
-      <Toolbar
-        lastSaved={lastSaved}
-        showAIPanel={showAIPanel}
-        onToggleAI={() => setShowAIPanel((v) => !v)}
-        variantTitle={variantTitle}
-        onTitleChange={handleTitleChange}
-        variantId={variant.id}
-        isPro={isPro}
-      />
+      <div className="flex flex-col h-screen overflow-hidden bg-bg">
+        <Toolbar
+          lastSaved={lastSaved}
+          showAIPanel={showAIPanel}
+          onToggleAI={() => setShowAIPanel((v) => !v)}
+          variantTitle={variantTitle}
+          onTitleChange={handleTitleChange}
+          variantId={variant.id}
+          isPro={isPro}
+          rawContent={rawContent}
+        />
 
-      {/* Mobile tab bar (<md) */}
-      <div className="md:hidden flex h-10 border-b border-border bg-surface flex-shrink-0 px-2 gap-1 items-center">
-        <button
-          onClick={() => setMobileTab('write')}
-          className={`flex-1 py-1.5 text-sm font-medium rounded-full transition-colors duration-150 ${
-            mobileTab === 'write'
-              ? 'bg-accent-muted text-accent'
-              : 'text-muted hover:text-text'
-          }`}
-        >
-          Write
-        </button>
-        <button
-          onClick={() => setMobileTab('preview')}
-          className={`flex-1 py-1.5 text-sm font-medium rounded-full transition-colors duration-150 ${
-            mobileTab === 'preview'
-              ? 'bg-accent-muted text-accent'
-              : 'text-muted hover:text-text'
-          }`}
-        >
-          Preview
-        </button>
-      </div>
-
-      {/* Mobile single-pane body */}
-      <div className="md:hidden flex-1 overflow-hidden min-h-0">
-        {mobileTab === 'write' ? (
-          <div className="h-full flex flex-col bg-editor-bg">
-            <div className="flex-1 min-h-0 overflow-hidden">
-              {isMounted && <Editor value={rawContent} onChange={handleContentChange} jumpTarget={jumpTarget} onJumpComplete={() => setJumpTarget(null)} />}
-            </div>
-            <AIChat resumeContent={rawContent} onApplyEdit={handleApplyEdit} />
-          </div>
-        ) : (
-          <PreviewPane
-            rawContent={rawContent}
-            templateId={templateId}
-            onTemplateChange={handleTemplateChange}
-            onContentChange={handleContentChange}
-            isPro={isPro}
-            onTextDoubleClick={handlePreviewDoubleClick}
-          />
-        )}
-      </div>
-
-      {/* Desktop split-pane body (≥md) */}
-      <div className="hidden md:flex flex-1 min-h-0 p-8">
-        <div ref={bodyRef} className="flex flex-1 overflow-hidden rounded-xl border border-border">
-          {/* Editor pane */}
-          <div
-            ref={leftPaneRef}
-            className="flex flex-col overflow-hidden flex-shrink-0 bg-editor-bg"
-            style={{ width: `${splitPct}%` }}
+        {/* Mobile tab bar (<md) */}
+        <div className="md:hidden flex h-10 border-b border-border bg-surface flex-shrink-0 px-2 gap-1 items-center">
+          <button
+            onClick={() => setMobileTab("write")}
+            className={`flex-1 py-1.5 text-sm font-medium rounded-full transition-colors duration-150 ${
+              mobileTab === "write"
+                ? "bg-accent-muted text-accent"
+                : "text-muted hover:text-text"
+            }`}
           >
-            <div className="flex-1 min-h-0 overflow-hidden">
-              {isMounted && <Editor value={rawContent} onChange={handleContentChange} jumpTarget={jumpTarget} onJumpComplete={() => setJumpTarget(null)} />}
-            </div>
-            <AIChat resumeContent={rawContent} onApplyEdit={handleApplyEdit} />
-          </div>
-
-          {/* Drag divider */}
-          <div
-            className="w-1 flex-shrink-0 bg-border hover:bg-accent transition-colors duration-150 select-none"
-            style={{ cursor: 'col-resize' }}
-            onMouseDown={handleDividerMouseDown}
-          />
-
-          {/* Preview pane */}
-          <div
-            ref={rightPaneRef}
-            className="flex-1 overflow-hidden"
-            style={{ width: `${100 - splitPct}%` }}
+            Write
+          </button>
+          <button
+            onClick={() => setMobileTab("preview")}
+            className={`flex-1 py-1.5 text-sm font-medium rounded-full transition-colors duration-150 ${
+              mobileTab === "preview"
+                ? "bg-accent-muted text-accent"
+                : "text-muted hover:text-text"
+            }`}
           >
+            Preview
+          </button>
+        </div>
+
+        {/* Mobile single-pane body */}
+        <div className="md:hidden flex-1 overflow-hidden min-h-0">
+          {mobileTab === "write" ? (
+            <div className="h-full flex flex-col bg-editor-bg">
+              <div className="flex-1 min-h-0 overflow-hidden">
+                {isMounted && (
+                  <Editor
+                    value={rawContent}
+                    onChange={handleContentChange}
+                    jumpTarget={jumpTarget}
+                    onJumpComplete={() => setJumpTarget(null)}
+                    resumeContext={rawContent}
+                    onEnhance={handleApplyEdit}
+                  />
+                )}
+              </div>
+              <AIChat
+                resumeContent={rawContent}
+                onApplyEdit={handleApplyEdit}
+              />
+            </div>
+          ) : (
             <PreviewPane
               rawContent={rawContent}
               templateId={templateId}
@@ -259,28 +233,86 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
               isPro={isPro}
               onTextDoubleClick={handlePreviewDoubleClick}
             />
+          )}
+        </div>
+
+        {/* Desktop split-pane body (≥md) */}
+        <div className="hidden md:flex flex-1 min-h-0 p-8">
+          <div
+            ref={bodyRef}
+            className="flex flex-1 overflow-hidden rounded-xl border border-border"
+          >
+            {/* Editor pane */}
+            <div
+              ref={leftPaneRef}
+              className="flex flex-col overflow-hidden flex-shrink-0 bg-editor-bg"
+              style={{ width: `${splitPct}%` }}
+            >
+              <div className="flex-1 min-h-0 overflow-hidden">
+                {isMounted && (
+                  <Editor
+                    value={rawContent}
+                    onChange={handleContentChange}
+                    jumpTarget={jumpTarget}
+                    onJumpComplete={() => setJumpTarget(null)}
+                    resumeContext={rawContent}
+                    onEnhance={handleApplyEdit}
+                  />
+                )}
+              </div>
+              <AIChat
+                resumeContent={rawContent}
+                onApplyEdit={handleApplyEdit}
+              />
+            </div>
+
+            {/* Drag divider */}
+            <div
+              className="w-1 flex-shrink-0 bg-border hover:bg-accent transition-colors duration-150 select-none"
+              style={{ cursor: "col-resize" }}
+              onMouseDown={handleDividerMouseDown}
+            />
+
+            {/* Preview pane */}
+            <div
+              ref={rightPaneRef}
+              className="flex-1 overflow-hidden"
+              style={{ width: `${100 - splitPct}%` }}
+            >
+              <PreviewPane
+                rawContent={rawContent}
+                templateId={templateId}
+                onTemplateChange={handleTemplateChange}
+                onContentChange={handleContentChange}
+                isPro={isPro}
+                onTextDoubleClick={handlePreviewDoubleClick}
+              />
+            </div>
           </div>
         </div>
+
+        {showAIPanel && (
+          <AIPanel
+            rawContent={rawContent}
+            onClose={() => setShowAIPanel(false)}
+            onApplyEdit={handleApplyEdit}
+          />
+        )}
+
+        {/* Snapshot modal */}
+        {showSnapshotModal && (
+          <SnapshotModal
+            variantId={variant.id}
+            rawContent={rawContent}
+            templateId={templateId}
+            onClose={() => setShowSnapshotModal(false)}
+            onSaved={() => {
+              setLastSaved(new Date());
+              setShowSnapshotModal(false);
+            }}
+          />
+        )}
       </div>
-
-      {showAIPanel && (
-        <AIPanel rawContent={rawContent} onClose={() => setShowAIPanel(false)} onApplyEdit={handleApplyEdit} />
-      )}
-
-      {/* Snapshot modal */}
-      {showSnapshotModal && (
-        <SnapshotModal
-          variantId={variant.id}
-          rawContent={rawContent}
-          templateId={templateId}
-          onClose={() => setShowSnapshotModal(false)}
-          onSaved={() => {
-            setLastSaved(new Date())
-            setShowSnapshotModal(false)
-          }}
-        />
-      )}
-    </div>
     </ErrorBoundary>
-  )
+  );
 }

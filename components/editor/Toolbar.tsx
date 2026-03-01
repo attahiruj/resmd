@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { SunIcon, MoonIcon, SparkleIcon, UserCircleIcon } from '@phosphor-icons/react'
+import { SunIcon, MoonIcon, SparkleIcon, UserCircleIcon, Warning } from '@phosphor-icons/react'
 import { applyTheme, getStoredThemePrefs } from '@/lib/themes'
 import { useProfile } from '@/hooks/useProfile'
 import Navbar from '@/components/ui/Navbar'
+import { hasPlaceholders } from '@/lib/inline'
 
 interface ToolbarProps {
   lastSaved: Date | null
@@ -15,6 +16,7 @@ interface ToolbarProps {
   onTitleChange?: (title: string) => void
   variantId?: string
   isPro?: boolean
+  rawContent?: string
 }
 
 export default function Toolbar({
@@ -25,9 +27,11 @@ export default function Toolbar({
   onTitleChange,
   variantId,
   isPro,
+  rawContent,
 }: ToolbarProps) {
   const [isDark, setIsDark] = useState(true)
   const [isExporting, setIsExporting] = useState(false)
+  const [showPlaceholderWarning, setShowPlaceholderWarning] = useState(false)
   const { user, profile } = useProfile()
 
   useEffect(() => {
@@ -43,7 +47,7 @@ export default function Toolbar({
     setIsDark(!isDark)
   }
 
-  const handleExportPDF = async () => {
+  const doExport = async () => {
     if (!variantId || isExporting) return
     setIsExporting(true)
     try {
@@ -69,11 +73,50 @@ export default function Toolbar({
     }
   }
 
+  const handleExportPDF = () => {
+    if (!variantId || isExporting) return
+    if (rawContent && hasPlaceholders(rawContent)) {
+      setShowPlaceholderWarning(true)
+    } else {
+      doExport()
+    }
+  }
+
   const lastSavedLabel = lastSaved ? formatRelative(lastSaved) : null
   const userInitial =
     (profile?.email?.[0] ?? user?.email?.[0] ?? '').toUpperCase() || null
 
   return (
+    <>
+    {showPlaceholderWarning && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="bg-surface rounded-xl border border-border shadow-xl p-6 max-w-sm w-full mx-4">
+          <div className="flex items-start gap-3 mb-4">
+            <Warning size={22} className="text-red-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h2 className="text-base font-semibold text-text mb-1">Unfilled placeholders detected</h2>
+              <p className="text-sm text-muted">
+                Your resume contains <span className="text-red-500 font-medium">[bracketed placeholders]</span> that may be AI suggestions. These will appear in the exported PDF.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={() => setShowPlaceholderWarning(false)}
+              className="text-sm px-3 py-1.5 rounded-lg border border-border text-text hover:bg-surface-2 transition-colors duration-150"
+            >
+              Fix first
+            </button>
+            <button
+              onClick={() => { setShowPlaceholderWarning(false); doExport() }}
+              className="text-sm px-3 py-1.5 rounded-lg bg-accent text-white hover:opacity-90 transition-opacity duration-150"
+            >
+              Export anyway
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <Navbar
       left={
         variantTitle !== undefined && onTitleChange ? (
@@ -146,6 +189,7 @@ export default function Toolbar({
         </div>
       }
     />
+    </>
   )
 }
 

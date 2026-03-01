@@ -9,6 +9,9 @@ import AIChat from '@/components/editor/AIChat'
 // CodeMirror is browser-only
 const Editor = dynamic(() => import('@/components/editor/Editor'), { ssr: false })
 
+// AI panel is lazy-loaded — only downloaded when the user opens it
+const AIPanel = dynamic(() => import('@/components/editor/AIPanel'), { ssr: false })
+
 const DEFAULT_CONTENT = `# Bio
 Name: Amara Osei
 Title: Full Stack Engineer
@@ -162,7 +165,7 @@ export default function EditorPage() {
         {mobileTab === 'write' ? (
           <div className="h-full flex flex-col bg-editor-bg">
             <div className="flex-1 min-h-0 overflow-hidden">
-              {isMounted && <Editor value={rawContent} onChange={setRawContent} />}
+              {isMounted && <Editor value={rawContent} onChange={setRawContent} resumeContext={rawContent} />}
             </div>
             <AIChat resumeContent={rawContent} />
           </div>
@@ -185,7 +188,7 @@ export default function EditorPage() {
           style={{ width: `${splitPct}%` }}
         >
           <div className="flex-1 min-h-0 overflow-hidden">
-            {isMounted && <Editor value={rawContent} onChange={setRawContent} />}
+            {isMounted && <Editor value={rawContent} onChange={setRawContent} resumeContext={rawContent} />}
           </div>
           <AIChat resumeContent={rawContent} />
         </div>
@@ -212,17 +215,9 @@ export default function EditorPage() {
         </div>
       </div>
 
-      {/* AI panel placeholder — slide-in from right, wired up in Stage 8 */}
+      {/* AI panel - slide-in from right */}
       {showAIPanel && (
-        <div
-          className="fixed top-[52px] right-0 bottom-0 w-[380px] bg-surface border-l border-border z-40 flex items-center justify-center"
-          style={{ transform: 'translateX(0)', transition: 'transform 200ms ease-out' }}
-        >
-          <div className="text-center p-8">
-            <div className="text-4xl mb-3">✦</div>
-            <p className="text-sm text-muted">AI assistant coming in Stage 8</p>
-          </div>
-        </div>
+        <AIPanel rawContent={rawContent} onClose={() => setShowAIPanel(false)} />
       )}
     </div>
   )

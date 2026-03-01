@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ReactNode } from 'react'
+import { CoffeeIcon } from '@phosphor-icons/react'
 
 interface NavbarProps {
   /** Content inserted after the wordmark, preceded by a separator */
@@ -30,10 +31,11 @@ export default function Navbar({ left, right }: NavbarProps) {
           href="https://buymeacoffee.com/hattahiroo"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-muted hover:text-text transition-colors duration-150 hidden sm:block"
+          className="items-center gap-1.5 text-xs text-muted hover:text-text transition-colors duration-150 hidden sm:flex"
           title="Support resmd"
         >
-          ☕ Support
+          <CoffeeIcon size={14} />
+          Support
         </a>
 
         {right}
