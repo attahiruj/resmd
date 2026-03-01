@@ -10,7 +10,7 @@ Open Source AI-Powered Resume Builder
 
 Write your resume in plain text. Get AI assistance. Export a beautiful PDF.
 
-[Demo](https://github.com/attahiruj/resmd) · [Report a Bug](https://github.com/attahiruj/resmd/issues/new?labels=bug) · [Request a Feature](https://github.com/attahiruj/resmd/issues/new?labels=enhancement)
+[Demo](https://resmd.vercel.app/) · [Report a Bug](https://github.com/attahiruj/resmd/issues/new?labels=bug) · [Request a Feature](https://github.com/attahiruj/resmd/issues/new?labels=enhancement)
 
 ---
 
@@ -28,34 +28,34 @@ Core ideas:
 
 ## Features
 
-| Feature | Description |
-| --- | --- |
-| **ResMarkup Syntax** | `# Section`, `## Entry`, `Key: Value`, bullet points — simple and flexible |
-| **Live Preview** | Side-by-side editor and rendered template, updates as you type |
-| **AI Enhance** | Select any text for AI-powered rewrites and improvements |
-| **AI Chat** | Conversational assistant for resume advice and content ideas |
-| **AI Review** | Structured feedback on content quality and impact |
-| **AI Match** | Compare your resume against a job description |
-| **Templates** | Minimal, Modern, Technical, Executive, Creative |
-| **PDF Export** | Print-ready PDF with template fidelity |
-| **Version Snapshots** | Track changes, restore previous versions |
-| **Public Sharing** | Publish a resume at a shareable `/r/[slug]` URL |
-| **Multiple Variants** | Manage different resume versions per user |
+| Feature               | Description                                                                |
+| --------------------- | -------------------------------------------------------------------------- |
+| **ResMarkup Syntax**  | `# Section`, `## Entry`, `Key: Value`, bullet points — simple and flexible |
+| **Live Preview**      | Side-by-side editor and rendered template, updates as you type             |
+| **AI Enhance**        | Select any text for AI-powered rewrites and improvements                   |
+| **AI Chat**           | Conversational assistant for resume advice and content ideas               |
+| **AI Review**         | Structured feedback on content quality and impact                          |
+| **AI Match**          | Compare your resume against a job description                              |
+| **Templates**         | Minimal, Modern, Technical, Executive, Creative                            |
+| **PDF Export**        | Print-ready PDF with template fidelity                                     |
+| **Version Snapshots** | Track changes, restore previous versions                                   |
+| **Public Sharing**    | Publish a resume at a shareable `/r/[slug]` URL                            |
+| **Multiple Variants** | Manage different resume versions per user                                  |
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-| --- | --- |
-| Framework | [Next.js](https://nextjs.org) (App Router, SSR) |
-| Language | TypeScript |
-| Database & Auth | [Supabase](https://supabase.com) (PostgreSQL) |
-| Styling | [Tailwind CSS](https://tailwindcss.com) |
-| Code Editor | [CodeMirror 6](https://codemirror.net) |
-| AI | [OpenRouter](https://openrouter.ai) (model-agnostic) |
-| PDF | [@react-pdf/renderer](https://react-pdf.com) |
-| Icons | [Phosphor Icons](https://phosphoricons.com) |
+| Layer           | Technology                                           |
+| --------------- | ---------------------------------------------------- |
+| Framework       | [Next.js](https://nextjs.org) (App Router, SSR)      |
+| Language        | TypeScript                                           |
+| Database & Auth | [Supabase](https://supabase.com) (PostgreSQL)        |
+| Styling         | [Tailwind CSS](https://tailwindcss.com)              |
+| Code Editor     | [CodeMirror 6](https://codemirror.net)               |
+| AI              | [OpenRouter](https://openrouter.ai) (model-agnostic) |
+| PDF             | [@react-pdf/renderer](https://react-pdf.com)         |
+| Icons           | [Phosphor Icons](https://phosphoricons.com)          |
 
 ---
 
