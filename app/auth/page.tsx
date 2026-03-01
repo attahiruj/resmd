@@ -31,7 +31,13 @@ export default function AuthPage() {
         if (error) throw error;
         router.push('/dashboard');
       } else {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+          },
+        });
         if (error) throw error;
         setMessage('Check your email to confirm your account, then sign in.');
       }
@@ -46,7 +52,7 @@ export default function AuthPage() {
     setError(null);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard` },
     });
     if (error) setError(error.message);
   };
