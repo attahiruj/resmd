@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { renderToBuffer } from '@react-pdf/renderer';
+import { renderToBuffer, type DocumentProps } from '@react-pdf/renderer';
 import React from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { getVariant, getUserProfile } from '@/lib/variantService';
@@ -47,7 +47,9 @@ export async function POST(req: NextRequest) {
 
     const PdfComponent = await getPdfComponent(variant.templateId);
     const doc = React.createElement(PdfComponent, { resume, isPro });
-    const buffer = await renderToBuffer(doc as React.ReactElement);
+    const buffer = await renderToBuffer(
+      doc as React.ReactElement<DocumentProps>
+    );
     const uint8 = new Uint8Array(buffer);
 
     const safeTitle =
