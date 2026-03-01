@@ -24,6 +24,10 @@ export async function POST(req: NextRequest) {
   }
 
   const apiKey = process.env.OPENROUTER_API_KEY;
+  console.log('[AI] key check:', {
+    len: apiKey?.length,
+    prefix: apiKey?.slice(0, 8),
+  });
   if (!apiKey) {
     return NextResponse.json(
       { error: 'AI service not configured' },
