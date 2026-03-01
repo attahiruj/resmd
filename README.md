@@ -2,7 +2,7 @@
 
 Open Source AI-Powered Resume Builder
 
-[![License: MIT](https://img.shields.io/github/license/attahiruj/resmd)](LICENSE)
+[![License: AGPL-3.0](https://img.shields.io/github/license/attahiruj/resmd)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/attahiruj/resmd?style=flat)](https://github.com/attahiruj/resmd/stargazers)
 [![Forks](https://img.shields.io/github/forks/attahiruj/resmd?style=flat)](https://github.com/attahiruj/resmd/network/members)
 [![Contributors](https://img.shields.io/github/contributors/attahiruj/resmd)](https://github.com/attahiruj/resmd/graphs/contributors)
@@ -363,7 +363,7 @@ Client-side helpers in `lib/ai.ts` handle the fetch and streaming.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+AGPL-3.0 — see [LICENSE](LICENSE).
 
 ---
 
