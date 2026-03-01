@@ -90,8 +90,20 @@ export function parseResume(raw: string): ParsedResume {
     // 3. Sections (# )
     if (line.startsWith('# ')) {
       const title = line.substring(2).trim();
+      let sectionId = slugify(title);
+
+      // Ensure unique section IDs by appending suffix if duplicate
+      const existingIds = new Set(sections.map((s) => s.id));
+      if (existingIds.has(sectionId)) {
+        let counter = 1;
+        while (existingIds.has(`${sectionId}-${counter}`)) {
+          counter++;
+        }
+        sectionId = `${sectionId}-${counter}`;
+      }
+
       currentSection = {
-        id: slugify(title),
+        id: sectionId,
         title,
         hint: 'mixed', // placeholder
         items: [],
