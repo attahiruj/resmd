@@ -22,6 +22,9 @@ export const metadata: Metadata = {
     description:
       'Write your resume in plain text. Render it through beautiful templates.',
   },
+  verification: {
+    google: 'SsI2pfnMSYm-weeLeIBh8w1sDREtxbKXQmIYO7uN_r4',
+  },
 };
 
 /**
