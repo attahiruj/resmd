@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check --ignore-path .gitignore ."
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.0",
