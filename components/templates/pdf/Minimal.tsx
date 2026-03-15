@@ -19,6 +19,7 @@ import { renderInlinePdf } from '@/lib/renderInlinePdf';
 import { isUrl, extractLink } from '@/lib/inline';
 
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
+const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
 const styles = StyleSheet.create({
   page: {
@@ -44,6 +45,12 @@ const styles = StyleSheet.create({
   contactRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   contactItem: { fontSize: 9, color: '#555555' },
   contactSep: { fontSize: 9, color: '#CCCCCC', marginHorizontal: 4 },
+  headerAbout: {
+    fontSize: 10,
+    color: '#444444',
+    lineHeight: 1.6,
+    marginTop: 8,
+  },
   // Section
   section: { marginBottom: 14 },
   sectionTitle: {
@@ -94,29 +101,23 @@ const styles = StyleSheet.create({
   kvRow: { flexDirection: 'row', marginBottom: 3, gap: 6 },
   kvKey: { fontSize: 9, color: '#888888', width: 60 },
   kvValue: { fontSize: 10, color: '#333333', flex: 1 },
-  // KeyValue pills (skills-like)
+  // KeyValue skills (plain)
   kvSkillsRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 5,
-    flexWrap: 'wrap',
+    marginBottom: 4,
   },
   kvSkillsLabel: {
     fontSize: 8,
     color: '#888888',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    width: 55,
-    paddingTop: 2,
+    width: 80,
   },
-  kvSkillsTags: { flexDirection: 'row', flexWrap: 'wrap', flex: 1, gap: 3 },
-  tag: {
-    fontSize: 8,
-    color: '#555555',
-    backgroundColor: '#F3F3F3',
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 3,
+  kvSkillsValue: {
+    fontSize: 10,
+    color: '#333333',
+    flex: 1,
   },
   // Watermark footer
   footer: {
@@ -143,28 +144,32 @@ export default function MinimalPdf({ resume, isPro }: TemplateProps) {
     null;
 
   type ContactEntry = { key: string; href: string | null; rawValue: string };
-  const contactEntries: ContactEntry[] = (headerSection?.items ?? []).flatMap(
-    (item) => {
-      if (
-        item.kind === 'keyvalue' &&
-        !HEADER_META_KEYS.has(item.key.toLowerCase())
-      ) {
-        return [
-          {
-            key: item.key,
-            href: isUrl(item.value) ? item.value : null,
-            rawValue: item.value,
-          },
-        ];
+  const contactEntries: ContactEntry[] = [];
+  const aboutLines: string[] = [];
+
+  for (const item of headerSection?.items ?? []) {
+    if (item.kind === 'keyvalue') {
+      const keyLower = item.key.toLowerCase();
+      if (HEADER_META_KEYS.has(keyLower)) continue;
+      if (HEADER_ABOUT_KEYS.has(keyLower)) {
+        aboutLines.push(item.value);
+        continue;
       }
-      if (item.kind === 'text') {
-        const link = extractLink(item.text);
-        if (link)
-          return [{ key: link.text, href: link.href, rawValue: link.href }];
-      }
-      return [];
+      contactEntries.push({
+        key: item.key,
+        href: isUrl(item.value) ? item.value : null,
+        rawValue: item.value,
+      });
+    } else if (item.kind === 'text') {
+      const link = extractLink(item.text);
+      if (link)
+        contactEntries.push({
+          key: link.text,
+          href: link.href,
+          rawValue: link.href,
+        });
     }
-  );
+  }
 
   const bodySections = sections.filter((sec) => sec !== headerSection);
 
@@ -207,6 +212,11 @@ export default function MinimalPdf({ resume, isPro }: TemplateProps) {
               ))}
             </View>
           )}
+          {aboutLines.map((line, i) => (
+            <Text key={i} style={styles.headerAbout}>
+              {line}
+            </Text>
+          ))}
         </View>
 
         {/* Body sections */}
@@ -258,20 +268,10 @@ function PdfItemBlock({
   switch (item.kind) {
     case 'keyvalue': {
       if (isKeyValueSection) {
-        const tags = item.value
-          .split(',')
-          .map((v) => v.trim())
-          .filter(Boolean);
         return (
           <View style={styles.kvSkillsRow}>
             <Text style={styles.kvSkillsLabel}>{item.key}</Text>
-            <View style={styles.kvSkillsTags}>
-              {tags.map((tag) => (
-                <View key={tag} style={styles.tag}>
-                  <Text>{tag}</Text>
-                </View>
-              ))}
-            </View>
+            <Text style={styles.kvSkillsValue}>{item.value}</Text>
           </View>
         );
       }

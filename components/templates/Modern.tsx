@@ -14,6 +14,7 @@ import { isUrl, extractLink } from '@/lib/inline';
 
 const FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
+const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ModernStyles = Record<string, any>;
@@ -69,7 +70,12 @@ export default function Modern({
       marginBottom: 3,
       lineHeight: 1.2,
     },
-    sidebarJobTitle: { fontSize: 9.5, color: '#B0B8CC', margin: 0, marginBottom: 16 },
+    sidebarJobTitle: {
+      fontSize: 9.5,
+      color: '#B0B8CC',
+      margin: 0,
+      marginBottom: 16,
+    },
     sidebarSectionTitle: {
       fontSize: 7,
       fontWeight: 700,
@@ -232,6 +238,12 @@ export default function Modern({
       textAlign: 'center' as const,
     },
     footerText: { fontSize: 8, color: '#BBBBCC' },
+    sidebarAbout: {
+      fontSize: 8.5,
+      color: '#B0B8CC',
+      lineHeight: 1.6,
+      marginTop: 10,
+    },
   };
 
   const headerSection = showHeader
@@ -243,28 +255,32 @@ export default function Modern({
     : null;
 
   type ContactEntry = { key: string; href: string | null; rawValue: string };
-  const contactEntries: ContactEntry[] = (headerSection?.items ?? []).flatMap(
-    (item) => {
-      if (
-        item.kind === 'keyvalue' &&
-        !HEADER_META_KEYS.has(item.key.toLowerCase())
-      ) {
-        return [
-          {
-            key: item.key,
-            href: isUrl(item.value) ? item.value : null,
-            rawValue: item.value,
-          },
-        ];
+  const contactEntries: ContactEntry[] = [];
+  const aboutLines: string[] = [];
+
+  for (const item of headerSection?.items ?? []) {
+    if (item.kind === 'keyvalue') {
+      const keyLower = item.key.toLowerCase();
+      if (HEADER_META_KEYS.has(keyLower)) continue;
+      if (HEADER_ABOUT_KEYS.has(keyLower)) {
+        aboutLines.push(item.value);
+        continue;
       }
-      if (item.kind === 'text') {
-        const link = extractLink(item.text);
-        if (link)
-          return [{ key: link.text, href: link.href, rawValue: link.href }];
-      }
-      return [];
+      contactEntries.push({
+        key: item.key,
+        href: isUrl(item.value) ? item.value : null,
+        rawValue: item.value,
+      });
+    } else if (item.kind === 'text') {
+      const link = extractLink(item.text);
+      if (link)
+        contactEntries.push({
+          key: link.text,
+          href: link.href,
+          rawValue: link.href,
+        });
     }
-  );
+  }
 
   const bodySections = sections.filter((sec) => sec !== headerSection);
   const sidebarSections = bodySections.filter(isSidebarSection);
@@ -304,6 +320,14 @@ export default function Modern({
                 ))}
               </div>
             )}
+            {aboutLines.map((line, i) => (
+              <p
+                key={i}
+                style={{ ...S.sidebarAbout, margin: 0, marginTop: 10 }}
+              >
+                {line}
+              </p>
+            ))}
           </div>
         )}
 

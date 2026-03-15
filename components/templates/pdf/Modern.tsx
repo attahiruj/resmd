@@ -21,6 +21,7 @@ import { isUrl, extractLink } from '@/lib/inline';
 type RS = Required<typeof DEFAULT_SETTINGS>;
 
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
+const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
 function isSidebarSection(section: ResumeSection): boolean {
   const lower = section.title.toLowerCase();
@@ -170,6 +171,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   footerText: { fontSize: 8, color: '#BBBBCC' },
+  sidebarAbout: {
+    fontSize: 8.5,
+    color: '#B0B8CC',
+    lineHeight: 1.6,
+    marginTop: 10,
+  },
 });
 
 export default function ModernPdf({ resume, isPro }: TemplateProps) {
@@ -184,28 +191,32 @@ export default function ModernPdf({ resume, isPro }: TemplateProps) {
     null;
 
   type ContactEntry = { key: string; href: string | null; rawValue: string };
-  const contactEntries: ContactEntry[] = (headerSection?.items ?? []).flatMap(
-    (item) => {
-      if (
-        item.kind === 'keyvalue' &&
-        !HEADER_META_KEYS.has(item.key.toLowerCase())
-      ) {
-        return [
-          {
-            key: item.key,
-            href: isUrl(item.value) ? item.value : null,
-            rawValue: item.value,
-          },
-        ];
+  const contactEntries: ContactEntry[] = [];
+  const aboutLines: string[] = [];
+
+  for (const item of headerSection?.items ?? []) {
+    if (item.kind === 'keyvalue') {
+      const keyLower = item.key.toLowerCase();
+      if (HEADER_META_KEYS.has(keyLower)) continue;
+      if (HEADER_ABOUT_KEYS.has(keyLower)) {
+        aboutLines.push(item.value);
+        continue;
       }
-      if (item.kind === 'text') {
-        const link = extractLink(item.text);
-        if (link)
-          return [{ key: link.text, href: link.href, rawValue: link.href }];
-      }
-      return [];
+      contactEntries.push({
+        key: item.key,
+        href: isUrl(item.value) ? item.value : null,
+        rawValue: item.value,
+      });
+    } else if (item.kind === 'text') {
+      const link = extractLink(item.text);
+      if (link)
+        contactEntries.push({
+          key: link.text,
+          href: link.href,
+          rawValue: link.href,
+        });
     }
-  );
+  }
 
   const bodySections = sections.filter((sec) => sec !== headerSection);
   const sidebarSections = bodySections.filter(isSidebarSection);
@@ -260,6 +271,11 @@ export default function ModernPdf({ resume, isPro }: TemplateProps) {
               ))}
             </View>
           )}
+          {aboutLines.map((line, i) => (
+            <Text key={i} style={styles.sidebarAbout}>
+              {line}
+            </Text>
+          ))}
 
           {sidebarSections.map((section) => (
             <View key={section.id}>

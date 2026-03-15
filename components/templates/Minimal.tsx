@@ -14,6 +14,7 @@ import { isUrl, extractLink } from '@/lib/inline';
 
 const FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
+const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
 export default function Minimal({
   resume,
@@ -131,35 +132,27 @@ export default function Minimal({
     kvSkillsRow: {
       display: 'flex',
       flexDirection: 'row' as const,
-      alignItems: 'flex-start',
-      marginBottom: 5,
-      flexWrap: 'wrap' as const,
+      alignItems: 'baseline',
+      marginBottom: 4,
     },
     kvSkillsLabel: {
       fontSize: 8,
       color: '#888888',
       textTransform: 'uppercase' as const,
       letterSpacing: '0.5px',
-      width: 55,
+      width: 80,
       flexShrink: 0,
-      paddingTop: 2,
     },
-    kvSkillsTags: {
-      display: 'flex',
-      flexDirection: 'row' as const,
-      flexWrap: 'wrap' as const,
+    kvSkillsValue: {
+      fontSize: s.fontSize,
+      color: '#333333',
       flex: 1,
-      gap: 3,
     },
-    tag: {
-      fontSize: 8,
-      color: '#555555',
-      backgroundColor: '#F3F3F3',
-      paddingLeft: 5,
-      paddingRight: 5,
-      paddingTop: 2,
-      paddingBottom: 2,
-      borderRadius: 3,
+    headerAbout: {
+      fontSize: s.fontSize,
+      color: '#444444',
+      lineHeight: 1.6,
+      marginTop: 8,
     },
     footer: {
       marginTop: 24,
@@ -179,28 +172,32 @@ export default function Minimal({
     : null;
 
   type ContactEntry = { key: string; href: string | null; rawValue: string };
-  const contactEntries: ContactEntry[] = (headerSection?.items ?? []).flatMap(
-    (item) => {
-      if (
-        item.kind === 'keyvalue' &&
-        !HEADER_META_KEYS.has(item.key.toLowerCase())
-      ) {
-        return [
-          {
-            key: item.key,
-            href: isUrl(item.value) ? item.value : null,
-            rawValue: item.value,
-          },
-        ];
+  const contactEntries: ContactEntry[] = [];
+  const aboutLines: string[] = [];
+
+  for (const item of headerSection?.items ?? []) {
+    if (item.kind === 'keyvalue') {
+      const keyLower = item.key.toLowerCase();
+      if (HEADER_META_KEYS.has(keyLower)) continue;
+      if (HEADER_ABOUT_KEYS.has(keyLower)) {
+        aboutLines.push(item.value);
+        continue;
       }
-      if (item.kind === 'text') {
-        const link = extractLink(item.text);
-        if (link)
-          return [{ key: link.text, href: link.href, rawValue: link.href }];
-      }
-      return [];
+      contactEntries.push({
+        key: item.key,
+        href: isUrl(item.value) ? item.value : null,
+        rawValue: item.value,
+      });
+    } else if (item.kind === 'text') {
+      const link = extractLink(item.text);
+      if (link)
+        contactEntries.push({
+          key: link.text,
+          href: link.href,
+          rawValue: link.href,
+        });
     }
-  );
+  }
 
   const bodySections = sections.filter((sec) => sec !== headerSection);
 
@@ -231,6 +228,11 @@ export default function Minimal({
               ))}
             </div>
           )}
+          {aboutLines.map((line, i) => (
+            <p key={i} style={{ ...S.headerAbout, margin: 0, marginTop: 8 }}>
+              {line}
+            </p>
+          ))}
         </header>
       )}
 
@@ -285,20 +287,10 @@ function ItemBlock({
   switch (item.kind) {
     case 'keyvalue': {
       if (isKeyValueSection) {
-        const tags = item.value
-          .split(',')
-          .map((v) => v.trim())
-          .filter(Boolean);
         return (
           <div style={S.kvSkillsRow}>
             <span style={S.kvSkillsLabel}>{item.key}</span>
-            <div style={S.kvSkillsTags}>
-              {tags.map((tag) => (
-                <span key={tag} style={S.tag}>
-                  {tag}
-                </span>
-              ))}
-            </div>
+            <span style={S.kvSkillsValue}>{item.value}</span>
           </div>
         );
       }

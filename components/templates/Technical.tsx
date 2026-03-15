@@ -14,6 +14,7 @@ import { isUrl, extractLink } from '@/lib/inline';
 
 const FONT = "'Courier New', Courier, monospace";
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
+const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TechStyles = Record<string, any>;
@@ -63,7 +64,12 @@ export default function Technical({
       marginBottom: 2,
       lineHeight: 1.1,
     },
-    jobTitle: { fontSize: s.fontSize + 0.5, color: '#555870', margin: 0, marginBottom: 6 },
+    jobTitle: {
+      fontSize: s.fontSize + 0.5,
+      color: '#555870',
+      margin: 0,
+      marginBottom: 6,
+    },
     contactRow: {
       display: 'flex',
       flexDirection: 'row' as const,
@@ -79,6 +85,12 @@ export default function Technical({
       paddingTop: 2,
       paddingBottom: 2,
       borderRadius: 3,
+    },
+    headerAbout: {
+      fontSize: s.fontSize,
+      color: '#445566',
+      lineHeight: 1.6,
+      marginTop: 8,
     },
     divider: {
       borderBottom: '1px solid #D0D4E8',
@@ -217,28 +229,32 @@ export default function Technical({
     : null;
 
   type ContactEntry = { key: string; href: string | null; rawValue: string };
-  const contactEntries: ContactEntry[] = (headerSection?.items ?? []).flatMap(
-    (item) => {
-      if (
-        item.kind === 'keyvalue' &&
-        !HEADER_META_KEYS.has(item.key.toLowerCase())
-      ) {
-        return [
-          {
-            key: item.key,
-            href: isUrl(item.value) ? item.value : null,
-            rawValue: item.value,
-          },
-        ];
+  const contactEntries: ContactEntry[] = [];
+  const aboutLines: string[] = [];
+
+  for (const item of headerSection?.items ?? []) {
+    if (item.kind === 'keyvalue') {
+      const keyLower = item.key.toLowerCase();
+      if (HEADER_META_KEYS.has(keyLower)) continue;
+      if (HEADER_ABOUT_KEYS.has(keyLower)) {
+        aboutLines.push(item.value);
+        continue;
       }
-      if (item.kind === 'text') {
-        const link = extractLink(item.text);
-        if (link)
-          return [{ key: link.text, href: link.href, rawValue: link.href }];
-      }
-      return [];
+      contactEntries.push({
+        key: item.key,
+        href: isUrl(item.value) ? item.value : null,
+        rawValue: item.value,
+      });
+    } else if (item.kind === 'text') {
+      const link = extractLink(item.text);
+      if (link)
+        contactEntries.push({
+          key: link.text,
+          href: link.href,
+          rawValue: link.href,
+        });
     }
-  );
+  }
 
   // Prioritize GitHub/website/portfolio at the front
   const priorityKeys = ['github', 'website', 'portfolio', 'linkedin'];
@@ -279,6 +295,11 @@ export default function Technical({
               ))}
             </div>
           )}
+          {aboutLines.map((line, i) => (
+            <p key={i} style={{ ...S.headerAbout, margin: 0, marginTop: 8 }}>
+              {line}
+            </p>
+          ))}
         </header>
       )}
 
