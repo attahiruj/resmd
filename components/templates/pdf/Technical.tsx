@@ -94,8 +94,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   sectionTitlePrefix: { color: '#8899BB' },
-  skillsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  skillGroup: { minWidth: 100, flex: 1 },
+  skillsGrid: { flexDirection: 'column', gap: 4 },
+  skillGroup: {},
   skillGroupLabel: {
     fontSize: 7.5,
     fontFamily: 'Courier-Bold',
@@ -128,23 +128,12 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontFamily: 'Courier',
     color: '#667799',
-    backgroundColor: '#EEF0F8',
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 3,
   },
   entryChildren: {
-    paddingLeft: 8,
     marginTop: 3,
-    borderLeftWidth: 1,
-    borderLeftColor: '#DDE0F0',
   },
   projectCard: {
     marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#D8DCF0',
-    borderRadius: 4,
-    padding: 8,
   },
   projectHeader: {
     flexDirection: 'row',
@@ -309,6 +298,21 @@ export default function TechnicalPdf({ resume, isPro }: TemplateProps) {
   );
 }
 
+function SkillRow({ item, s }: { item: KeyValueItem; s: RS }) {
+  return (
+    <Text style={{ fontSize: s.fontSize, color: '#333344', marginBottom: 3 }}>
+      <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>
+        {item.key}:{' '}
+      </Text>
+      {item.value
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean)
+        .join(', ')}
+    </Text>
+  );
+}
+
 function TechSectionBlock({ section, s }: { section: ResumeSection; s: RS }) {
   if (section.items.length === 0) return null;
 
@@ -319,34 +323,14 @@ function TechSectionBlock({ section, s }: { section: ResumeSection; s: RS }) {
     if (kvItems.length > 0) {
       return (
         <View style={styles.section}>
-          <View minPresenceAhead={30}>
-            <Text style={styles.sectionTitle}>{'// ' + section.title}</Text>
-          </View>
           <View style={styles.skillsGrid}>
-            {kvItems.map((item) => {
-              const tags = item.value
-                .split(',')
-                .map((v) => v.trim())
-                .filter(Boolean);
-              return (
-                <View key={item.key} style={styles.skillGroup}>
-                  <Text style={styles.skillGroupLabel}>{item.key}</Text>
-                  <View style={styles.skillTagsRow}>
-                    {tags.map((tag) => (
-                      <Text
-                        key={tag}
-                        style={[
-                          styles.skillTag,
-                          { fontSize: s.fontSize - 1.5 },
-                        ]}
-                      >
-                        {tag}
-                      </Text>
-                    ))}
-                  </View>
-                </View>
-              );
-            })}
+            <View wrap={false}>
+              <Text style={styles.sectionTitle}>{'// ' + section.title}</Text>
+              {kvItems[0] && <SkillRow item={kvItems[0]} s={s} />}
+            </View>
+            {kvItems.slice(1).map((item) => (
+              <SkillRow key={item.key} item={item} s={s} />
+            ))}
           </View>
         </View>
       );
@@ -358,56 +342,61 @@ function TechSectionBlock({ section, s }: { section: ResumeSection; s: RS }) {
       (i): i is EntryItem => i.kind === 'entry'
     );
     if (entryItems.length > 0) {
+      const renderProjectEntry = (entry: EntryItem, key: number) => (
+        <View
+          key={key}
+          style={[styles.projectCard, { marginBottom: s.entrySpacing }]}
+          wrap={false}
+        >
+          <View style={styles.projectHeader}>
+            <Text style={[styles.projectName, { fontSize: s.fontSize }]}>
+              {entry.heading.split('|')[0].trim()}
+            </Text>
+            {entry.meta.length > 0 && (
+              <Text style={[styles.projectUrl, { fontSize: s.fontSize - 1.5 }]}>
+                {entry.meta[0]}
+              </Text>
+            )}
+          </View>
+          {entry.children.map((child, j) => (
+            <TechItemBlock
+              key={j}
+              item={child}
+              isKeyValueSection={false}
+              s={s}
+            />
+          ))}
+        </View>
+      );
       return (
         <View style={styles.section}>
-          <View minPresenceAhead={30}>
+          <View wrap={false}>
             <Text style={styles.sectionTitle}>{'// ' + section.title}</Text>
+            {entryItems[0] && renderProjectEntry(entryItems[0], 0)}
           </View>
-          {entryItems.map((entry, i) => (
-            <View
-              key={i}
-              style={[styles.projectCard, { marginBottom: s.entrySpacing }]}
-              wrap={false}
-            >
-              <View style={styles.projectHeader}>
-                <Text style={[styles.projectName, { fontSize: s.fontSize }]}>
-                  {entry.heading.split('|')[0].trim()}
-                </Text>
-                {entry.meta.length > 0 && (
-                  <Text
-                    style={[styles.projectUrl, { fontSize: s.fontSize - 1.5 }]}
-                  >
-                    {entry.meta[0]}
-                  </Text>
-                )}
-              </View>
-              {entry.children.map((child, j) => (
-                <TechItemBlock
-                  key={j}
-                  item={child}
-                  isKeyValueSection={false}
-                  s={s}
-                />
-              ))}
-            </View>
-          ))}
+          {entryItems
+            .slice(1)
+            .map((entry, i) => renderProjectEntry(entry, i + 1))}
         </View>
       );
     }
   }
 
+  const isKv = section.hint === 'keyvalue';
   return (
     <View style={styles.section}>
-      <View minPresenceAhead={30}>
+      <View wrap={false}>
         <Text style={styles.sectionTitle}>{'// ' + section.title}</Text>
+        {section.items[0] && (
+          <TechItemBlock
+            item={section.items[0]}
+            isKeyValueSection={isKv}
+            s={s}
+          />
+        )}
       </View>
-      {section.items.map((item, i) => (
-        <TechItemBlock
-          key={i}
-          item={item}
-          isKeyValueSection={section.hint === 'keyvalue'}
-          s={s}
-        />
+      {section.items.slice(1).map((item, i) => (
+        <TechItemBlock key={i + 1} item={item} isKeyValueSection={isKv} s={s} />
       ))}
     </View>
   );
@@ -425,32 +414,18 @@ function TechItemBlock({
   switch (item.kind) {
     case 'keyvalue': {
       if (isKeyValueSection) {
-        const tags = item.value
-          .split(',')
-          .map((v) => v.trim())
-          .filter(Boolean);
         return (
-          <View style={{ flexDirection: 'row', marginBottom: 4 }}>
+          <View style={styles.kvRow}>
             <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>
               {item.key}:
             </Text>
-            <View
-              style={{
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                flex: 1,
-                gap: 3,
-              }}
-            >
-              {tags.map((tag) => (
-                <Text
-                  key={tag}
-                  style={[styles.skillTag, { fontSize: s.fontSize - 1.5 }]}
-                >
-                  {tag}
-                </Text>
-              ))}
-            </View>
+            <Text style={[styles.kvValue, { fontSize: s.fontSize }]}>
+              {item.value
+                .split(',')
+                .map((v) => v.trim())
+                .filter(Boolean)
+                .join(', ')}
+            </Text>
           </View>
         );
       }

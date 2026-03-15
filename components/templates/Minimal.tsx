@@ -88,9 +88,7 @@ export default function Minimal({
       marginLeft: 8,
     },
     entryChildren: {
-      paddingLeft: 10,
       marginTop: 3,
-      borderLeft: '1px solid #EEEEEE',
     },
     bulletRow: {
       display: 'flex',

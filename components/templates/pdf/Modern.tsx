@@ -124,10 +124,7 @@ const styles = StyleSheet.create({
   entryOrg: { fontSize: 10.5, fontFamily: 'Helvetica', color: '#444466' },
   entryMeta: { fontSize: 8.5, color: '#888899' },
   entryChildren: {
-    paddingLeft: 8,
     marginTop: 3,
-    borderLeftWidth: 1,
-    borderLeftColor: '#EEECFF',
   },
   bulletRow: { flexDirection: 'row', marginBottom: 2.5 },
   bulletDash: { fontSize: 10, color: '#AAAACC', marginRight: 5 },

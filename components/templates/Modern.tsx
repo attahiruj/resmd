@@ -169,9 +169,7 @@ export default function Modern({
       marginLeft: 8,
     },
     entryChildren: {
-      paddingLeft: 8,
       marginTop: 3,
-      borderLeft: '1px solid #EEECFF',
     },
     bulletRow: {
       display: 'flex',
