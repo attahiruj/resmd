@@ -59,10 +59,11 @@ export default function Technical({
       fontSize: 22,
       fontWeight: 700,
       color: '#0A0C10',
+      margin: 0,
       marginBottom: 2,
       lineHeight: 1.1,
     },
-    jobTitle: { fontSize: s.fontSize + 0.5, color: '#555870', marginBottom: 6 },
+    jobTitle: { fontSize: s.fontSize + 0.5, color: '#555870', margin: 0, marginBottom: 6 },
     contactRow: {
       display: 'flex',
       flexDirection: 'row' as const,

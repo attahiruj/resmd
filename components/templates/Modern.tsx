@@ -65,10 +65,11 @@ export default function Modern({
       fontSize: 16,
       fontWeight: 700,
       color: '#FFFFFF',
+      margin: 0,
       marginBottom: 3,
       lineHeight: 1.2,
     },
-    sidebarJobTitle: { fontSize: 9.5, color: '#B0B8CC', marginBottom: 16 },
+    sidebarJobTitle: { fontSize: 9.5, color: '#B0B8CC', margin: 0, marginBottom: 16 },
     sidebarSectionTitle: {
       fontSize: 7,
       fontWeight: 700,
