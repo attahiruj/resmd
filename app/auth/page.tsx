@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 
@@ -10,15 +10,32 @@ export default function AuthPage() {
   const [tab, setTab] = useState<Tab>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createSupabaseBrowserClient();
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        router.push('/dashboard');
+      } else {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [router, supabase]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
     setError(null);
     setMessage(null);
 
@@ -44,7 +61,7 @@ export default function AuthPage() {
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
@@ -63,6 +80,14 @@ export default function AuthPage() {
     setError(null);
     setMessage(null);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center p-4">
+        <div className="animate-spin w-8 h-8 border-2 border-accent border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center p-4">
@@ -158,10 +183,10 @@ export default function AuthPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={formLoading}
               className="w-full bg-accent hover:bg-accent-hover text-accent-text rounded-lg py-2.5 text-sm font-medium transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent mt-1"
             >
-              {loading
+              {formLoading
                 ? 'Please wait…'
                 : tab === 'signin'
                   ? 'Sign in'
