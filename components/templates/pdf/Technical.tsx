@@ -21,6 +21,7 @@ import { isUrl, extractLink } from '@/lib/inline';
 type RS = Required<typeof DEFAULT_SETTINGS>;
 
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
+const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
 function isSkillsSection(section: ResumeSection): boolean {
   const lower = section.title.toLowerCase();
@@ -71,6 +72,12 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 3,
     fontFamily: 'Courier',
+  },
+  headerAbout: {
+    fontSize: 9.5,
+    color: '#445566',
+    lineHeight: 1.6,
+    marginTop: 8,
   },
   divider: {
     borderBottomWidth: 1,
@@ -186,28 +193,32 @@ export default function TechnicalPdf({ resume, isPro }: TemplateProps) {
     null;
 
   type ContactEntry = { key: string; href: string | null; rawValue: string };
-  const contactEntries: ContactEntry[] = (headerSection?.items ?? []).flatMap(
-    (item) => {
-      if (
-        item.kind === 'keyvalue' &&
-        !HEADER_META_KEYS.has(item.key.toLowerCase())
-      ) {
-        return [
-          {
-            key: item.key,
-            href: isUrl(item.value) ? item.value : null,
-            rawValue: item.value,
-          },
-        ];
+  const contactEntries: ContactEntry[] = [];
+  const aboutLines: string[] = [];
+
+  for (const item of headerSection?.items ?? []) {
+    if (item.kind === 'keyvalue') {
+      const keyLower = item.key.toLowerCase();
+      if (HEADER_META_KEYS.has(keyLower)) continue;
+      if (HEADER_ABOUT_KEYS.has(keyLower)) {
+        aboutLines.push(item.value);
+        continue;
       }
-      if (item.kind === 'text') {
-        const link = extractLink(item.text);
-        if (link)
-          return [{ key: link.text, href: link.href, rawValue: link.href }];
-      }
-      return [];
+      contactEntries.push({
+        key: item.key,
+        href: isUrl(item.value) ? item.value : null,
+        rawValue: item.value,
+      });
+    } else if (item.kind === 'text') {
+      const link = extractLink(item.text);
+      if (link)
+        contactEntries.push({
+          key: link.text,
+          href: link.href,
+          rawValue: link.href,
+        });
     }
-  );
+  }
 
   // Prioritize GitHub/website/portfolio at the front
   const priorityKeys = ['github', 'website', 'portfolio', 'linkedin'];
@@ -270,6 +281,14 @@ export default function TechnicalPdf({ resume, isPro }: TemplateProps) {
               )}
             </View>
           )}
+          {aboutLines.map((line, i) => (
+            <Text
+              key={i}
+              style={[styles.headerAbout, { fontSize: s.fontSize }]}
+            >
+              {line}
+            </Text>
+          ))}
         </View>
 
         <View style={styles.divider} />
