@@ -41,10 +41,11 @@ export default function Minimal({
       fontSize: 24,
       fontWeight: 700,
       color: '#1A1A1A',
-      marginBottom: 3,
+      margin: 0,
+      marginBottom: 12,
       lineHeight: 1.1,
     },
-    jobTitle: { fontSize: 11, color: '#666666', marginBottom: 6 },
+    jobTitle: { fontSize: 11, color: '#666666', margin: 0, marginBottom: 10 },
     contactRow: {
       display: 'flex',
       flexDirection: 'row' as const,

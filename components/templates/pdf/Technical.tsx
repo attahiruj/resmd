@@ -54,6 +54,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Courier-Bold',
     color: '#0A0C10',
     marginBottom: 2,
+    lineHeight: 1.1,
   },
   jobTitle: {
     fontSize: 10,

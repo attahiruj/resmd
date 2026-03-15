@@ -57,6 +57,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica-Bold',
     color: '#FFFFFF',
     marginBottom: 3,
+    lineHeight: 1.2,
   },
   sidebarJobTitle: { fontSize: 9.5, color: '#B0B8CC', marginBottom: 16 },
   sidebarSectionTitle: {
