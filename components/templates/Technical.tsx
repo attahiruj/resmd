@@ -107,9 +107,9 @@ export default function Technical({
       letterSpacing: '1px',
     },
     skillsGrid: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: 8,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: 4,
     },
     skillGroupLabel: {
       fontSize: 7.5,
@@ -148,26 +148,15 @@ export default function Technical({
     entryMetaBadge: {
       fontSize: s.fontSize - 1.5,
       color: '#667799',
-      backgroundColor: '#EEF0F8',
-      paddingLeft: 5,
-      paddingRight: 5,
-      paddingTop: 2,
-      paddingBottom: 2,
-      borderRadius: 3,
       whiteSpace: 'nowrap' as const,
       flexShrink: 0,
       marginLeft: 8,
     },
     entryChildren: {
-      paddingLeft: 8,
       marginTop: 3,
-      borderLeft: '1px solid #DDE0F0',
     },
     projectCard: {
       marginBottom: s.entrySpacing,
-      border: '1px solid #D8DCF0',
-      borderRadius: 4,
-      padding: 8,
     },
     projectHeader: {
       display: 'flex',
@@ -336,24 +325,27 @@ function TechSectionBlock({
         <section data-section={section.id} style={S.section}>
           <h2 style={S.sectionTitle}>{'// ' + section.title}</h2>
           <div style={S.skillsGrid}>
-            {kvItems.map((item) => {
-              const tags = item.value
-                .split(',')
-                .map((v) => v.trim())
-                .filter(Boolean);
-              return (
-                <div key={item.key}>
-                  <p style={S.skillGroupLabel}>{item.key}</p>
-                  <div style={S.skillTagsRow}>
-                    {tags.map((tag) => (
-                      <span key={tag} style={S.skillTag}>
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+            {kvItems.map((item) => (
+              <div key={item.key} style={S.kvRow}>
+                <span
+                  style={{
+                    ...S.kvKey,
+                    width: 'auto',
+                    marginRight: 6,
+                    flexShrink: 0,
+                  }}
+                >
+                  {item.key}:
+                </span>
+                <span style={S.kvValue}>
+                  {item.value
+                    .split(',')
+                    .map((v) => v.trim())
+                    .filter(Boolean)
+                    .join(', ')}
+                </span>
+              </div>
+            ))}
           </div>
         </section>
       );
@@ -420,30 +412,16 @@ function TechItemBlock({
   switch (item.kind) {
     case 'keyvalue': {
       if (isKeyValueSection) {
-        const tags = item.value
-          .split(',')
-          .map((v) => v.trim())
-          .filter(Boolean);
         return (
-          <div
-            style={{ display: 'flex', flexDirection: 'row', marginBottom: 4 }}
-          >
+          <div style={S.kvRow}>
             <span style={S.kvKey}>{item.key}:</span>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                flex: 1,
-                gap: 3,
-              }}
-            >
-              {tags.map((tag) => (
-                <span key={tag} style={S.skillTag}>
-                  {tag}
-                </span>
-              ))}
-            </div>
+            <span style={S.kvValue}>
+              {item.value
+                .split(',')
+                .map((v) => v.trim())
+                .filter(Boolean)
+                .join(', ')}
+            </span>
           </div>
         );
       }
