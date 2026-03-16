@@ -12,7 +12,7 @@ import { DEFAULT_SETTINGS } from '@/types/resume';
 import { renderInline } from '@/lib/renderInline';
 import { isUrl, extractLink } from '@/lib/inline';
 
-const FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+const FONT = "var(--font-noto-sans), 'Noto Sans', sans-serif";
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
 const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
@@ -204,19 +204,15 @@ export default function Modern({
       marginBottom: 5,
     },
     kvSkillsLabel: {
-      fontSize: 8,
+      fontSize: s.fontSize,
       color: '#888899',
-      textTransform: 'uppercase' as const,
-      letterSpacing: '0.5px',
-      width: 55,
+      marginRight: 6,
       flexShrink: 0,
-      paddingTop: 2,
     },
     kvSkillsTags: {
       display: 'flex',
       flexDirection: 'row' as const,
       flexWrap: 'wrap' as const,
-      flex: 1,
       gap: 3,
     },
     tag: {
@@ -304,15 +300,12 @@ export default function Modern({
                         rel="noopener noreferrer"
                         style={{ color: 'inherit', textDecoration: 'none' }}
                       >
-                        <span style={S.sidebarKvKey}>↗ {entry.key}</span>
+                        <span style={S.sidebarKvKey}>*{entry.key}</span>
                       </a>
                     ) : (
-                      <>
-                        <span style={S.sidebarKvKey}>{entry.key}</span>
-                        <span style={S.sidebarKvValue}>
-                          {renderInline(entry.rawValue)}
-                        </span>
-                      </>
+                      <span style={S.sidebarKvValue}>
+                        {renderInline(entry.rawValue)}
+                      </span>
                     )}
                   </div>
                 ))}
@@ -403,7 +396,7 @@ function SidebarItemBlock({
               rel="noopener noreferrer"
               style={{ color: 'inherit', textDecoration: 'none' }}
             >
-              <span style={S.sidebarKvKey}>↗ {item.key}</span>
+              <span style={S.sidebarKvKey}>*{item.key}</span>
             </a>
           ) : (
             <>
@@ -481,7 +474,7 @@ function MainItemBlock({
           .filter(Boolean);
         return (
           <div style={S.kvSkillsRow}>
-            <span style={S.kvSkillsLabel}>{item.key}</span>
+            <span style={S.kvSkillsLabel}>{item.key}:</span>
             <div style={S.kvSkillsTags}>
               {tags.map((tag) => (
                 <span key={tag} style={S.tag}>
@@ -501,7 +494,7 @@ function MainItemBlock({
               rel="noopener noreferrer"
               style={{ color: 'inherit', textDecoration: 'none' }}
             >
-              <span style={S.kvKey}>↗ {item.key}</span>
+              <span style={S.kvKey}>*{item.key}</span>
             </a>
           ) : (
             <>
@@ -536,8 +529,7 @@ function MainEntryBlock({ entry, S }: { entry: EntryItem; S: ModernStyles }) {
               <span style={S.entryRole}>{renderInline(entry.role)}</span>
               {entry.organization && (
                 <span style={S.entryOrg}>
-                  {' '}
-                  @ {renderInline(entry.organization)}
+                  , {renderInline(entry.organization)}
                 </span>
               )}
             </span>

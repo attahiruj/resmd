@@ -16,6 +16,7 @@ import type {
 } from '@/types/resume';
 import { DEFAULT_SETTINGS } from '@/types/resume';
 import { renderInlinePdf } from '@/lib/renderInlinePdf';
+import '@/lib/pdfFonts';
 import { isUrl, extractLink } from '@/lib/inline';
 
 type RS = Required<typeof DEFAULT_SETTINGS>;
@@ -40,7 +41,7 @@ function isProjectsSection(section: ResumeSection): boolean {
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: 'Courier',
+    fontFamily: 'CourierPrime',
     fontSize: 9.5,
     color: '#1A1C23',
     paddingTop: 38,
@@ -52,14 +53,15 @@ const styles = StyleSheet.create({
   header: { marginBottom: 16 },
   name: {
     fontSize: 22,
-    fontFamily: 'Courier-Bold',
+    fontFamily: 'CourierPrime',
+    fontWeight: 700,
     color: '#0A0C10',
     marginBottom: 2,
     lineHeight: 1.1,
   },
   jobTitle: {
     fontSize: 10,
-    fontFamily: 'Courier',
+    fontFamily: 'CourierPrime',
     color: '#555870',
     marginBottom: 6,
   },
@@ -71,7 +73,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 3,
-    fontFamily: 'Courier',
+    fontFamily: 'CourierPrime',
   },
   headerAbout: {
     fontSize: 9.5,
@@ -87,7 +89,8 @@ const styles = StyleSheet.create({
   section: { marginBottom: 12 },
   sectionTitle: {
     fontSize: 8,
-    fontFamily: 'Courier-Bold',
+    fontFamily: 'CourierPrime',
+    fontWeight: 700,
     color: '#445577',
     marginBottom: 6,
     textTransform: 'uppercase',
@@ -98,7 +101,8 @@ const styles = StyleSheet.create({
   skillGroup: {},
   skillGroupLabel: {
     fontSize: 7.5,
-    fontFamily: 'Courier-Bold',
+    fontFamily: 'CourierPrime',
+    fontWeight: 700,
     color: '#778899',
     marginBottom: 3,
     textTransform: 'uppercase',
@@ -114,7 +118,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 1.5,
     borderRadius: 3,
-    fontFamily: 'Courier',
+    fontFamily: 'CourierPrime',
   },
   entry: { marginBottom: 9 },
   entryHeader: {
@@ -122,11 +126,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
-  entryRole: { fontSize: 10, fontFamily: 'Courier-Bold', color: '#0A0C10' },
-  entryOrg: { fontSize: 10, fontFamily: 'Courier', color: '#445577' },
+  entryRole: {
+    fontSize: 10,
+    fontFamily: 'NotoSansMono',
+    fontWeight: 700,
+    color: '#0A0C10',
+  },
+  entryOrg: { fontSize: 10, fontFamily: 'NotoSansMono', color: '#445577' },
   entryMetaBadge: {
     fontSize: 8,
-    fontFamily: 'Courier',
+    fontFamily: 'CourierPrime',
     color: '#667799',
   },
   entryChildren: {
@@ -141,8 +150,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 3,
   },
-  projectName: { fontSize: 10, fontFamily: 'Courier-Bold', color: '#1A1C23' },
-  projectUrl: { fontSize: 8, fontFamily: 'Courier', color: '#778899' },
+  projectName: {
+    fontSize: 10,
+    fontFamily: 'NotoSansMono',
+    fontWeight: 700,
+    color: '#1A1C23',
+  },
+  projectUrl: { fontSize: 8, fontFamily: 'NotoSansMono', color: '#778899' },
   bulletRow: { flexDirection: 'row', marginBottom: 2.5 },
   bulletDash: { fontSize: 9.5, color: '#8899BB', marginRight: 5 },
   bulletText: { fontSize: 9.5, color: '#2A2C35', flex: 1 },
@@ -156,8 +170,16 @@ const styles = StyleSheet.create({
   kvKey: {
     fontSize: 8.5,
     color: '#778899',
-    fontFamily: 'Courier-Bold',
+    fontFamily: 'CourierPrime',
+    fontWeight: 700,
     width: 62,
+  },
+  kvSkillsKey: {
+    fontSize: 8.5,
+    color: '#778899',
+    fontFamily: 'CourierPrime',
+    fontWeight: 700,
+    marginRight: 6,
   },
   kvValue: { fontSize: 9.5, color: '#333344', flex: 1 },
   footer: {
@@ -167,7 +189,7 @@ const styles = StyleSheet.create({
     paddingTop: 5,
     textAlign: 'center',
   },
-  footerText: { fontSize: 7.5, color: '#AABBCC', fontFamily: 'Courier' },
+  footerText: { fontSize: 7.5, color: '#AABBCC', fontFamily: 'NotoSansMono' },
 });
 
 export default function TechnicalPdf({ resume, isPro }: TemplateProps) {
@@ -256,7 +278,7 @@ export default function TechnicalPdf({ resume, isPro }: TemplateProps) {
                     <Text
                       style={[styles.contactChip, { fontSize: s.fontSize - 1 }]}
                     >
-                      ↗ {entry.key}
+                      *{entry.key}
                     </Text>
                   </Link>
                 ) : (
@@ -264,7 +286,7 @@ export default function TechnicalPdf({ resume, isPro }: TemplateProps) {
                     key={entry.key}
                     style={[styles.contactChip, { fontSize: s.fontSize - 1 }]}
                   >
-                    {entry.key}: {entry.rawValue}
+                    {entry.rawValue}
                   </Text>
                 )
               )}
@@ -416,7 +438,7 @@ function TechItemBlock({
       if (isKeyValueSection) {
         return (
           <View style={styles.kvRow}>
-            <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>
+            <Text style={[styles.kvSkillsKey, { fontSize: s.fontSize }]}>
               {item.key}:
             </Text>
             <Text style={[styles.kvValue, { fontSize: s.fontSize }]}>
@@ -437,7 +459,7 @@ function TechItemBlock({
               style={{ color: 'inherit', textDecoration: 'none' }}
             >
               <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>
-                ↗ {item.key}
+                *{item.key}
               </Text>
             </Link>
           ) : (

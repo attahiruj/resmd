@@ -12,7 +12,8 @@ import { DEFAULT_SETTINGS } from '@/types/resume';
 import { renderInline } from '@/lib/renderInline';
 import { isUrl, extractLink } from '@/lib/inline';
 
-const FONT = "'Courier New', Courier, monospace";
+const FONT =
+  "var(--font-courier-prime), 'Courier Prime', 'Courier New', monospace";
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
 const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
@@ -199,6 +200,13 @@ export default function Technical({
       width: 62,
       flexShrink: 0,
     },
+    kvSkillsKey: {
+      fontSize: s.fontSize,
+      color: '#778899',
+      fontWeight: 700,
+      marginRight: 6,
+      flexShrink: 0,
+    },
     kvValue: { fontSize: s.fontSize, color: '#333344', flex: 1 },
     footer: {
       marginTop: 16,
@@ -273,12 +281,10 @@ export default function Technical({
                       rel="noopener noreferrer"
                       style={{ color: 'inherit', textDecoration: 'none' }}
                     >
-                      ↗ {entry.key}
+                      *{entry.key}
                     </a>
                   ) : (
-                    <>
-                      {entry.key}: {entry.rawValue}
-                    </>
+                    <>{entry.rawValue}</>
                   )}
                 </span>
               ))}
@@ -414,7 +420,7 @@ function TechItemBlock({
       if (isKeyValueSection) {
         return (
           <div style={S.kvRow}>
-            <span style={S.kvKey}>{item.key}:</span>
+            <span style={S.kvSkillsKey}>{item.key}:</span>
             <span style={S.kvValue}>
               {item.value
                 .split(',')
@@ -434,7 +440,7 @@ function TechItemBlock({
               rel="noopener noreferrer"
               style={{ color: 'inherit', textDecoration: 'none' }}
             >
-              <span style={S.kvKey}>↗ {item.key}</span>
+              <span style={S.kvKey}>*{item.key}</span>
             </a>
           ) : (
             <>

@@ -632,7 +632,7 @@ export default function Editor({
             onClick={applyComment}
             className="text-[11px] font-mono text-text-muted"
           >
-            //
+            {'//'}
           </FormatBtn>
 
           {/* Arrow notch */}

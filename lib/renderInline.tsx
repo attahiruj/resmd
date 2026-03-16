@@ -23,7 +23,7 @@ export function renderInline(text: string): React.ReactNode {
           rel="noopener noreferrer"
           style={{ color: 'inherit', textDecoration: 'none' }}
         >
-          ↗ {seg.text}
+          *{seg.text}
         </a>
       );
     if (seg.bold) return <strong key={i}>{seg.text}</strong>;

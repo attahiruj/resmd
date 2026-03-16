@@ -12,7 +12,7 @@ export function renderInlinePdf(text: string): React.ReactNode {
           src={seg.href}
           style={{ color: '#2563EB', textDecoration: 'none' }}
         >
-          ↗ {seg.text}
+          <Text>*{seg.text}</Text>
         </Link>
       );
     if (seg.bold)
