@@ -3,13 +3,21 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowCounterClockwiseIcon,
+  CaretDownIcon,
+  CaretUpIcon,
   CheckIcon,
   CopyIcon,
-  MinusIcon,
   PaperPlaneTiltIcon,
   XIcon,
 } from '@phosphor-icons/react';
+import ReactMarkdown from 'react-markdown';
 import { parseSuggestion } from '@/lib/prompts';
+import { AI_MODEL_STORAGE_KEY } from '@/lib/ai';
+
+interface ModelOption {
+  id: string;
+  name: string;
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -44,8 +52,58 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
   const [loading, setLoading] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [minimized, setMinimized] = useState(false);
+  const [models, setModels] = useState<ModelOption[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>('');
+  const [showModelPicker, setShowModelPicker] = useState(false);
   const historyRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const pickerTriggerRef = useRef<HTMLButtonElement>(null);
+
+  // Load persisted model selection and fetch available models
+  useEffect(() => {
+    const saved = localStorage.getItem(AI_MODEL_STORAGE_KEY);
+    if (saved) setSelectedModel(saved);
+
+    fetch('/api/ai/models')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.models?.length) {
+          setModels(data.models);
+          // If no saved model, default to the first one
+          if (!saved) {
+            setSelectedModel(data.models[0].id);
+            localStorage.setItem(AI_MODEL_STORAGE_KEY, data.models[0].id);
+          }
+        }
+      })
+      .catch(() => {
+        // Silently fail — server env model will be used as fallback
+      });
+  }, []);
+
+  // Close model picker on outside click
+  useEffect(() => {
+    if (!showModelPicker) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        pickerRef.current &&
+        !pickerRef.current.contains(e.target as Node) &&
+        pickerTriggerRef.current &&
+        !pickerTriggerRef.current.contains(e.target as Node)
+      ) {
+        setShowModelPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showModelPicker]);
+
+  const handleModelChange = (id: string) => {
+    setSelectedModel(id);
+    localStorage.setItem(AI_MODEL_STORAGE_KEY, id);
+    setShowModelPicker(false);
+  };
 
   useEffect(() => {
     if (historyRef.current) {
@@ -133,6 +191,7 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
           resumeContent,
           // Send only prose for history — the full resume is always in the preamble
           history: history.map((m) => ({ role: m.role, content: m.prose })),
+          model: selectedModel || undefined,
         }),
       });
 
@@ -168,7 +227,7 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
           ...next,
           {
             role: 'assistant',
-            prose: 'Something went wrong. Please try again.',
+            prose: 'Something went wrong. Please try another model.',
             edits: [],
           },
         ]);
@@ -215,13 +274,77 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
           </span>
           AI Assistant
         </span>
-        <button
-          onClick={() => setMinimized((m) => !m)}
-          className="p-1 rounded text-faint hover:text-text hover:bg-surface-2 transition-colors duration-150"
-          title={minimized ? 'Expand' : 'Minimize'}
-        >
-          <MinusIcon size={12} />
-        </button>
+        <div className="flex items-center gap-1.5">
+          {models.length > 0 && (
+            <div className="relative">
+              {/* Picker — opens upward */}
+              {showModelPicker && (
+                <div
+                  ref={pickerRef}
+                  className="absolute bottom-full right-0 mb-1.5 w-56 bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-50"
+                >
+                  <div
+                    className="overflow-y-auto"
+                    style={{ maxHeight: '240px' }}
+                  >
+                    {models.map((m) => {
+                      const isActive = m.id === selectedModel;
+                      return (
+                        <button
+                          key={m.id}
+                          onClick={() => handleModelChange(m.id)}
+                          className={`w-full text-left px-3 py-2 text-xs transition-colors duration-100 ${
+                            isActive
+                              ? 'bg-accent-muted text-accent'
+                              : 'text-text hover:bg-surface-2'
+                          }`}
+                        >
+                          {m.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Trigger */}
+              <button
+                ref={pickerTriggerRef}
+                onClick={() => setShowModelPicker((v) => !v)}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-muted hover:text-text hover:bg-surface-2 border border-border transition-colors duration-150"
+                title="Select AI model"
+              >
+                <span className="max-w-[120px] truncate">
+                  {models.find((m) => m.id === selectedModel)?.name ?? '…'}
+                </span>
+                {showModelPicker ? (
+                  <CaretUpIcon
+                    size={11}
+                    weight="bold"
+                    className="flex-shrink-0"
+                  />
+                ) : (
+                  <CaretDownIcon
+                    size={11}
+                    weight="bold"
+                    className="flex-shrink-0"
+                  />
+                )}
+              </button>
+            </div>
+          )}
+          <button
+            onClick={() => setMinimized((m) => !m)}
+            className="p-1 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150"
+            title={minimized ? 'Expand' : 'Collapse'}
+          >
+            {minimized ? (
+              <CaretUpIcon size={14} />
+            ) : (
+              <CaretDownIcon size={14} />
+            )}
+          </button>
+        </div>
       </div>
 
       {!minimized && messages.length > 0 && (
@@ -235,19 +358,62 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
               key={mi}
               className={`group flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
             >
-              <span className="text-[10px] uppercase tracking-wide text-faint select-none">
-                {msg.role === 'user' ? 'You' : 'AI'}
-              </span>
-
               {msg.prose && (
                 <div
-                  className={`text-sm rounded-xl px-3 py-1.5 max-w-[90%] whitespace-pre-wrap leading-relaxed ${
+                  className={`text-sm rounded-xl px-3 py-1.5 max-w-[90%] leading-relaxed ${
                     msg.role === 'user'
-                      ? 'bg-accent text-accent-text'
+                      ? 'bg-accent text-accent-text whitespace-pre-wrap'
                       : 'bg-surface text-text border border-border'
                   }`}
                 >
-                  {msg.prose}
+                  {msg.role === 'user' ? (
+                    msg.prose
+                  ) : (
+                    <ReactMarkdown
+                      components={{
+                        p: ({ children }) => (
+                          <p className="mb-1.5 last:mb-0">{children}</p>
+                        ),
+                        strong: ({ children }) => (
+                          <strong className="font-semibold text-text">
+                            {children}
+                          </strong>
+                        ),
+                        em: ({ children }) => (
+                          <em className="italic text-muted">{children}</em>
+                        ),
+                        ul: ({ children }) => (
+                          <ul className="mb-1.5 pl-4 flex flex-col gap-0.5 list-disc">
+                            {children}
+                          </ul>
+                        ),
+                        ol: ({ children }) => (
+                          <ol className="mb-1.5 pl-4 flex flex-col gap-0.5 list-decimal">
+                            {children}
+                          </ol>
+                        ),
+                        li: ({ children }) => (
+                          <li className="text-sm">{children}</li>
+                        ),
+                        code: ({ children }) => (
+                          <code className="font-mono text-xs bg-surface-2 px-1 py-0.5 rounded">
+                            {children}
+                          </code>
+                        ),
+                        h1: ({ children }) => (
+                          <p className="font-semibold mb-1">{children}</p>
+                        ),
+                        h2: ({ children }) => (
+                          <p className="font-semibold mb-1">{children}</p>
+                        ),
+                        h3: ({ children }) => (
+                          <p className="font-medium mb-0.5">{children}</p>
+                        ),
+                      }}
+                    >
+                      {msg.prose}
+                    </ReactMarkdown>
+                  )}
                 </div>
               )}
 
@@ -301,9 +467,6 @@ export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
 
           {loading && (
             <div className="flex flex-col gap-0.5 items-start">
-              <span className="text-[10px] uppercase tracking-wide text-faint select-none">
-                AI
-              </span>
               <div className="text-sm rounded-xl px-3 py-1.5 bg-surface border border-border text-muted">
                 <ThinkingDots />
               </div>

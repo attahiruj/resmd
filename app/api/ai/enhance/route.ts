@@ -59,7 +59,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { selectedText, instruction, resumeContext } = await req.json();
+    const { selectedText, instruction, resumeContext, model } =
+      await req.json();
 
     if (!selectedText || !instruction) {
       return NextResponse.json(
@@ -112,10 +113,13 @@ Do not include any preamble or explanation.`;
         'Content-Type': 'application/json',
         'HTTP-Referer':
           process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
-        'X-Title': 'ResMarkup AI Enhancement',
+        'X-Title': 'resmd resAI',
       },
       body: JSON.stringify({
-        model: process.env.OPENROUTER_MODEL ?? 'google/gemma-3n-e4b-it:free',
+        model:
+          model ??
+          process.env.OPENROUTER_MODEL ??
+          'google/gemma-3n-e4b-it:free',
         max_tokens: 1024,
         messages,
         stream: true,
