@@ -73,6 +73,31 @@ function applyHeadingToView(view: EditorView, level: number) {
   view.dispatch({ changes });
 }
 
+function toggleCommentOnView(view: EditorView) {
+  const { from, to } = view.state.selection.main;
+  const startLine = view.state.doc.lineAt(from);
+  const endLine = view.state.doc.lineAt(to);
+
+  const lines = [];
+  for (let n = startLine.number; n <= endLine.number; n++) {
+    lines.push(view.state.doc.line(n));
+  }
+
+  const allCommented = lines.every((l) => l.text.startsWith('//'));
+
+  const changes = lines.map((line) => {
+    if (allCommented) {
+      // Remove comment prefix (// or // followed by space)
+      const end = line.text.startsWith('// ') ? line.from + 3 : line.from + 2;
+      return { from: line.from, to: end, insert: '' };
+    } else {
+      return { from: line.from, to: line.from, insert: '// ' };
+    }
+  });
+
+  view.dispatch({ changes });
+}
+
 // ─── Preview → editor jump helper ────────────────────────────────────────────
 
 function findBestOccurrence(
@@ -137,6 +162,10 @@ function buildDecorations(view: EditorView): DecorationSet {
       } else if (/^## .+/.test(text)) {
         deco.push(
           Decoration.line({ class: 'cm-resmd-entry' }).range(line.from)
+        );
+      } else if (/^\/\//.test(text)) {
+        deco.push(
+          Decoration.line({ class: 'cm-resmd-comment' }).range(line.from)
         );
       } else if (/^- /.test(text)) {
         deco.push(
@@ -327,6 +356,14 @@ export default function Editor({
     view.focus();
   };
 
+  const applyComment = () => {
+    const view = viewRef.current;
+    if (!view) return;
+    toggleCommentOnView(view);
+    view.focus();
+    setSelectionPopup(null);
+  };
+
   // ── Editor setup ────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -382,6 +419,13 @@ export default function Editor({
         key: 'Mod-u',
         run: (view) => {
           applyInlineToView(view, '_');
+          return true;
+        },
+      },
+      {
+        key: 'Mod-/',
+        run: (view) => {
+          toggleCommentOnView(view);
           return true;
         },
       },
@@ -578,6 +622,18 @@ export default function Editor({
               H{level}
             </FormatBtn>
           ))}
+
+          {/* Divider */}
+          <div className="w-px h-4 bg-border mx-0.5 flex-shrink-0" />
+
+          {/* Comment toggle */}
+          <FormatBtn
+            title="Toggle comment (Ctrl+/)  →  // text"
+            onClick={applyComment}
+            className="text-[11px] font-mono text-text-muted"
+          >
+            //
+          </FormatBtn>
 
           {/* Arrow notch */}
           <span
