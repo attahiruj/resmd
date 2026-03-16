@@ -16,6 +16,7 @@ import type {
 } from '@/types/resume';
 import { DEFAULT_SETTINGS } from '@/types/resume';
 import { renderInlinePdf } from '@/lib/renderInlinePdf';
+import '@/lib/pdfFonts';
 import { isUrl, extractLink } from '@/lib/inline';
 
 type RS = Required<typeof DEFAULT_SETTINGS>;
@@ -39,7 +40,7 @@ function isSidebarSection(section: ResumeSection): boolean {
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: 'Helvetica',
+    fontFamily: 'NotoSans',
     fontSize: 10,
     color: '#1C1B18',
     flexDirection: 'row',
@@ -55,7 +56,8 @@ const styles = StyleSheet.create({
   },
   sidebarName: {
     fontSize: 16,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'NotoSans',
+    fontWeight: 700,
     color: '#FFFFFF',
     marginBottom: 3,
     lineHeight: 1.2,
@@ -63,7 +65,8 @@ const styles = StyleSheet.create({
   sidebarJobTitle: { fontSize: 9.5, color: '#B0B8CC', marginBottom: 16 },
   sidebarSectionTitle: {
     fontSize: 7,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'NotoSans',
+    fontWeight: 700,
     textTransform: 'uppercase',
     letterSpacing: 1,
     color: '#7A8299',
@@ -104,7 +107,8 @@ const styles = StyleSheet.create({
   },
   mainSectionTitle: {
     fontSize: 8,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'NotoSans',
+    fontWeight: 700,
     textTransform: 'uppercase',
     letterSpacing: 1,
     color: '#4A5070',
@@ -120,8 +124,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
-  entryRole: { fontSize: 10.5, fontFamily: 'Helvetica-Bold', color: '#1A1A2E' },
-  entryOrg: { fontSize: 10.5, fontFamily: 'Helvetica', color: '#444466' },
+  entryRole: {
+    fontSize: 10.5,
+    fontFamily: 'NotoSans',
+    fontWeight: 700,
+    color: '#1A1A2E',
+  },
+  entryOrg: { fontSize: 10.5, fontFamily: 'NotoSans', color: '#444466' },
   entryMeta: { fontSize: 8.5, color: '#888899' },
   entryChildren: {
     marginTop: 3,
@@ -146,12 +155,9 @@ const styles = StyleSheet.create({
   kvSkillsLabel: {
     fontSize: 8,
     color: '#888899',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    width: 55,
-    paddingTop: 2,
+    marginRight: 6,
   },
-  kvSkillsTags: { flexDirection: 'row', flexWrap: 'wrap', flex: 1, gap: 3 },
+  kvSkillsTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 3 },
   tag: {
     fontSize: 8,
     color: '#555566',
@@ -254,15 +260,12 @@ export default function ModernPdf({ resume, isPro }: TemplateProps) {
                       src={entry.href}
                       style={{ color: 'inherit', textDecoration: 'none' }}
                     >
-                      <Text style={styles.sidebarKvKey}>↗ {entry.key}</Text>
+                      <Text style={styles.sidebarKvKey}>*{entry.key}</Text>
                     </Link>
                   ) : (
-                    <>
-                      <Text style={styles.sidebarKvKey}>{entry.key}</Text>
-                      <Text style={styles.sidebarKvValue}>
-                        {renderInlinePdf(entry.rawValue)}
-                      </Text>
-                    </>
+                    <Text style={styles.sidebarKvValue}>
+                      {renderInlinePdf(entry.rawValue)}
+                    </Text>
                   )}
                 </View>
               ))}
@@ -369,7 +372,7 @@ function SidebarItemBlock({
               src={item.value}
               style={{ color: 'inherit', textDecoration: 'none' }}
             >
-              <Text style={styles.sidebarKvKey}>↗ {item.key}</Text>
+              <Text style={styles.sidebarKvKey}>*{item.key}</Text>
             </Link>
           ) : (
             <>
@@ -398,7 +401,8 @@ function SidebarItemBlock({
           <Text
             style={{
               fontSize: 9,
-              fontFamily: 'Helvetica-Bold',
+              fontFamily: 'NotoSans',
+              fontWeight: 700,
               color: '#D0D6E8',
             }}
           >
@@ -432,7 +436,9 @@ function MainItemBlock({
           .filter(Boolean);
         return (
           <View style={styles.kvSkillsRow}>
-            <Text style={styles.kvSkillsLabel}>{item.key}</Text>
+            <Text style={[styles.kvSkillsLabel, { fontSize: s.fontSize }]}>
+              {item.key}:
+            </Text>
             <View style={styles.kvSkillsTags}>
               {tags.map((tag) => (
                 <View key={tag} style={styles.tag}>
@@ -451,7 +457,7 @@ function MainItemBlock({
               style={{ color: 'inherit', textDecoration: 'none' }}
             >
               <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>
-                ↗ {item.key}
+                *{item.key}
               </Text>
             </Link>
           ) : (
@@ -499,8 +505,7 @@ function MainEntryBlock({ entry, s }: { entry: EntryItem; s: RS }) {
               </Text>
               {entry.organization && (
                 <Text style={[styles.entryOrg, { fontSize: s.fontSize + 0.5 }]}>
-                  {' '}
-                  @ {renderInlinePdf(entry.organization)}
+                  , {renderInlinePdf(entry.organization)}
                 </Text>
               )}
             </Text>

@@ -1,5 +1,49 @@
 import type { Metadata } from 'next';
+import { Noto_Sans, Noto_Sans_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
+
+const notoSans = Noto_Sans({
+  subsets: ['latin'],
+  variable: '--font-noto-sans',
+  weight: ['400', '700'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+});
+
+const notoSansMono = Noto_Sans_Mono({
+  subsets: ['latin'],
+  variable: '--font-noto-sans-mono',
+  weight: ['400', '700'],
+  display: 'swap',
+});
+
+const courierPrime = localFont({
+  src: [
+    {
+      path: '../public/fonts/CourierPrime-Regular.ttf',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/CourierPrime-Bold.ttf',
+      weight: '700',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/CourierPrime-Italic.ttf',
+      weight: '400',
+      style: 'italic',
+    },
+    {
+      path: '../public/fonts/CourierPrime-BoldItalic.ttf',
+      weight: '700',
+      style: 'italic',
+    },
+  ],
+  variable: '--font-courier-prime',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: {
@@ -55,7 +99,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${notoSans.variable} ${notoSansMono.variable} ${courierPrime.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         {/* Theme init must run before body renders to prevent FOWT */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />

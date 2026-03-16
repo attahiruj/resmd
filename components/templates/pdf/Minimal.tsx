@@ -16,6 +16,7 @@ import type {
 } from '@/types/resume';
 import { DEFAULT_SETTINGS } from '@/types/resume';
 import { renderInlinePdf } from '@/lib/renderInlinePdf';
+import '@/lib/pdfFonts';
 import { isUrl, extractLink } from '@/lib/inline';
 
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
@@ -23,7 +24,7 @@ const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: 'Helvetica',
+    fontFamily: 'NotoSans',
     fontSize: 10,
     color: '#1C1B18',
     paddingTop: 40,
@@ -36,7 +37,8 @@ const styles = StyleSheet.create({
   header: { marginBottom: 20 },
   name: {
     fontSize: 24,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'NotoSans',
+    fontWeight: 700,
     color: '#1A1A1A',
     lineHeight: 1.1,
     marginBottom: 12,
@@ -55,7 +57,8 @@ const styles = StyleSheet.create({
   section: { marginBottom: 14 },
   sectionTitle: {
     fontSize: 7.5,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'NotoSans',
+    fontWeight: 700,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     color: '#888888',
@@ -72,8 +75,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   entryLeft: { flex: 1 },
-  entryRole: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#1A1A1A' },
-  entryOrg: { fontSize: 10, fontFamily: 'Helvetica', color: '#444444' },
+  entryRole: {
+    fontSize: 10,
+    fontFamily: 'NotoSans',
+    fontWeight: 700,
+    color: '#1A1A1A',
+  },
+  entryOrg: { fontSize: 10, fontFamily: 'NotoSans', color: '#444444' },
   entryMeta: { fontSize: 9, color: '#888888', marginLeft: 8 },
   entryChildren: {
     marginTop: 3,
@@ -107,14 +115,11 @@ const styles = StyleSheet.create({
   kvSkillsLabel: {
     fontSize: 8,
     color: '#888888',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    width: 80,
+    marginRight: 6,
   },
   kvSkillsValue: {
     fontSize: 10,
     color: '#333333',
-    flex: 1,
   },
   // Watermark footer
   footer: {
@@ -200,7 +205,7 @@ export default function MinimalPdf({ resume, isPro }: TemplateProps) {
                       src={entry.href}
                       style={{ color: 'inherit', textDecoration: 'none' }}
                     >
-                      <Text style={styles.contactItem}>↗ {entry.key}</Text>
+                      <Text style={styles.contactItem}>*{entry.key}</Text>
                     </Link>
                   ) : (
                     <Text style={styles.contactItem}>{entry.rawValue}</Text>
@@ -267,7 +272,9 @@ function PdfItemBlock({
       if (isKeyValueSection) {
         return (
           <View style={styles.kvSkillsRow}>
-            <Text style={styles.kvSkillsLabel}>{item.key}</Text>
+            <Text style={[styles.kvSkillsLabel, { fontSize: s.fontSize }]}>
+              {item.key}:
+            </Text>
             <Text style={styles.kvSkillsValue}>{item.value}</Text>
           </View>
         );
@@ -280,7 +287,7 @@ function PdfItemBlock({
               style={{ color: 'inherit', textDecoration: 'none' }}
             >
               <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>
-                ↗ {item.key}
+                *{item.key}
               </Text>
             </Link>
           ) : (
@@ -341,7 +348,7 @@ function PdfEntryBlock({ entry, s }: { entry: EntryItem; s: RS }) {
               {entry.organization && (
                 <Text style={[styles.entryOrg, { fontSize: s.fontSize }]}>
                   {' '}
-                  @ {renderInlinePdf(entry.organization)}
+                  · {renderInlinePdf(entry.organization)}
                 </Text>
               )}
             </Text>

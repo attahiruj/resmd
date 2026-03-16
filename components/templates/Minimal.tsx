@@ -12,7 +12,7 @@ import { DEFAULT_SETTINGS } from '@/types/resume';
 import { renderInline } from '@/lib/renderInline';
 import { isUrl, extractLink } from '@/lib/inline';
 
-const FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+const FONT = "var(--font-noto-sans), 'Noto Sans', sans-serif";
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
 const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
@@ -134,17 +134,14 @@ export default function Minimal({
       marginBottom: 4,
     },
     kvSkillsLabel: {
-      fontSize: 8,
+      fontSize: s.fontSize,
       color: '#888888',
-      textTransform: 'uppercase' as const,
-      letterSpacing: '0.5px',
-      width: 80,
+      marginRight: 6,
       flexShrink: 0,
     },
     kvSkillsValue: {
       fontSize: s.fontSize,
       color: '#333333',
-      flex: 1,
     },
     headerAbout: {
       fontSize: s.fontSize,
@@ -217,7 +214,7 @@ export default function Minimal({
                       rel="noopener noreferrer"
                       style={{ color: 'inherit', textDecoration: 'none' }}
                     >
-                      <span style={S.contactItem}>↗ {entry.key}</span>
+                      <span style={S.contactItem}>*{entry.key}</span>
                     </a>
                   ) : (
                     <span style={S.contactItem}>{entry.rawValue}</span>
@@ -287,7 +284,7 @@ function ItemBlock({
       if (isKeyValueSection) {
         return (
           <div style={S.kvSkillsRow}>
-            <span style={S.kvSkillsLabel}>{item.key}</span>
+            <span style={S.kvSkillsLabel}>{item.key}:</span>
             <span style={S.kvSkillsValue}>{item.value}</span>
           </div>
         );
@@ -301,7 +298,7 @@ function ItemBlock({
               rel="noopener noreferrer"
               style={{ color: 'inherit', textDecoration: 'none' }}
             >
-              <span style={S.kvKey}>↗ {item.key}</span>
+              <span style={S.kvKey}>*{item.key}</span>
             </a>
           ) : (
             <>
@@ -337,7 +334,7 @@ function EntryBlock({ entry, S }: { entry: EntryItem; S: MinimalStyles }) {
               {entry.organization && (
                 <span style={S.entryOrg}>
                   {' '}
-                  @ {renderInline(entry.organization)}
+                  · {renderInline(entry.organization)}
                 </span>
               )}
             </span>
