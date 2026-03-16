@@ -10,7 +10,7 @@ Open Source AI-Powered Resume Builder
 
 Write your resume in plain text. Get AI assistance. Export a beautiful PDF.
 
-[Demo](https://resmd.vercel.app/) · [Report a Bug](https://github.com/attahiruj/resmd/issues/new?labels=bug) · [Request a Feature](https://github.com/attahiruj/resmd/issues/new?labels=enhancement)
+[Demo](https://resmd.app/) · [Report a Bug](https://github.com/attahiruj/resmd/issues/new?labels=bug) · [Request a Feature](https://github.com/attahiruj/resmd/issues/new?labels=enhancement)
 
 ---
 

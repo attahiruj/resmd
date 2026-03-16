@@ -135,18 +135,6 @@ function Hero() {
         <div className="grid lg:grid-cols-12 gap-12 items-center">
           {/* Left content - asymmetric positioning */}
           <div className="lg:col-span-7 lg:pr-12">
-            <div className="reveal-up">
-              <div className="inline-flex items-center gap-2 bg-surface border border-border rounded-full px-4 py-2 mb-8">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
-                </span>
-                <span className="text-xs font-medium text-muted">
-                  ResMarkup 1.0 is here
-                </span>
-              </div>
-            </div>
-
             <h1 className="reveal-up reveal-delay-1 font-display text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight text-text mb-6">
               Write resumes{' '}
               <span className="text-gradient-shimmer">like code.</span>

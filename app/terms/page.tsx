@@ -47,34 +47,33 @@ export default function TermsPage() {
             service, you agree to these terms.
           </p>
 
-          <div className="bg-surface border border-border rounded-xl p-6 mb-6">
-            <h2 className="text-lg font-semibold text-text mb-4">
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-text mb-3">
               Acceptable Use
             </h2>
-            <ul className="space-y-2 text-sm text-muted">
-              <li>• Use the service for creating and managing resumes</li>
-              <li>• Do not use the service for any illegal purposes</li>
-              <li>• Do not attempt to hack or abuse the service</li>
-              <li>• Respect other users and our team</li>
+            <ul className="space-y-1.5 text-sm text-muted pl-4">
+              <li>Use the service for creating and managing resumes</li>
+              <li>Do not use the service for any illegal purposes</li>
+              <li>Do not attempt to hack or abuse the service</li>
+              <li>Respect other users and our team</li>
             </ul>
           </div>
 
-          <div className="bg-surface border border-border rounded-xl p-6 mb-6">
-            <h2 className="text-lg font-semibold text-text mb-4">
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-text mb-3">
               Your Content
             </h2>
-            <ul className="space-y-2 text-sm text-muted">
-              <li>• You retain ownership of all content you create</li>
+            <ul className="space-y-1.5 text-sm text-muted pl-4">
+              <li>You retain ownership of all content you create</li>
               <li>
-                • You&apos;re responsible for the accuracy of your resume
-                content
+                You&apos;re responsible for the accuracy of your resume content
               </li>
-              <li>• You can delete your content at any time</li>
+              <li>You can delete your content at any time</li>
             </ul>
           </div>
 
-          <div className="bg-surface border border-border rounded-xl p-6 mb-6">
-            <h2 className="text-lg font-semibold text-text mb-4">
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-text mb-3">
               Service Availability
             </h2>
             <p className="text-sm text-muted">
@@ -84,8 +83,8 @@ export default function TermsPage() {
             </p>
           </div>
 
-          <div className="bg-surface border border-border rounded-xl p-6 mb-6">
-            <h2 className="text-lg font-semibold text-text mb-4">
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-text mb-3">
               Early Access
             </h2>
             <p className="text-sm text-muted">
@@ -95,8 +94,45 @@ export default function TermsPage() {
             </p>
           </div>
 
-          <div className="bg-surface border border-border rounded-xl p-6 mb-6">
-            <h2 className="text-lg font-semibold text-text mb-4">Disclaimer</h2>
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-text mb-3">
+              Third-Party Services
+            </h2>
+            <p className="text-sm text-muted">
+              Our service uses third-party providers to deliver functionality:
+            </p>
+            <ul className="space-y-1.5 text-sm text-muted pl-4 mt-2">
+              <li>
+                <strong>Supabase</strong> - Database and authentication
+              </li>
+              <li>
+                <strong>Stripe</strong> - Payment processing (for future paid
+                features)
+              </li>
+              <li>
+                <strong>AI Services</strong> - AI-powered features to assist
+                with resume creation
+              </li>
+            </ul>
+            <p className="text-sm text-muted mt-2">
+              These providers have their own terms and privacy policies.
+            </p>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-text mb-3">
+              Termination
+            </h2>
+            <p className="text-sm text-muted">
+              We reserve the right to suspend or terminate your access to the
+              service at our sole discretion for any violation of these terms or
+              for any other reason. You may also delete your account at any time
+              through your account settings.
+            </p>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-text mb-3">Disclaimer</h2>
             <p className="text-sm text-muted">
               The service is provided &quot;as is&quot; without warranties of
               any kind. We don&apos;t guarantee that the service will meet your
@@ -104,7 +140,31 @@ export default function TermsPage() {
             </p>
           </div>
 
-          <div className="bg-surface border border-border rounded-xl p-6">
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-text mb-3">
+              Limitation of Liability
+            </h2>
+            <p className="text-sm text-muted">
+              To the maximum extent permitted by law, resmd shall not be liable
+              for any indirect, incidental, special, consequential, or punitive
+              damages, including without limitation loss of profits, data, or
+              other intangible losses resulting from your use or inability to
+              use the service.
+            </p>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-text mb-3">
+              Governing Law
+            </h2>
+            <p className="text-sm text-muted">
+              These Terms of Service shall be governed by and construed in
+              accordance with applicable laws, without regard to conflict of law
+              provisions.
+            </p>
+          </div>
+
+          <div>
             <h2 className="text-lg font-semibold text-text mb-4">Contact Us</h2>
             <p className="text-sm text-muted">
               If you have any questions about these Terms of Service, please
