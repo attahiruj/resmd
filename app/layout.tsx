@@ -52,9 +52,7 @@ export const metadata: Metadata = {
   },
   description:
     'Write your resume in plain text. Render it through beautiful templates. Manage multiple tailored variants. Export to PDF.',
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? 'https://resmd.vercel.app'
-  ),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://resmd.app'),
   openGraph: {
     type: 'website',
     siteName: 'resmd',

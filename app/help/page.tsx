@@ -560,8 +560,8 @@ GitHub: github.com/alexrivera`}</Code>
             <H2>Publishing</H2>
             <p className="text-muted text-sm mb-3">
               You can publish any variant to get a public URL at{' '}
-              <C>resmd.vercel.app/r/your-slug</C>. Use the overflow menu in the
-              editor to publish or unpublish. The URL goes live immediately;
+              <C>resmd.app/r/your-slug</C>. Use the overflow menu in the editor
+              to publish or unpublish. The URL goes live immediately;
               unpublishing deactivates it without affecting your data.
             </p>
           </section>
