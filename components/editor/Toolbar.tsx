@@ -5,7 +5,6 @@ import Link from 'next/link';
 import {
   SunIcon,
   MoonIcon,
-  SparkleIcon,
   UserCircleIcon,
   Warning,
 } from '@phosphor-icons/react';
@@ -16,8 +15,7 @@ import { hasPlaceholders } from '@/lib/inline';
 
 interface ToolbarProps {
   lastSaved: Date | null;
-  showAIPanel: boolean;
-  onToggleAI: () => void;
+
   variantTitle?: string;
   onTitleChange?: (title: string) => void;
   variantId?: string;
@@ -27,8 +25,7 @@ interface ToolbarProps {
 
 export default function Toolbar({
   lastSaved,
-  showAIPanel,
-  onToggleAI,
+
   variantTitle,
   onTitleChange,
   variantId,
@@ -165,18 +162,6 @@ export default function Toolbar({
               title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
-            </button>
-
-            <button
-              onClick={onToggleAI}
-              className={`p-2.5 rounded-full transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-                showAIPanel
-                  ? 'text-accent bg-accent-muted'
-                  : 'text-muted hover:text-text hover:bg-surface-2'
-              }`}
-              title="AI Assistant"
-            >
-              <SparkleIcon size={18} />
             </button>
 
             <div className="w-px h-5 bg-border mx-1" />

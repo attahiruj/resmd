@@ -11,11 +11,6 @@ const Editor = dynamic(() => import('@/components/editor/Editor'), {
   ssr: false,
 });
 
-// AI panel is lazy-loaded — only downloaded when the user opens it
-const AIPanel = dynamic(() => import('@/components/editor/AIPanel'), {
-  ssr: false,
-});
-
 const DEFAULT_CONTENT = `# Bio
 Name: Amara Osei
 Title: Full Stack Engineer
@@ -65,7 +60,7 @@ type MobileTab = 'write' | 'preview';
 export default function EditorPage() {
   const [rawContent, setRawContent] = useState(DEFAULT_CONTENT);
   const [templateId, setTemplateId] = useState('minimal');
-  const [showAIPanel, setShowAIPanel] = useState(false);
+
   const [splitPct, setSplitPct] = useState(DEFAULT_SPLIT);
   const [mobileTab, setMobileTab] = useState<MobileTab>('write');
   const [isMounted, setIsMounted] = useState(false);
@@ -135,11 +130,7 @@ export default function EditorPage() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-bg">
-      <Toolbar
-        lastSaved={null}
-        showAIPanel={showAIPanel}
-        onToggleAI={() => setShowAIPanel((v) => !v)}
-      />
+      <Toolbar lastSaved={null} />
 
       {/* Mobile tab bar (<md) */}
       <div className="md:hidden flex h-10 border-b border-border bg-surface flex-shrink-0 px-2 gap-1 items-center">
@@ -231,14 +222,6 @@ export default function EditorPage() {
           </div>
         </div>
       </div>
-
-      {/* AI panel - slide-in from right */}
-      {showAIPanel && (
-        <AIPanel
-          rawContent={rawContent}
-          onClose={() => setShowAIPanel(false)}
-        />
-      )}
     </div>
   );
 }
