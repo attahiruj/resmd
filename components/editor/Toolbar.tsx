@@ -12,6 +12,7 @@ import { applyTheme, getStoredThemePrefs } from '@/lib/themes';
 import { useProfile } from '@/hooks/useProfile';
 import Navbar from '@/components/ui/Navbar';
 import { hasPlaceholders } from '@/lib/inline';
+import FeedbackModal from '@/components/ui/FeedbackModal';
 
 interface ToolbarProps {
   lastSaved: Date | null;
@@ -35,6 +36,7 @@ export default function Toolbar({
   const [isDark, setIsDark] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [showPlaceholderWarning, setShowPlaceholderWarning] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const { user, profile } = useProfile();
 
   useEffect(() => {
@@ -69,6 +71,11 @@ export default function Toolbar({
       a.download = match?.[1] ?? 'resume.pdf';
       a.click();
       URL.revokeObjectURL(url);
+      // Show feedback prompt once, after the user's first successful export
+      if (!localStorage.getItem('resmd_exported_once')) {
+        localStorage.setItem('resmd_exported_once', '1');
+        setTimeout(() => setShowFeedback(true), 800);
+      }
     } catch {
       // Silently fail — user sees nothing changed
     } finally {
@@ -91,6 +98,7 @@ export default function Toolbar({
 
   return (
     <>
+      {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
       {showPlaceholderWarning && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-surface rounded-xl border border-border shadow-xl p-6 max-w-sm w-full mx-4">
