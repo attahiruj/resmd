@@ -4,10 +4,13 @@
  * - streamChat: AI Chat Panel (8b)
  */
 
+export const AI_MODEL_STORAGE_KEY = 'resmd_ai_model';
+
 export interface EnhanceOptions {
   instruction: string;
   selectedText: string;
   resumeContext: string;
+  model?: string;
   onChunk: (text: string) => void;
   onDone: (fullText: string) => void;
   onError: (error: string) => void;
@@ -17,6 +20,7 @@ export interface ChatOptions {
   message: string;
   resumeContent: string;
   history: Array<{ role: string; content: string }>;
+  model?: string;
   onChunk: (text: string) => void;
   onDone: (fullText: string) => void;
   onError: (error: string) => void;
@@ -30,6 +34,7 @@ export function streamEnhance({
   instruction,
   selectedText,
   resumeContext,
+  model,
   onChunk,
   onDone,
   onError,
@@ -38,6 +43,9 @@ export function streamEnhance({
   const signal = controller.signal;
 
   const run = async () => {
+    const selectedModel =
+      model ?? localStorage.getItem(AI_MODEL_STORAGE_KEY) ?? undefined;
+
     try {
       const response = await fetch('/api/ai/enhance', {
         method: 'POST',
@@ -46,6 +54,7 @@ export function streamEnhance({
           selectedText,
           instruction,
           resumeContext,
+          model: selectedModel,
         }),
         signal,
       });
@@ -96,6 +105,7 @@ export function streamChat({
   message,
   resumeContent,
   history,
+  model,
   onChunk,
   onDone,
   onError,
@@ -104,6 +114,9 @@ export function streamChat({
   const signal = controller.signal;
 
   const run = async () => {
+    const selectedModel =
+      model ?? localStorage.getItem(AI_MODEL_STORAGE_KEY) ?? undefined;
+
     try {
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
@@ -112,6 +125,7 @@ export function streamChat({
           message,
           resumeContent,
           history,
+          model: selectedModel,
         }),
         signal,
       });

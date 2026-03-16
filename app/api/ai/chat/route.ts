@@ -36,12 +36,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { message, resumeContent, history } = await req.json();
+    const { message, resumeContent, history, model } = await req.json();
 
     if (!resumeContent || !resumeContent.trim()) {
       return NextResponse.json({
         reply:
-          'Your resume editor is empty. Please add some content to your resume first, then I can help you improve it.',
+          "Your resume is empty — add some content first and I'll get to work on it.",
       });
     }
 
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       {
         role: 'assistant',
         content:
-          "Understood. I'm ready to help improve your resume. What would you like to work on?",
+          "Got it — I've read through your resume. What are we working on?",
       },
       ...(history ?? []).map(
         ({ role, content }: { role: string; content: string }) => ({
@@ -77,10 +77,10 @@ export async function POST(req: NextRequest) {
         'Content-Type': 'application/json',
         'HTTP-Referer':
           process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
-        'X-Title': 'ResMarkup AI Assistant',
+        'X-Title': 'resmd resAI',
       },
       body: JSON.stringify({
-        model: AI_MODEL,
+        model: model ?? AI_MODEL,
         max_tokens: AI_MAX_TOKENS,
         messages,
       }),
