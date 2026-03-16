@@ -14,11 +14,6 @@ const Editor = dynamic(() => import('@/components/editor/Editor'), {
   ssr: false,
 });
 
-// AI panel is lazy-loaded — only downloaded when the user opens it
-const AIPanel = dynamic(() => import('@/components/editor/AIPanel'), {
-  ssr: false,
-});
-
 const MIN_PANE_PX = 300;
 const DEFAULT_SPLIT = 50;
 const AUTOSAVE_DELAY = 2000;
@@ -34,7 +29,7 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
   const [rawContent, setRawContent] = useState(variant.rawContent);
   const [templateId, setTemplateId] = useState(variant.templateId);
   const [variantTitle, setVariantTitle] = useState(variant.title);
-  const [showAIPanel, setShowAIPanel] = useState(false);
+
   const [showSnapshotModal, setShowSnapshotModal] = useState(false);
   const [splitPct, setSplitPct] = useState(DEFAULT_SPLIT);
   const [mobileTab, setMobileTab] = useState<MobileTab>('write');
@@ -193,8 +188,6 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
       <div className="flex flex-col h-screen overflow-hidden bg-bg">
         <Toolbar
           lastSaved={lastSaved}
-          showAIPanel={showAIPanel}
-          onToggleAI={() => setShowAIPanel((v) => !v)}
           variantTitle={variantTitle}
           onTitleChange={handleTitleChange}
           variantId={variant.id}
@@ -313,14 +306,6 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
             </div>
           </div>
         </div>
-
-        {showAIPanel && (
-          <AIPanel
-            rawContent={rawContent}
-            onClose={() => setShowAIPanel(false)}
-            onApplyEdit={handleApplyEdit}
-          />
-        )}
 
         {/* Snapshot modal */}
         {showSnapshotModal && (
