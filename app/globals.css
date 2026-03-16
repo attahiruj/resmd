@@ -200,7 +200,13 @@
   opacity: 0.8;
 }
 .cm-resmd-bullet {
+  color: var(--color-text);
+  opacity: 0.75;
+}
+.cm-resmd-comment {
   color: var(--color-text-muted);
+  opacity: 0.6;
+  font-style: italic;
 }
 
 /* ============================================================

@@ -72,6 +72,9 @@ export function parseResume(raw: string): ParsedResume {
     // 1. Blank lines are ignored
     if (trimmedLine === '') continue;
 
+    // 1b. Comments (// ...) — stripped from all rendered output
+    if (trimmedLine.startsWith('//')) continue;
+
     // 2. Directives (!key: value) — extracted and stripped from rendered content
     if (trimmedLine.startsWith('!')) {
       const colonIdx = trimmedLine.indexOf(':');
