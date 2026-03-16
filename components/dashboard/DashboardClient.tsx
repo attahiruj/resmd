@@ -19,6 +19,7 @@ import {
   FileTextIcon,
   SunIcon,
   MoonIcon,
+  ChatTeardropTextIcon,
 } from '@phosphor-icons/react';
 import type { ResumeVariant } from '@/types/resume';
 import { parseResume } from '@/lib/parser';
@@ -27,6 +28,7 @@ import { LIMITS } from '@/lib/limits';
 import { applyTheme, getStoredThemePrefs } from '@/lib/themes';
 import CloneModal from '@/components/variants/CloneModal';
 import OnboardingModal from '@/components/ui/OnboardingModal';
+import FeedbackModal from '@/components/ui/FeedbackModal';
 import Navbar from '@/components/ui/Navbar';
 
 interface DashboardClientProps {
@@ -270,6 +272,7 @@ export default function DashboardClient({
   const [cloneSource, setCloneSource] = useState<ResumeVariant | null>(null);
   const [cloning, setCloning] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('updatedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -455,6 +458,13 @@ export default function DashboardClient({
       <Navbar
         right={
           <div className="flex items-center gap-3 ml-auto">
+            <button
+              onClick={() => setShowFeedback(true)}
+              className="p-2 rounded-full text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              title="Share feedback"
+            >
+              <ChatTeardropTextIcon size={18} />
+            </button>
             <button
               onClick={toggleTheme}
               className="p-2 rounded-full text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
@@ -742,6 +752,8 @@ export default function DashboardClient({
       {showOnboarding && (
         <OnboardingModal onClose={() => setShowOnboarding(false)} />
       )}
+
+      {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
     </div>
   );
 
