@@ -61,9 +61,18 @@ export default function FeedbackModal({ onClose }: FeedbackModalProps) {
         </div>
 
         {done ? (
-          <p className="text-xs text-muted text-center py-2">
-            We really appreciate it.
-          </p>
+          <div className="text-center py-2 space-y-3">
+            <p className="text-xs text-muted">We really appreciate it.</p>
+            <a
+              href="https://github.com/attahiruj/resmd"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-text border border-border hover:border-text/30 px-3 py-1.5 rounded-lg transition-colors duration-150"
+            >
+              <Star size={13} weight="fill" className="text-accent" />
+              Star us on GitHub
+            </a>
+          </div>
         ) : (
           <>
             {/* Star rating */}
