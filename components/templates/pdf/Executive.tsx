@@ -28,13 +28,16 @@ const styles = StyleSheet.create({
     fontFamily: 'NotoSans',
     fontSize: 10,
     color: '#1C1C1C',
+    paddingTop: 40,
+    paddingBottom: 40,
+    paddingLeft: 50,
+    paddingRight: 50,
+    lineHeight: 1.5,
   },
   headerBox: {
     backgroundColor: '#1B2438',
-    paddingLeft: 50,
-    paddingRight: 50,
-    paddingTop: 40,
-    paddingBottom: 32,
+    paddingBottom: 16,
+    marginBottom: 16,
   },
   name: {
     fontSize: 26,
@@ -70,12 +73,6 @@ const styles = StyleSheet.create({
     color: '#A8B4CC',
     lineHeight: 1.6,
     marginTop: 12,
-  },
-  body: {
-    paddingLeft: 50,
-    paddingRight: 50,
-    paddingTop: 32,
-    paddingBottom: 40,
   },
   section: { marginBottom: 16 },
   sectionTitleRow: {
@@ -202,14 +199,24 @@ export default function ExecutivePdf({ resume }: TemplateProps) {
         size="A4"
         style={[
           styles.page,
-          { fontSize: s.fontSize, lineHeight: s.lineHeight },
+          {
+            fontSize: s.fontSize,
+            lineHeight: s.lineHeight,
+            paddingTop: s.marginV,
+            paddingBottom: s.marginV,
+            paddingLeft: s.marginH,
+            paddingRight: s.marginH,
+          },
         ]}
       >
-        {/* Dark header */}
+        {/* Dark header — negative margins break out of page padding → full bleed */}
         <View
           style={[
             styles.headerBox,
             {
+              marginTop: -s.marginV,
+              marginLeft: -s.marginH,
+              marginRight: -s.marginH,
               paddingTop: s.marginV,
               paddingLeft: s.marginH,
               paddingRight: s.marginH,
@@ -247,22 +254,9 @@ export default function ExecutivePdf({ resume }: TemplateProps) {
           ))}
         </View>
 
-        {/* Body */}
-        <View
-          style={[
-            styles.body,
-            {
-              paddingTop: s.marginV * 0.85,
-              paddingBottom: s.marginV,
-              paddingLeft: s.marginH,
-              paddingRight: s.marginH,
-            },
-          ]}
-        >
-          {bodySections.map((section) => (
-            <PdfSectionBlock key={section.id} section={section} s={s} />
-          ))}
-        </View>
+        {bodySections.map((section) => (
+          <PdfSectionBlock key={section.id} section={section} s={s} />
+        ))}
       </Page>
     </Document>
   );

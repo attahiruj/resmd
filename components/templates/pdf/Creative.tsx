@@ -38,15 +38,9 @@ const styles = StyleSheet.create({
     paddingRight: 50,
     lineHeight: 1.5,
   },
-  headerAccentBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: 4,
-    bottom: 0,
-    backgroundColor: TEAL,
-  },
   headerInner: {
+    borderLeftWidth: 4,
+    borderLeftColor: TEAL,
     paddingLeft: 12,
     marginBottom: 22,
   },
@@ -89,6 +83,12 @@ const styles = StyleSheet.create({
   sectionTitleWrap: {
     marginBottom: 8,
     alignSelf: 'flex-start',
+    backgroundColor: TEAL,
+    paddingLeft: 10,
+    paddingRight: 10,
+    paddingTop: 3,
+    paddingBottom: 3,
+    borderRadius: 3,
   },
   sectionTitle: {
     fontSize: 7.5,
@@ -97,12 +97,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1.5,
     color: '#FFFFFF',
-    backgroundColor: TEAL,
-    paddingLeft: 10,
-    paddingRight: 10,
-    paddingTop: 3,
-    paddingBottom: 3,
-    borderRadius: 3,
   },
   entry: { marginBottom: 8 },
   entryHeader: {
@@ -209,9 +203,6 @@ export default function CreativePdf({ resume }: TemplateProps) {
           },
         ]}
       >
-        {/* Teal left accent bar */}
-        <View style={styles.headerAccentBar} fixed />
-
         {/* Header */}
         <View style={styles.headerInner}>
           {meta.name && <Text style={styles.name}>{meta.name}</Text>}

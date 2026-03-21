@@ -11,7 +11,6 @@ import type {
   TemplateProps,
   ResumeSection,
   SectionItem,
-  KeyValueItem,
   EntryItem,
 } from '@/types/resume';
 import { DEFAULT_SETTINGS } from '@/types/resume';
@@ -47,10 +46,7 @@ const styles = StyleSheet.create({
     lineHeight: 1.5,
   },
   sidebar: {
-    width: '30%',
-    backgroundColor: '#1E2330',
-    paddingTop: 36,
-    paddingBottom: 36,
+    width: '34%',
     paddingLeft: 18,
     paddingRight: 18,
   },
@@ -100,8 +96,6 @@ const styles = StyleSheet.create({
   },
   main: {
     flex: 1,
-    paddingTop: 36,
-    paddingBottom: 36,
     paddingLeft: 24,
     paddingRight: 28,
   },
@@ -231,19 +225,32 @@ export default function ModernPdf({ resume }: TemplateProps) {
         size="A4"
         style={[
           styles.page,
-          { fontSize: s.fontSize, lineHeight: s.lineHeight },
+          {
+            fontSize: s.fontSize,
+            lineHeight: s.lineHeight,
+            paddingTop: s.marginV,
+            paddingBottom: s.marginV,
+          },
         ]}
       >
-        {/* Sidebar */}
+        {/* Sidebar background — fixed so it covers every page top-to-bottom.
+            position:absolute is relative to the Page content box, so top:-marginV reaches the page top edge.
+            Rendered first so it sits behind the flex content. */}
         <View
-          style={[
-            styles.sidebar,
-            {
-              paddingTop: s.marginV,
-              paddingBottom: s.marginV,
-              paddingLeft: s.marginH,
-            },
-          ]}
+          fixed
+          style={{
+            position: 'absolute',
+            top: -s.marginV,
+            left: 0,
+            bottom: -s.marginV,
+            width: '34%',
+            backgroundColor: '#1E2330',
+          }}
+        />
+
+        {/* Sidebar content */}
+        <View
+          style={[styles.sidebar, { paddingLeft: Math.round(s.marginH * 0.5) }]}
         >
           {meta.name && <Text style={styles.sidebarName}>{meta.name}</Text>}
           {meta.title && (
@@ -296,8 +303,6 @@ export default function ModernPdf({ resume }: TemplateProps) {
           style={[
             styles.main,
             {
-              paddingTop: s.marginV,
-              paddingBottom: s.marginV,
               paddingRight: s.marginH,
             },
           ]}
