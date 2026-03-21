@@ -21,7 +21,6 @@ export default async function DashboardPage() {
   return (
     <DashboardClient
       initialVariants={variants}
-      isPro={profile?.isPro ?? false}
       userEmail={profile?.email ?? user.email ?? ''}
     />
   );

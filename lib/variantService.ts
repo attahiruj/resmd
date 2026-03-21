@@ -1,5 +1,4 @@
-import { ResumeVariant, VariantSnapshot, UserProfile } from '@/types/resume';
-import { LIMITS } from '@/lib/limits';
+import { ResumeVariant, UserProfile } from '@/types/resume';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 // DB row → TypeScript type mappers (snake_case → camelCase)
@@ -18,25 +17,10 @@ function mapVariant(row: Record<string, unknown>): ResumeVariant {
   };
 }
 
-function mapSnapshot(row: Record<string, unknown>): VariantSnapshot {
-  return {
-    id: row.id as string,
-    variantId: row.variant_id as string,
-    rawContent: row.raw_content as string,
-    message: row.message as string,
-    templateId: row.template_id as string,
-    createdAt: row.created_at as string,
-  };
-}
-
 function mapProfile(row: Record<string, unknown>): UserProfile {
   return {
     id: row.id as string,
     email: row.email as string,
-    isPro: row.is_pro as boolean,
-    stripeCustomerId: (row.stripe_customer_id as string | null) ?? null,
-    proExpiresAt: (row.pro_expires_at as string | null) ?? null,
-    aiUsageThisMonth: row.ai_usage_this_month as number,
     createdAt: row.created_at as string,
   };
 }
@@ -62,17 +46,7 @@ export const createVariant = async (
 
   if (error) throw error;
 
-  const variant = mapVariant(data);
-
-  // Create initial snapshot
-  await supabase.from('variant_snapshots').insert({
-    variant_id: variant.id,
-    raw_content: rawContent,
-    message: 'Initial save',
-    template_id: templateId,
-  });
-
-  return variant;
+  return mapVariant(data);
 };
 
 export const updateVariantContent = async (
@@ -94,60 +68,6 @@ export const updateVariantContent = async (
     .eq('id', variantId);
 
   if (error) throw error;
-};
-
-export const saveSnapshot = async (
-  variantId: string,
-  rawContent: string,
-  message: string,
-  templateId: string
-): Promise<VariantSnapshot> => {
-  const supabase = createSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from('variant_snapshots')
-    .insert({
-      variant_id: variantId,
-      raw_content: rawContent,
-      message,
-      template_id: templateId,
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-
-  // For free users: keep only the most recent FREE_SNAPSHOTS snapshots
-  const { data: variant } = await supabase
-    .from('resume_variants')
-    .select('user_id')
-    .eq('id', variantId)
-    .single();
-
-  if (variant) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_pro')
-      .eq('id', variant.user_id)
-      .single();
-
-    if (profile && !profile.is_pro) {
-      const { data: snapshots } = await supabase
-        .from('variant_snapshots')
-        .select('id')
-        .eq('variant_id', variantId)
-        .order('created_at', { ascending: false });
-
-      if (snapshots && snapshots.length > LIMITS.FREE_SNAPSHOTS) {
-        const toDelete = snapshots
-          .slice(LIMITS.FREE_SNAPSHOTS)
-          .map((s: { id: string }) => s.id);
-        await supabase.from('variant_snapshots').delete().in('id', toDelete);
-      }
-    }
-  }
-
-  return mapSnapshot(data);
 };
 
 export const getUserVariants = async (
@@ -182,22 +102,6 @@ export const getVariant = async (
   return mapVariant(data);
 };
 
-export const getVariantSnapshots = async (
-  variantId: string
-): Promise<VariantSnapshot[]> => {
-  const supabase = createSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from('variant_snapshots')
-    .select('*')
-    .eq('variant_id', variantId)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-
-  return (data ?? []).map(mapSnapshot);
-};
-
 export const cloneVariant = async (
   sourceVariantId: string,
   newTitle: string,
@@ -222,17 +126,7 @@ export const cloneVariant = async (
 
   if (error) throw error;
 
-  const newVariant = mapVariant(data);
-
-  // Create first snapshot with clone message
-  await supabase.from('variant_snapshots').insert({
-    variant_id: newVariant.id,
-    raw_content: source.rawContent,
-    message: `Cloned from ${source.title}`,
-    template_id: source.templateId,
-  });
-
-  return newVariant;
+  return mapVariant(data);
 };
 
 export const deleteVariant = async (variantId: string): Promise<void> => {

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { checkRateLimit } from '@/lib/rateLimit';
-import { LIMITS } from '@/lib/limits';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
@@ -30,31 +29,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Check AI usage limit
+  // Fetch profile for usage tracking
   const { data: profile } = await supabase
     .from('profiles')
     .select('ai_usage_this_month, ai_usage_reset_at')
     .eq('id', user.id)
     .single();
-
-  if (profile) {
-    // Check if we need to reset the monthly counter
-    const now = new Date();
-    const resetAt = new Date(profile.ai_usage_reset_at);
-    let currentUsage = profile.ai_usage_this_month;
-
-    if (now >= resetAt) {
-      // Reset for new month
-      currentUsage = 0;
-    }
-
-    if (currentUsage >= LIMITS.FREE_AI_PER_MONTH) {
-      return NextResponse.json(
-        { error: 'AI usage limit reached', code: 'ai_limit_exceeded' },
-        { status: 402 }
-      );
-    }
-  }
 
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {

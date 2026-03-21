@@ -98,21 +98,8 @@ export interface ResumeVariant {
   updatedAt: string;
 }
 
-export interface VariantSnapshot {
-  id: string;
-  variantId: string;
-  rawContent: string;
-  message: string;
-  templateId: string;
-  createdAt: string;
-}
-
 export interface UserProfile {
   id: string;
   email: string;
-  isPro: boolean;
-  stripeCustomerId: string | null;
-  proExpiresAt: string | null;
-  aiUsageThisMonth: number;
   createdAt: string;
 }

@@ -47,21 +47,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Check free tier variant limit
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_pro')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile?.is_pro) {
+    // Check variant limit for authenticated users
+    if (!user.is_anonymous) {
       const existing = await getUserVariants(user.id);
-      if (existing.length >= LIMITS.FREE_VARIANTS) {
+      if (existing.length >= LIMITS.MAX_VARIANTS) {
         return NextResponse.json(
-          {
-            error: 'Variant limit reached for free plan',
-            code: 'limit_reached',
-          },
+          { error: 'Variant limit reached', code: 'limit_reached' },
           { status: 402 }
         );
       }
