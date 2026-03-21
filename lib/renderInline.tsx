@@ -14,7 +14,7 @@ export function renderInline(text: string): React.ReactNode {
     return text;
   }
   return segments.map((seg, i) => {
-    if (seg.href)
+    if (seg.href && /^https?:\/\//.test(seg.href))
       return (
         <a
           key={i}
@@ -25,6 +25,12 @@ export function renderInline(text: string): React.ReactNode {
         >
           *{seg.text}
         </a>
+      );
+    if (seg.href)
+      return (
+        <span key={i} style={{ color: 'inherit', textDecoration: 'none' }}>
+          *{seg.text}
+        </span>
       );
     if (seg.bold) return <strong key={i}>{seg.text}</strong>;
     if (seg.italic) return <em key={i}>{seg.text}</em>;

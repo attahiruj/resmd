@@ -87,7 +87,6 @@ Do not include any preamble or explanation.`;
     const messages = [{ role: 'user', content: systemPrompt }];
 
     console.log('[AI Enhance] →', {
-      instruction,
       selectedTextLength: selectedText.length,
       resumeContextLength: resumeContext?.length || 0,
     });

@@ -5,6 +5,7 @@ import {
   updateResumeContent,
   deleteResume,
 } from '@/lib/resumeService';
+import { getAllTemplates } from '@/lib/templates';
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -51,6 +52,36 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     const { rawContent, templateId, title } = await req.json();
+
+    // Input validation
+    if (
+      title !== undefined &&
+      (typeof title !== 'string' || title.length > 100)
+    ) {
+      return NextResponse.json(
+        { error: 'Title must be a string with max 100 characters' },
+        { status: 400 }
+      );
+    }
+    if (
+      rawContent !== undefined &&
+      (typeof rawContent !== 'string' || rawContent.length > 50000)
+    ) {
+      return NextResponse.json(
+        { error: 'Content must be a string with max 50,000 characters' },
+        { status: 400 }
+      );
+    }
+    if (templateId !== undefined) {
+      const validTemplateIds = getAllTemplates().map((t) => t.id);
+      if (!validTemplateIds.includes(templateId)) {
+        return NextResponse.json(
+          { error: 'Invalid template ID' },
+          { status: 400 }
+        );
+      }
+    }
+
     await updateResumeContent(id, rawContent, templateId, title);
     return NextResponse.json({ data: { success: true } });
   } catch {

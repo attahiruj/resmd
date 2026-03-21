@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { createResume, getUserResumes } from '@/lib/resumeService';
 import { LIMITS } from '@/lib/limits';
+import { getAllTemplates } from '@/lib/templates';
 
 // GET /api/resumes — list authenticated user's resumes
 export async function GET() {
@@ -71,6 +72,27 @@ export async function POST(req: NextRequest) {
       rawContent = '',
       templateId = 'minimal',
     } = body;
+
+    // Input validation
+    if (typeof title !== 'string' || title.length > 100) {
+      return NextResponse.json(
+        { error: 'Title must be a string with max 100 characters' },
+        { status: 400 }
+      );
+    }
+    if (typeof rawContent !== 'string' || rawContent.length > 5000) {
+      return NextResponse.json(
+        { error: 'Content must be a string with max 5000 characters' },
+        { status: 400 }
+      );
+    }
+    const validTemplateIds = getAllTemplates().map((t) => t.id);
+    if (!validTemplateIds.includes(templateId)) {
+      return NextResponse.json(
+        { error: 'Invalid template ID' },
+        { status: 400 }
+      );
+    }
 
     const resume = await createResume(user.id, title, rawContent, templateId);
     return NextResponse.json({ data: resume });
