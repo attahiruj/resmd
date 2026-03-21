@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
-import { cloneVariant, getUserVariants } from '@/lib/variantService';
+import { cloneResume, getUserResumes } from '@/lib/resumeService';
 import { LIMITS } from '@/lib/limits';
 
-// POST /api/variants/[id]/clone — clone an existing variant into a new one
+// POST /api/resumes/[id]/clone — clone an existing resume
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -17,10 +17,10 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const existing = await getUserVariants(user.id);
+    const existing = await getUserResumes(user.id);
     if (existing.length >= LIMITS.MAX_VARIANTS) {
       return NextResponse.json(
-        { error: 'Variant limit reached', code: 'limit_reached' },
+        { error: 'Resume limit reached', code: 'limit_reached' },
         { status: 402 }
       );
     }
@@ -31,11 +31,11 @@ export async function POST(
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     }
 
-    const variant = await cloneVariant(id, title.trim(), user.id);
-    return NextResponse.json({ data: variant });
+    const resume = await cloneResume(id, title.trim(), user.id);
+    return NextResponse.json({ data: resume });
   } catch {
     return NextResponse.json(
-      { error: 'Failed to clone variant' },
+      { error: 'Failed to clone resume' },
       { status: 500 }
     );
   }

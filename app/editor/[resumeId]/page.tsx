@@ -1,14 +1,14 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
-import { getVariant } from '@/lib/variantService';
+import { getResume } from '@/lib/resumeService';
 import EditorClient from '@/components/editor/EditorClient';
 
 interface Props {
-  params: Promise<{ variantId: string }>;
+  params: Promise<{ resumeId: string }>;
 }
 
 export default async function EditorPage({ params }: Props) {
-  const { variantId } = await params;
+  const { resumeId } = await params;
   const supabase = createSupabaseServerClient();
   const {
     data: { user },
@@ -18,13 +18,11 @@ export default async function EditorPage({ params }: Props) {
     redirect('/auth');
   }
 
-  const variant = await getVariant(variantId);
+  const resume = await getResume(resumeId);
 
-  if (!variant || variant.userId !== user.id) {
+  if (!resume || resume.userId !== user.id) {
     redirect('/dashboard');
   }
 
-  return (
-    <EditorClient variant={variant} isGuest={user.is_anonymous ?? false} />
-  );
+  return <EditorClient resume={resume} isGuest={user.is_anonymous ?? false} />;
 }

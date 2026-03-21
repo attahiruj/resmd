@@ -85,7 +85,7 @@ export interface TemplateProps {
   showHeader?: boolean;
 }
 
-export interface ResumeVariant {
+export interface Resume {
   id: string;
   userId: string;
   title: string;

@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import {
-  getVariant,
-  updateVariantContent,
-  deleteVariant,
-} from '@/lib/variantService';
+  getResume,
+  updateResumeContent,
+  deleteResume,
+} from '@/lib/resumeService';
 
 interface Params {
   params: Promise<{ id: string }>;
 }
 
-// GET /api/variants/[id] — fetch single variant
+// GET /api/resumes/[id] — fetch single resume
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params;
   const supabase = createSupabaseServerClient();
@@ -21,20 +21,20 @@ export async function GET(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const variant = await getVariant(id);
-    if (!variant || variant.userId !== user.id) {
+    const resume = await getResume(id);
+    if (!resume || resume.userId !== user.id) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
-    return NextResponse.json({ data: variant });
+    return NextResponse.json({ data: resume });
   } catch {
     return NextResponse.json(
-      { error: 'Failed to load variant' },
+      { error: 'Failed to load resume' },
       { status: 500 }
     );
   }
 }
 
-// PATCH /api/variants/[id] — autosave update
+// PATCH /api/resumes/[id] — autosave update
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const supabase = createSupabaseServerClient();
@@ -45,23 +45,23 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const variant = await getVariant(id);
-    if (!variant || variant.userId !== user.id) {
+    const resume = await getResume(id);
+    if (!resume || resume.userId !== user.id) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const { rawContent, templateId, title } = await req.json();
-    await updateVariantContent(id, rawContent, templateId, title);
+    await updateResumeContent(id, rawContent, templateId, title);
     return NextResponse.json({ data: { success: true } });
   } catch {
     return NextResponse.json(
-      { error: 'Failed to update variant' },
+      { error: 'Failed to update resume' },
       { status: 500 }
     );
   }
 }
 
-// DELETE /api/variants/[id] — delete a variant
+// DELETE /api/resumes/[id] — delete a resume
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { id } = await params;
   const supabase = createSupabaseServerClient();
@@ -72,16 +72,16 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const variant = await getVariant(id);
-    if (!variant || variant.userId !== user.id) {
+    const resume = await getResume(id);
+    if (!resume || resume.userId !== user.id) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    await deleteVariant(id);
+    await deleteResume(id);
     return NextResponse.json({ data: { success: true } });
   } catch {
     return NextResponse.json(
-      { error: 'Failed to delete variant' },
+      { error: 'Failed to delete resume' },
       { status: 500 }
     );
   }

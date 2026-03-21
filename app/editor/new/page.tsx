@@ -71,7 +71,7 @@ export default function EditorNewPage() {
       }
 
       // Create a variant for this guest session
-      const res = await fetch('/api/variants', {
+      const res = await fetch('/api/resumes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -86,8 +86,8 @@ export default function EditorNewPage() {
         return;
       }
 
-      const { data: variant } = await res.json();
-      router.replace(`/editor/${variant.id}`);
+      const { data: resume } = await res.json();
+      router.replace(`/editor/${resume.id}`);
     };
 
     init();

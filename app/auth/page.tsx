@@ -21,7 +21,7 @@ export default function AuthPage() {
   const searchParams = useSearchParams();
   const supabase = createSupabaseBrowserClient();
 
-  const returnVariant = searchParams.get('returnVariant');
+  const returnResume = searchParams.get('returnResume');
 
   useEffect(() => {
     // Default to sign-up tab when coming from guest flow
@@ -38,7 +38,7 @@ export default function AuthPage() {
 
       if (user && !user.is_anonymous) {
         // Already a real user — send them away
-        router.push(returnVariant ? `/editor/${returnVariant}` : '/dashboard');
+        router.push(returnResume ? `/editor/${returnResume}` : '/dashboard');
       } else {
         setIsAnonymous(user?.is_anonymous ?? false);
         setLoading(false);
@@ -46,10 +46,10 @@ export default function AuthPage() {
     };
 
     checkAuth();
-  }, [router, supabase, returnVariant]);
+  }, [router, supabase, returnResume]);
 
   const afterAuth = () => {
-    router.push(returnVariant ? `/editor/${returnVariant}` : '/dashboard');
+    router.push(returnResume ? `/editor/${returnResume}` : '/dashboard');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,8 +93,8 @@ export default function AuthPage() {
 
   const handleGoogle = async () => {
     setError(null);
-    const redirectTo = returnVariant
-      ? `${window.location.origin}/auth/callback?returnVariant=${returnVariant}`
+    const redirectTo = returnResume
+      ? `${window.location.origin}/auth/callback?returnResume=${returnResume}`
       : `${window.location.origin}/auth/callback`;
 
     if (isAnonymous) {

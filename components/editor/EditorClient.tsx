@@ -7,7 +7,7 @@ import PreviewPane from '@/components/preview/PreviewPane';
 import AIChat from '@/components/editor/AIChat';
 import ErrorBoundary from '@/components/editor/ErrorBoundary';
 import GuestBanner from '@/components/editor/GuestBanner';
-import type { ResumeVariant } from '@/types/resume';
+import type { Resume } from '@/types/resume';
 
 // CodeMirror is browser-only
 const Editor = dynamic(() => import('@/components/editor/Editor'), {
@@ -21,17 +21,17 @@ const AUTOSAVE_DELAY = 2000;
 type MobileTab = 'write' | 'preview';
 
 interface EditorClientProps {
-  variant: ResumeVariant;
+  resume: Resume;
   isGuest?: boolean;
 }
 
 export default function EditorClient({
-  variant,
+  resume,
   isGuest = false,
 }: EditorClientProps) {
-  const [rawContent, setRawContent] = useState(variant.rawContent);
-  const [templateId, setTemplateId] = useState(variant.templateId);
-  const [variantTitle, setVariantTitle] = useState(variant.title);
+  const [rawContent, setRawContent] = useState(resume.rawContent);
+  const [templateId, setTemplateId] = useState(resume.templateId);
+  const [resumeTitle, setResumeTitle] = useState(resume.title);
 
   const [splitPct, setSplitPct] = useState(DEFAULT_SPLIT);
   const [mobileTab, setMobileTab] = useState<MobileTab>('write');
@@ -55,10 +55,10 @@ export default function EditorClient({
   const titleSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rawContentRef = useRef(rawContent);
   const templateIdRef = useRef(templateId);
-  const variantTitleRef = useRef(variantTitle);
+  const resumeTitleRef = useRef(resumeTitle);
   rawContentRef.current = rawContent;
   templateIdRef.current = templateId;
-  variantTitleRef.current = variantTitle;
+  resumeTitleRef.current = resumeTitle;
 
   useEffect(() => {
     const savedSplit = localStorage.getItem('resmd_split');
@@ -75,7 +75,7 @@ export default function EditorClient({
   const autosave = useCallback(async () => {
     setIsSaving(true);
     try {
-      await fetch(`/api/variants/${variant.id}`, {
+      await fetch(`/api/resumes/${resume.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -89,7 +89,7 @@ export default function EditorClient({
     } finally {
       setIsSaving(false);
     }
-  }, [variant.id]);
+  }, [resume.id]);
 
   const scheduleAutosave = useCallback(() => {
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
@@ -134,11 +134,11 @@ export default function EditorClient({
 
   const handleTitleChange = useCallback(
     (title: string) => {
-      setVariantTitle(title);
+      setResumeTitle(title);
       if (titleSaveTimerRef.current) clearTimeout(titleSaveTimerRef.current);
       titleSaveTimerRef.current = setTimeout(async () => {
         try {
-          await fetch(`/api/variants/${variant.id}`, {
+          await fetch(`/api/resumes/${resume.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -153,7 +153,7 @@ export default function EditorClient({
         }
       }, 800);
     },
-    [variant.id]
+    [resume.id]
   );
 
   const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
@@ -190,9 +190,9 @@ export default function EditorClient({
       <div className="flex flex-col h-screen overflow-hidden bg-bg">
         <Toolbar
           lastSaved={lastSaved}
-          variantTitle={variantTitle}
+          resumeTitle={resumeTitle}
           onTitleChange={handleTitleChange}
-          variantId={variant.id}
+          resumeId={resume.id}
           rawContent={rawContent}
         />
         {isGuest && <GuestBanner />}

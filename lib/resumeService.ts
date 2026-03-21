@@ -1,8 +1,8 @@
-import { ResumeVariant, UserProfile } from '@/types/resume';
+import { Resume, UserProfile } from '@/types/resume';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 // DB row → TypeScript type mappers (snake_case → camelCase)
-function mapVariant(row: Record<string, unknown>): ResumeVariant {
+function mapResume(row: Record<string, unknown>): Resume {
   return {
     id: row.id as string,
     userId: row.user_id as string,
@@ -25,16 +25,16 @@ function mapProfile(row: Record<string, unknown>): UserProfile {
   };
 }
 
-export const createVariant = async (
+export const createResume = async (
   userId: string,
   title: string,
   rawContent: string,
   templateId: string
-): Promise<ResumeVariant> => {
+): Promise<Resume> => {
   const supabase = createSupabaseServerClient();
 
   const { data, error } = await supabase
-    .from('resume_variants')
+    .from('resumes')
     .insert({
       user_id: userId,
       title,
@@ -46,11 +46,11 @@ export const createVariant = async (
 
   if (error) throw error;
 
-  return mapVariant(data);
+  return mapResume(data);
 };
 
-export const updateVariantContent = async (
-  variantId: string,
+export const updateResumeContent = async (
+  resumeId: string,
   rawContent: string,
   templateId: string,
   title?: string
@@ -58,95 +58,86 @@ export const updateVariantContent = async (
   const supabase = createSupabaseServerClient();
 
   const { error } = await supabase
-    .from('resume_variants')
+    .from('resumes')
     .update({
       raw_content: rawContent,
       template_id: templateId,
       updated_at: new Date().toISOString(),
       ...(title !== undefined ? { title } : {}),
     })
-    .eq('id', variantId);
+    .eq('id', resumeId);
 
   if (error) throw error;
 };
 
-export const getUserVariants = async (
-  userId: string
-): Promise<ResumeVariant[]> => {
+export const getUserResumes = async (userId: string): Promise<Resume[]> => {
   const supabase = createSupabaseServerClient();
 
   const { data, error } = await supabase
-    .from('resume_variants')
+    .from('resumes')
     .select('*')
     .eq('user_id', userId)
     .order('updated_at', { ascending: false });
 
   if (error) throw error;
 
-  return (data ?? []).map(mapVariant);
+  return (data ?? []).map(mapResume);
 };
 
-export const getVariant = async (
-  variantId: string
-): Promise<ResumeVariant | null> => {
+export const getResume = async (resumeId: string): Promise<Resume | null> => {
   const supabase = createSupabaseServerClient();
 
   const { data, error } = await supabase
-    .from('resume_variants')
+    .from('resumes')
     .select('*')
-    .eq('id', variantId)
+    .eq('id', resumeId)
     .single();
 
   if (error) return null;
 
-  return mapVariant(data);
+  return mapResume(data);
 };
 
-export const cloneVariant = async (
-  sourceVariantId: string,
+export const cloneResume = async (
+  sourceResumeId: string,
   newTitle: string,
   userId: string
-): Promise<ResumeVariant> => {
+): Promise<Resume> => {
   const supabase = createSupabaseServerClient();
 
-  const source = await getVariant(sourceVariantId);
-  if (!source) throw new Error('Source variant not found');
+  const source = await getResume(sourceResumeId);
+  if (!source) throw new Error('Source resume not found');
 
   const { data, error } = await supabase
-    .from('resume_variants')
+    .from('resumes')
     .insert({
       user_id: userId,
       title: newTitle,
       raw_content: source.rawContent,
       template_id: source.templateId,
-      forked_from_id: sourceVariantId,
+      forked_from_id: sourceResumeId,
     })
     .select()
     .single();
 
   if (error) throw error;
 
-  return mapVariant(data);
+  return mapResume(data);
 };
 
-export const deleteVariant = async (variantId: string): Promise<void> => {
+export const deleteResume = async (resumeId: string): Promise<void> => {
   const supabase = createSupabaseServerClient();
 
-  const { error } = await supabase
-    .from('resume_variants')
-    .delete()
-    .eq('id', variantId);
+  const { error } = await supabase.from('resumes').delete().eq('id', resumeId);
 
   if (error) throw error;
 };
 
-export const getVariantBySlug = async (
-  slug: string
-): Promise<ResumeVariant | null> => {
+export const getResumeBySlug = async (slug: string): Promise<Resume | null> => {
   const supabase = createSupabaseServerClient();
 
   const { data, error } = await supabase
-    .from('resume_variants')
+    .from('resumes')
     .select('*')
     .eq('public_slug', slug)
     .eq('is_public', true)
@@ -154,7 +145,7 @@ export const getVariantBySlug = async (
 
   if (error) return null;
 
-  return mapVariant(data);
+  return mapResume(data);
 };
 
 export const getUserProfile = async (

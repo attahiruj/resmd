@@ -9,10 +9,10 @@ export async function GET(request: NextRequest) {
     const supabase = createSupabaseServerClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      const returnVariant = searchParams.get('returnVariant');
+      const returnResume = searchParams.get('returnResume');
       return NextResponse.redirect(
-        returnVariant
-          ? `${origin}/editor/${returnVariant}`
+        returnResume
+          ? `${origin}/editor/${returnResume}`
           : `${origin}/dashboard`
       );
     }

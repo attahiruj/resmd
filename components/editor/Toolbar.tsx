@@ -17,18 +17,18 @@ import FeedbackModal from '@/components/ui/FeedbackModal';
 interface ToolbarProps {
   lastSaved: Date | null;
 
-  variantTitle?: string;
+  resumeTitle?: string;
   onTitleChange?: (title: string) => void;
-  variantId?: string;
+  resumeId?: string;
   rawContent?: string;
 }
 
 export default function Toolbar({
   lastSaved,
 
-  variantTitle,
+  resumeTitle,
   onTitleChange,
-  variantId,
+  resumeId,
   rawContent,
 }: ToolbarProps) {
   const [isDark, setIsDark] = useState(true);
@@ -51,13 +51,13 @@ export default function Toolbar({
   };
 
   const doExport = async () => {
-    if (!variantId || isExporting) return;
+    if (!resumeId || isExporting) return;
     setIsExporting(true);
     try {
       const res = await fetch('/api/export/pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ variantId }),
+        body: JSON.stringify({ resumeId }),
       });
       if (!res.ok) throw new Error('Export failed');
       const blob = await res.blob();
@@ -82,7 +82,7 @@ export default function Toolbar({
   };
 
   const handleExportPDF = () => {
-    if (!variantId || isExporting) return;
+    if (!resumeId || isExporting) return;
     if (rawContent && hasPlaceholders(rawContent)) {
       setShowPlaceholderWarning(true);
     } else {
@@ -141,9 +141,9 @@ export default function Toolbar({
       )}
       <Navbar
         left={
-          variantTitle !== undefined && onTitleChange ? (
+          resumeTitle !== undefined && onTitleChange ? (
             <input
-              value={variantTitle}
+              value={resumeTitle}
               onChange={(e) => onTitleChange(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') e.currentTarget.blur();
@@ -174,16 +174,16 @@ export default function Toolbar({
 
             <button
               onClick={handleExportPDF}
-              disabled={!variantId || isExporting}
+              disabled={!resumeId || isExporting}
               title={
-                !variantId
+                !resumeId
                   ? 'Sign in to export'
                   : isExporting
                     ? 'Generating…'
                     : 'Export PDF'
               }
               className={`text-sm px-3 py-1.5 rounded-lg border border-border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-                !variantId || isExporting
+                !resumeId || isExporting
                   ? 'text-faint cursor-not-allowed opacity-50'
                   : 'text-text hover:bg-surface-2'
               }`}
