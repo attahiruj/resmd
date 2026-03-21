@@ -5,52 +5,12 @@ import dynamic from 'next/dynamic';
 import Toolbar from '@/components/editor/Toolbar';
 import PreviewPane from '@/components/preview/PreviewPane';
 import AIChat from '@/components/editor/AIChat';
+import { DEFAULT_RESUME_CONTENT } from '@/lib/defaultContent';
 
 // CodeMirror is browser-only
 const Editor = dynamic(() => import('@/components/editor/Editor'), {
   ssr: false,
 });
-
-const DEFAULT_CONTENT = `# Bio
-Name: Amara Osei
-Title: Full Stack Engineer
-Email: amara@example.com
-Location: Lagos, Nigeria
-GitHub: github.com/amaraosei
-LinkedIn: linkedin.com/in/amaraosei
-
-# Summary
-Full stack engineer with 4 years building products across fintech and edtech.
-Strong backend focus with React on the frontend. Passionate about developer tooling.
-
-# Experience
-## Senior Engineer @ Paystack | 2022 – Present
-- Architected a transaction reconciliation service processing ₦2B daily
-- Reduced API response time by 60% through query optimization and caching
-- Mentored 3 junior engineers through a structured onboarding program
-
-## Software Engineer @ Andela | 2020 – 2022
-- Built React component library used across 12 client projects
-- Led migration from REST to GraphQL, reducing over-fetching by 40%
-
-# Education
-## B.Sc Computer Science @ University of Lagos | 2016 – 2020
-First Class Honours. Final year project: real-time collaborative code editor.
-
-# Skills
-Languages: TypeScript, Python, Go
-Frontend: React, Next.js, Tailwind CSS
-Backend: Node.js, FastAPI, PostgreSQL, Redis
-Infrastructure: Docker, AWS, GitHub Actions
-
-# Projects
-## resmd | github.com/amara/resmd | 2024
-Plain-text resume builder with live preview and AI enhancement.
-- Built parser in TypeScript with zero dependencies
-- 300+ GitHub stars in 6 weeks after launch
-
-# Certifications
-AWS Solutions Architect Associate | Amazon | 2023`;
 
 const MIN_PANE_PX = 300;
 const DEFAULT_SPLIT = 50;
@@ -58,7 +18,7 @@ const DEFAULT_SPLIT = 50;
 type MobileTab = 'write' | 'preview';
 
 export default function EditorPage() {
-  const [rawContent, setRawContent] = useState(DEFAULT_CONTENT);
+  const [rawContent, setRawContent] = useState(DEFAULT_RESUME_CONTENT);
   const [templateId, setTemplateId] = useState('minimal');
 
   const [splitPct, setSplitPct] = useState(DEFAULT_SPLIT);
