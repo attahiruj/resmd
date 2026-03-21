@@ -37,7 +37,6 @@ function isProjectsSection(section: ResumeSection): boolean {
 
 export default function Technical({
   resume,
-  isPro,
   showHeader = true,
 }: TemplateProps) {
   const { sections, meta } = resume;
@@ -303,12 +302,6 @@ export default function Technical({
       {bodySections.map((section) => (
         <TechSectionBlock key={section.id} section={section} S={S} />
       ))}
-
-      {!isPro && (
-        <footer style={S.footer}>
-          <span style={S.footerText}>Created with resmd · resmd.app</span>
-        </footer>
-      )}
     </article>
   );
 }

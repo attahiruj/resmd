@@ -33,11 +33,7 @@ function isSidebarSection(section: ResumeSection): boolean {
   );
 }
 
-export default function Modern({
-  resume,
-  isPro,
-  showHeader = true,
-}: TemplateProps) {
+export default function Modern({ resume, showHeader = true }: TemplateProps) {
   const { sections, meta } = resume;
   const s = { ...DEFAULT_SETTINGS, ...resume.settings };
 
@@ -347,12 +343,6 @@ export default function Modern({
             S={S}
           />
         ))}
-
-        {!isPro && (
-          <footer style={S.footer}>
-            <span style={S.footerText}>Created with resmd · resmd.app</span>
-          </footer>
-        )}
       </main>
     </article>
   );

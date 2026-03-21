@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   footerText: { fontSize: 7.5, color: '#AABBCC', fontFamily: 'NotoSansMono' },
 });
 
-export default function TechnicalPdf({ resume, isPro }: TemplateProps) {
+export default function TechnicalPdf({ resume }: TemplateProps) {
   const { sections, meta } = resume;
   const s: RS = { ...DEFAULT_SETTINGS, ...resume.settings };
 
@@ -307,14 +307,6 @@ export default function TechnicalPdf({ resume, isPro }: TemplateProps) {
         {bodySections.map((section) => (
           <TechSectionBlock key={section.id} section={section} s={s} />
         ))}
-
-        {!isPro && (
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              Created with resmd · resmd.app
-            </Text>
-          </View>
-        )}
       </Page>
     </Document>
   );

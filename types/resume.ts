@@ -71,7 +71,6 @@ export interface TemplateDefinition {
   name: string;
   description: string;
   category: 'minimal' | 'professional' | 'creative' | 'technical' | 'academic';
-  isPro: boolean;
   thumbnail: string;
   component: React.ComponentType<TemplateProps>;
   pdfComponent: React.ComponentType<TemplateProps>;
@@ -79,7 +78,6 @@ export interface TemplateDefinition {
 
 export interface TemplateProps {
   resume: ParsedResume;
-  isPro: boolean;
   /** When false, the template omits the name/title/contact header (for pages 2+) */
   showHeader?: boolean;
 }
