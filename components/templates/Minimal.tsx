@@ -1,20 +1,18 @@
 'use client';
 
 import React from 'react';
-import type {
-  TemplateProps,
-  ResumeSection,
-  SectionItem,
-  EntryItem,
-  KeyValueItem,
-} from '@/types/resume';
+import type { TemplateProps, SectionItem, KeyValueItem } from '@/types/resume';
 import { DEFAULT_SETTINGS } from '@/types/resume';
 import { renderInline } from '@/lib/renderInline';
-import { isUrl, extractLink } from '@/lib/inline';
+import { parseResumeHeader } from '@/lib/templateUtils';
+import {
+  WebSectionBlock,
+  WebEntryBlock,
+  WebBulletRow,
+  WebKvRow,
+} from '@/components/templates/shared';
 
 const FONT = "var(--font-noto-sans), 'Noto Sans', sans-serif";
-const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
-const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
 export default function Minimal({ resume, showHeader = true }: TemplateProps) {
   const { sections, meta } = resume;
@@ -83,9 +81,7 @@ export default function Minimal({ resume, showHeader = true }: TemplateProps) {
       flexShrink: 0,
       marginLeft: 8,
     },
-    entryChildren: {
-      marginTop: 3,
-    },
+    entryChildren: { marginTop: 3 },
     bulletRow: {
       display: 'flex',
       flexDirection: 'row' as const,
@@ -154,43 +150,10 @@ export default function Minimal({ resume, showHeader = true }: TemplateProps) {
     footerText: { fontSize: 8, color: '#BBBBBB' },
   };
 
-  const headerSection = showHeader
-    ? (sections.find(
-        (sec) => sec.hint === 'keyvalue' || sec.title.toLowerCase() === 'bio'
-      ) ??
-      sections[0] ??
-      null)
-    : null;
-
-  type ContactEntry = { key: string; href: string | null; rawValue: string };
-  const contactEntries: ContactEntry[] = [];
-  const aboutLines: string[] = [];
-
-  for (const item of headerSection?.items ?? []) {
-    if (item.kind === 'keyvalue') {
-      const keyLower = item.key.toLowerCase();
-      if (HEADER_META_KEYS.has(keyLower)) continue;
-      if (HEADER_ABOUT_KEYS.has(keyLower)) {
-        aboutLines.push(item.value);
-        continue;
-      }
-      contactEntries.push({
-        key: item.key,
-        href: isUrl(item.value) ? item.value : null,
-        rawValue: item.value,
-      });
-    } else if (item.kind === 'text') {
-      const link = extractLink(item.text);
-      if (link)
-        contactEntries.push({
-          key: link.text,
-          href: link.href,
-          rawValue: link.href,
-        });
-    }
-  }
-
-  const bodySections = sections.filter((sec) => sec !== headerSection);
+  const { contactEntries, aboutLines, bodySections } = parseResumeHeader(
+    sections,
+    showHeader
+  );
 
   return (
     <article style={S.page}>
@@ -228,7 +191,15 @@ export default function Minimal({ resume, showHeader = true }: TemplateProps) {
       )}
 
       {bodySections.map((section) => (
-        <SectionBlock key={section.id} section={section} S={S} />
+        <WebSectionBlock
+          key={section.id}
+          section={section}
+          styles={{ section: S.section }}
+          renderTitle={(title) => <h2 style={S.sectionTitle}>{title}</h2>}
+          renderItem={(item, isKv) => (
+            <ItemBlock item={item} isKv={isKv} S={S} />
+          )}
+        />
       ))}
     </article>
   );
@@ -237,112 +208,61 @@ export default function Minimal({ resume, showHeader = true }: TemplateProps) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MinimalStyles = Record<string, any>;
 
-function SectionBlock({
-  section,
-  S,
-}: {
-  section: ResumeSection;
-  S: MinimalStyles;
-}) {
-  if (section.items.length === 0) return null;
-  return (
-    <section data-section={section.id} style={S.section}>
-      <h2 style={S.sectionTitle}>{section.title}</h2>
-      {section.items.map((item, i) => (
-        <ItemBlock
-          key={i}
-          item={item}
-          isKeyValueSection={section.hint === 'keyvalue'}
-          S={S}
-        />
-      ))}
-    </section>
-  );
-}
-
 function ItemBlock({
   item,
-  isKeyValueSection,
+  isKv,
   S,
 }: {
   item: SectionItem;
-  isKeyValueSection: boolean;
+  isKv: boolean;
   S: MinimalStyles;
 }) {
   switch (item.kind) {
-    case 'keyvalue': {
-      if (isKeyValueSection) {
-        return (
-          <div style={S.kvSkillsRow}>
-            <span style={S.kvSkillsLabel}>{item.key}:</span>
-            <span style={S.kvSkillsValue}>{item.value}</span>
-          </div>
-        );
-      }
+    case 'keyvalue':
       return (
-        <div style={S.kvRow}>
-          {isUrl(item.value) ? (
-            <a
-              href={item.value}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: 'inherit', textDecoration: 'none' }}
-            >
-              <span style={S.kvKey}>*{item.key}</span>
-            </a>
-          ) : (
-            <>
-              <span style={S.kvKey}>{item.key}:</span>
-              <span style={S.kvValue}>{renderInline(item.value)}</span>
-            </>
+        <WebKvRow
+          item={item}
+          isKeyValueSection={isKv}
+          kvStyles={{ row: S.kvRow, key: S.kvKey, value: S.kvValue }}
+          renderSkills={(kv: KeyValueItem) => (
+            <div style={S.kvSkillsRow}>
+              <span style={S.kvSkillsLabel}>{kv.key}:</span>
+              <span style={S.kvSkillsValue}>{kv.value}</span>
+            </div>
           )}
-        </div>
+        />
       );
-    }
     case 'entry':
-      return <EntryBlock entry={item} S={S} />;
+      return (
+        <WebEntryBlock
+          entry={item}
+          styles={{
+            entry: S.entry,
+            entryHeader: S.entryHeader,
+            entryRole: S.entryRole,
+            entryOrg: S.entryOrg,
+            entryMeta: S.entryMeta,
+            entryChildren: S.entryChildren,
+          }}
+          orgSeparator=" · "
+          renderChildren={(child) => (
+            <ItemBlock item={child} isKv={false} S={S} />
+          )}
+        />
+      );
     case 'bullet':
       return (
-        <div style={S.bulletRow}>
-          <span style={S.bulletDash}>–</span>
-          <span style={S.bulletText}>{renderInline(item.text)}</span>
-        </div>
+        <WebBulletRow
+          text={item.text}
+          bullet="–"
+          styles={{
+            row: S.bulletRow,
+            dash: S.bulletDash,
+            text: S.bulletText,
+          }}
+        />
       );
     case 'text':
       return <p style={S.textPara}>{renderInline(item.text)}</p>;
   }
-}
-
-function EntryBlock({ entry, S }: { entry: EntryItem; S: MinimalStyles }) {
-  return (
-    <div data-block="avoid" style={S.entry}>
-      <div style={S.entryHeader}>
-        <div>
-          {entry.role ? (
-            <span>
-              <span style={S.entryRole}>{renderInline(entry.role)}</span>
-              {entry.organization && (
-                <span style={S.entryOrg}>
-                  {' '}
-                  · {renderInline(entry.organization)}
-                </span>
-              )}
-            </span>
-          ) : (
-            <span style={S.entryRole}>{renderInline(entry.heading)}</span>
-          )}
-        </div>
-        {entry.meta.length > 0 && (
-          <span style={S.entryMeta}>{entry.meta.join(' · ')}</span>
-        )}
-      </div>
-      {entry.children.length > 0 && (
-        <div style={S.entryChildren}>
-          {entry.children.map((child, i) => (
-            <ItemBlock key={i} item={child} isKeyValueSection={false} S={S} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
 }

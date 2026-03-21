@@ -10,12 +10,20 @@ import type {
 } from '@/types/resume';
 import { DEFAULT_SETTINGS } from '@/types/resume';
 import { renderInline } from '@/lib/renderInline';
-import { isUrl, extractLink } from '@/lib/inline';
+import {
+  parseResumeHeader,
+  sortContactsByPriority,
+  splitTagValue,
+} from '@/lib/templateUtils';
+import {
+  WebSectionBlock,
+  WebEntryBlock,
+  WebBulletRow,
+  WebKvRow,
+} from '@/components/templates/shared';
 
 const FONT =
   "var(--font-courier-prime), 'Courier Prime', 'Courier New', monospace";
-const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
-const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TechStyles = Record<string, any>;
@@ -111,31 +119,6 @@ export default function Technical({
       flexDirection: 'column' as const,
       gap: 4,
     },
-    skillGroupLabel: {
-      fontSize: 7.5,
-      fontWeight: 700,
-      color: '#778899',
-      marginBottom: 3,
-      textTransform: 'uppercase' as const,
-      letterSpacing: '0.5px',
-    },
-    skillTagsRow: {
-      display: 'flex',
-      flexDirection: 'row' as const,
-      flexWrap: 'wrap' as const,
-      gap: 3,
-    },
-    skillTag: {
-      fontSize: s.fontSize - 1.5,
-      color: '#334466',
-      backgroundColor: '#F0F2F8',
-      border: '1px solid #D8DCF0',
-      paddingLeft: 5,
-      paddingRight: 5,
-      paddingTop: 1.5,
-      paddingBottom: 1.5,
-      borderRadius: 3,
-    },
     entry: { marginBottom: s.entrySpacing },
     entryHeader: {
       display: 'flex',
@@ -207,61 +190,13 @@ export default function Technical({
       flexShrink: 0,
     },
     kvValue: { fontSize: s.fontSize, color: '#333344', flex: 1 },
-    footer: {
-      marginTop: 16,
-      borderTop: '1px solid #D8DCF0',
-      paddingTop: 5,
-      textAlign: 'center' as const,
-    },
-    footerText: { fontSize: 7.5, color: '#AABBCC' },
   };
 
-  const headerSection = showHeader
-    ? (sections.find(
-        (sec) => sec.hint === 'keyvalue' || sec.title.toLowerCase() === 'bio'
-      ) ??
-      sections[0] ??
-      null)
-    : null;
-
-  type ContactEntry = { key: string; href: string | null; rawValue: string };
-  const contactEntries: ContactEntry[] = [];
-  const aboutLines: string[] = [];
-
-  for (const item of headerSection?.items ?? []) {
-    if (item.kind === 'keyvalue') {
-      const keyLower = item.key.toLowerCase();
-      if (HEADER_META_KEYS.has(keyLower)) continue;
-      if (HEADER_ABOUT_KEYS.has(keyLower)) {
-        aboutLines.push(item.value);
-        continue;
-      }
-      contactEntries.push({
-        key: item.key,
-        href: isUrl(item.value) ? item.value : null,
-        rawValue: item.value,
-      });
-    } else if (item.kind === 'text') {
-      const link = extractLink(item.text);
-      if (link)
-        contactEntries.push({
-          key: link.text,
-          href: link.href,
-          rawValue: link.href,
-        });
-    }
-  }
-
-  // Prioritize GitHub/website/portfolio at the front
-  const priorityKeys = ['github', 'website', 'portfolio', 'linkedin'];
-  const sortedContact = [
-    ...contactEntries.filter((e) => priorityKeys.includes(e.key.toLowerCase())),
-    ...contactEntries.filter(
-      (e) => !priorityKeys.includes(e.key.toLowerCase())
-    ),
-  ];
-
-  const bodySections = sections.filter((sec) => sec !== headerSection);
+  const { contactEntries, aboutLines, bodySections } = parseResumeHeader(
+    sections,
+    showHeader
+  );
+  const sortedContact = sortContactsByPriority(contactEntries);
 
   return (
     <article style={S.page}>
@@ -313,8 +248,6 @@ function TechSectionBlock({
   section: ResumeSection;
   S: TechStyles;
 }) {
-  if (section.items.length === 0) return null;
-
   if (isSkillsSection(section)) {
     const kvItems = section.items.filter(
       (i): i is KeyValueItem => i.kind === 'keyvalue'
@@ -326,22 +259,9 @@ function TechSectionBlock({
           <div style={S.skillsGrid}>
             {kvItems.map((item) => (
               <div key={item.key} style={S.kvRow}>
-                <span
-                  style={{
-                    ...S.kvKey,
-                    width: 'auto',
-                    marginRight: 6,
-                    flexShrink: 0,
-                  }}
-                >
-                  {item.key}:
-                </span>
+                <span style={S.kvSkillsKey}>{item.key}:</span>
                 <span style={S.kvValue}>
-                  {item.value
-                    .split(',')
-                    .map((v) => v.trim())
-                    .filter(Boolean)
-                    .join(', ')}
+                  {splitTagValue(item.value).join(', ')}
                 </span>
               </div>
             ))}
@@ -385,17 +305,14 @@ function TechSectionBlock({
   }
 
   return (
-    <section data-section={section.id} style={S.section}>
-      <h2 style={S.sectionTitle}>{'// ' + section.title}</h2>
-      {section.items.map((item, i) => (
-        <TechItemBlock
-          key={i}
-          item={item}
-          isKeyValueSection={section.hint === 'keyvalue'}
-          S={S}
-        />
-      ))}
-    </section>
+    <WebSectionBlock
+      section={section}
+      styles={{ section: S.section }}
+      renderTitle={(title) => <h2 style={S.sectionTitle}>{'// ' + title}</h2>}
+      renderItem={(item, isKv) => (
+        <TechItemBlock item={item} isKeyValueSection={isKv} S={S} />
+      )}
+    />
   );
 }
 
@@ -409,90 +326,53 @@ function TechItemBlock({
   S: TechStyles;
 }) {
   switch (item.kind) {
-    case 'keyvalue': {
-      if (isKeyValueSection) {
-        return (
-          <div style={S.kvRow}>
-            <span style={S.kvSkillsKey}>{item.key}:</span>
-            <span style={S.kvValue}>
-              {item.value
-                .split(',')
-                .map((v) => v.trim())
-                .filter(Boolean)
-                .join(', ')}
-            </span>
-          </div>
-        );
-      }
+    case 'keyvalue':
       return (
-        <div style={S.kvRow}>
-          {isUrl(item.value) ? (
-            <a
-              href={item.value}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: 'inherit', textDecoration: 'none' }}
-            >
-              <span style={S.kvKey}>*{item.key}</span>
-            </a>
-          ) : (
-            <>
-              <span style={S.kvKey}>{item.key}:</span>
-              <span style={S.kvValue}>{renderInline(item.value)}</span>
-            </>
+        <WebKvRow
+          item={item}
+          isKeyValueSection={isKeyValueSection}
+          kvStyles={{ row: S.kvRow, key: S.kvKey, value: S.kvValue }}
+          renderSkills={(kv: KeyValueItem) => (
+            <div style={S.kvRow}>
+              <span style={S.kvSkillsKey}>{kv.key}:</span>
+              <span style={S.kvValue}>
+                {splitTagValue(kv.value).join(', ')}
+              </span>
+            </div>
           )}
-        </div>
+        />
       );
-    }
     case 'entry':
-      return <TechEntryBlock entry={item} S={S} />;
+      return (
+        <WebEntryBlock
+          entry={item}
+          styles={{
+            entry: S.entry,
+            entryHeader: S.entryHeader,
+            entryRole: S.entryRole,
+            entryOrg: S.entryOrg,
+            entryMeta: S.entryMetaBadge,
+            entryChildren: S.entryChildren,
+          }}
+          orgSeparator=" @ "
+          renderChildren={(child) => (
+            <TechItemBlock item={child} isKeyValueSection={false} S={S} />
+          )}
+        />
+      );
     case 'bullet':
       return (
-        <div style={S.bulletRow}>
-          <span style={S.bulletDash}>–</span>
-          <span style={S.bulletText}>{renderInline(item.text)}</span>
-        </div>
+        <WebBulletRow
+          text={item.text}
+          bullet="–"
+          styles={{
+            row: S.bulletRow,
+            dash: S.bulletDash,
+            text: S.bulletText,
+          }}
+        />
       );
     case 'text':
       return <p style={S.textPara}>{renderInline(item.text)}</p>;
   }
-}
-
-function TechEntryBlock({ entry, S }: { entry: EntryItem; S: TechStyles }) {
-  return (
-    <div data-block="avoid" style={S.entry}>
-      <div style={S.entryHeader}>
-        <div style={{ flex: 1 }}>
-          {entry.role ? (
-            <span>
-              <span style={S.entryRole}>{renderInline(entry.role)}</span>
-              {entry.organization && (
-                <span style={S.entryOrg}>
-                  {' '}
-                  @ {renderInline(entry.organization)}
-                </span>
-              )}
-            </span>
-          ) : (
-            <span style={S.entryRole}>{renderInline(entry.heading)}</span>
-          )}
-        </div>
-        {entry.meta.length > 0 && (
-          <span style={S.entryMetaBadge}>{entry.meta.join(' · ')}</span>
-        )}
-      </div>
-      {entry.children.length > 0 && (
-        <div style={S.entryChildren}>
-          {entry.children.map((child, i) => (
-            <TechItemBlock
-              key={i}
-              item={child}
-              isKeyValueSection={false}
-              S={S}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
 }
