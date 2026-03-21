@@ -40,13 +40,37 @@ interface Message {
 interface AIChatProps {
   resumeContent: string;
   onApplyEdit?: (search: string, replace: string) => void;
+  isGuest?: boolean;
 }
 
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
-export default function AIChat({ resumeContent, onApplyEdit }: AIChatProps) {
+export default function AIChat({
+  resumeContent,
+  onApplyEdit,
+  isGuest = false,
+}: AIChatProps) {
+  if (isGuest) {
+    return (
+      <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-t border-border bg-editor-bg flex-shrink-0 text-xs">
+        <span className="flex items-center gap-1.5 text-faint">
+          <span className="text-accent">✦</span>
+          AI Assistant
+        </span>
+        <span className="text-muted">
+          <a
+            href="/auth?signup=1"
+            className="text-accent hover:underline font-medium"
+          >
+            Create a free account
+          </a>{' '}
+          to use AI features
+        </span>
+      </div>
+    );
+  }
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);

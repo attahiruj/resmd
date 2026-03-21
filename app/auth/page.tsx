@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 
 type Tab = 'signin' | 'signup';
@@ -16,8 +16,19 @@ export default function AuthPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createSupabaseBrowserClient();
+
+  const returnVariant = searchParams.get('returnVariant');
+
+  useEffect(() => {
+    // Default to sign-up tab when coming from guest flow
+    if (searchParams.get('signup') === '1') {
+      setTab('signup');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -25,15 +36,21 @@ export default function AuthPage() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (user) {
-        router.push('/dashboard');
+      if (user && !user.is_anonymous) {
+        // Already a real user — send them away
+        router.push(returnVariant ? `/editor/${returnVariant}` : '/dashboard');
       } else {
+        setIsAnonymous(user?.is_anonymous ?? false);
         setLoading(false);
       }
     };
 
     checkAuth();
-  }, [router, supabase]);
+  }, [router, supabase, returnVariant]);
+
+  const afterAuth = () => {
+    router.push(returnVariant ? `/editor/${returnVariant}` : '/dashboard');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,17 +65,24 @@ export default function AuthPage() {
           password,
         });
         if (error) throw error;
-        router.push('/dashboard');
+        afterAuth();
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
-          },
-        });
-        if (error) throw error;
-        setMessage('Check your email to confirm your account, then sign in.');
+        if (isAnonymous) {
+          // Convert anonymous session to a real account
+          const { error } = await supabase.auth.updateUser({ email, password });
+          if (error) throw error;
+          afterAuth();
+        } else {
+          const { error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+            },
+          });
+          if (error) throw error;
+          setMessage('Check your email to confirm your account, then sign in.');
+        }
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -69,12 +93,24 @@ export default function AuthPage() {
 
   const handleGoogle = async () => {
     setError(null);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      // options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback` },
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (error) setError(error.message);
+    const redirectTo = returnVariant
+      ? `${window.location.origin}/auth/callback?returnVariant=${returnVariant}`
+      : `${window.location.origin}/auth/callback`;
+
+    if (isAnonymous) {
+      // Link Google identity to the existing anonymous account
+      const { error } = await supabase.auth.linkIdentity({
+        provider: 'google',
+        options: { redirectTo },
+      });
+      if (error) setError(error.message);
+    } else {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo },
+      });
+      if (error) setError(error.message);
+    }
   };
 
   const switchTab = (t: Tab) => {
@@ -100,7 +136,11 @@ export default function AuthPage() {
             res<span className="text-accent">md</span>
           </span>
           <p className="text-sm text-muted mt-1">
-            {tab === 'signin' ? 'Welcome back' : 'Create your account'}
+            {tab === 'signin'
+              ? 'Welcome back'
+              : isAnonymous
+                ? 'Save your resume'
+                : 'Create your account'}
           </p>
         </div>
 

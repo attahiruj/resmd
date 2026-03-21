@@ -32,7 +32,7 @@ export default function Home() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (user) {
+      if (user && !user.is_anonymous) {
         router.push('/dashboard');
       } else {
         setLoading(false);
@@ -110,7 +110,7 @@ function Nav() {
             Sign in
           </Link>
           <Link
-            href="/auth"
+            href="/editor/new"
             className="text-sm font-medium bg-accent hover:bg-accent-hover text-accent-text px-5 py-2 rounded-lg transition-all duration-200 hover:shadow-accent hover:shadow-lg"
           >
             Start free
@@ -152,11 +152,11 @@ function Hero() {
 
             <div className="reveal-up reveal-delay-3 flex flex-wrap gap-4 mb-8">
               <Link
-                href="/auth"
+                href="/editor/new"
                 className="group inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-accent-text font-medium px-7 py-3.5 rounded-xl transition-all duration-300 hover:shadow-accent hover:shadow-xl hover:-translate-y-1"
               >
                 <TerminalIcon className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-                Start for free
+                Try it free
               </Link>
               <a
                 href="#how-it-works"

@@ -7,6 +7,7 @@ import PreviewPane from '@/components/preview/PreviewPane';
 import AIChat from '@/components/editor/AIChat';
 import SnapshotModal from '@/components/editor/SnapshotModal';
 import ErrorBoundary from '@/components/editor/ErrorBoundary';
+import GuestBanner from '@/components/editor/GuestBanner';
 import type { ResumeVariant } from '@/types/resume';
 
 // CodeMirror is browser-only
@@ -22,9 +23,13 @@ type MobileTab = 'write' | 'preview';
 
 interface EditorClientProps {
   variant: ResumeVariant;
+  isGuest?: boolean;
 }
 
-export default function EditorClient({ variant }: EditorClientProps) {
+export default function EditorClient({
+  variant,
+  isGuest = false,
+}: EditorClientProps) {
   const [rawContent, setRawContent] = useState(variant.rawContent);
   const [templateId, setTemplateId] = useState(variant.templateId);
   const [variantTitle, setVariantTitle] = useState(variant.title);
@@ -192,6 +197,7 @@ export default function EditorClient({ variant }: EditorClientProps) {
           variantId={variant.id}
           rawContent={rawContent}
         />
+        {isGuest && <GuestBanner />}
 
         {/* Mobile tab bar (<md) */}
         <div className="md:hidden flex h-10 border-b border-border bg-surface flex-shrink-0 px-2 gap-1 items-center">
@@ -236,6 +242,7 @@ export default function EditorClient({ variant }: EditorClientProps) {
               <AIChat
                 resumeContent={rawContent}
                 onApplyEdit={handleApplyEdit}
+                isGuest={isGuest}
               />
             </div>
           ) : (
@@ -276,6 +283,7 @@ export default function EditorClient({ variant }: EditorClientProps) {
               <AIChat
                 resumeContent={rawContent}
                 onApplyEdit={handleApplyEdit}
+                isGuest={isGuest}
               />
             </div>
 
