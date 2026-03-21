@@ -304,7 +304,7 @@ function ItemBlock({
       return (
         <WebBulletRow
           text={item.text}
-          bullet="▸"
+          bullet="•"
           styles={{
             row: S.bulletRow,
             dash: S.bulletDash,

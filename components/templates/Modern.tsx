@@ -60,12 +60,12 @@ export default function Modern({ resume, showHeader = true }: TemplateProps) {
       minHeight: '100%',
     },
     sidebar: {
-      width: '30%',
+      width: '34%',
       flexShrink: 0,
       backgroundColor: '#1E2330',
       paddingTop: s.marginV,
       paddingBottom: s.marginV,
-      paddingLeft: s.marginH,
+      paddingLeft: Math.round(s.marginH * 0.5),
       paddingRight: 18,
     },
     sidebarName: {

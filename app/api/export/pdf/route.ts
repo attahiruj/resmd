@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { renderToBuffer, type DocumentProps } from '@react-pdf/renderer';
 import React from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
-import { getVariant, getUserProfile } from '@/lib/variantService';
+import { getVariant } from '@/lib/variantService';
 import { parseResume } from '@/lib/parser';
 import { getTemplate, getPdfComponent } from '@/lib/templates';
 
@@ -33,9 +33,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const profile = await getUserProfile(user.id);
-    const isPro = profile?.isPro ?? false;
-
     const resume = parseResume(variant.rawContent);
     const template = getTemplate(variant.templateId);
     if (!template) {
@@ -46,7 +43,7 @@ export async function POST(req: NextRequest) {
     }
 
     const PdfComponent = await getPdfComponent(variant.templateId);
-    const doc = React.createElement(PdfComponent, { resume, isPro });
+    const doc = React.createElement(PdfComponent, { resume });
     const buffer = await renderToBuffer(
       doc as React.ReactElement<DocumentProps>
     );

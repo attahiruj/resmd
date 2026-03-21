@@ -37,11 +37,10 @@ const styles = StyleSheet.create({
   },
   headerBox: {
     backgroundColor: '#1B2438',
-    paddingBottom: 16,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   name: {
-    fontSize: 26,
+    fontSize: 28,
     fontFamily: 'NotoSans',
     fontWeight: 700,
     color: '#FFFFFF',
@@ -184,6 +183,7 @@ export default function ExecutivePdf({ resume }: TemplateProps) {
               marginLeft: -s.marginH,
               marginRight: -s.marginH,
               paddingTop: s.marginV,
+              paddingBottom: Math.round(s.marginV * 0.85),
               paddingLeft: s.marginH,
               paddingRight: s.marginH,
             },
@@ -303,7 +303,7 @@ function ItemBlock({
       return (
         <PdfBulletRow
           text={item.text}
-          bullet=">"
+          bullet="•"
           styles={{
             row: styles.bulletRow,
             dash: styles.bulletDash,
