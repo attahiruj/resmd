@@ -18,7 +18,7 @@ export default function GuestBanner() {
 
   if (dismissed) return null;
 
-  const signupHref = `/auth?signup=1&returnVariant=${pathname.split('/').pop()}`;
+  const signupHref = `/auth?signup=1&returnResume=${pathname.split('/').pop()}`;
 
   const handleDismiss = () => {
     sessionStorage.setItem(DISMISSED_KEY, '1');

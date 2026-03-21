@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getVariantBySlug } from '@/lib/variantService';
+import { getResumeBySlug } from '@/lib/resumeService';
 import { getTemplate } from '@/lib/templates';
 import { parseResume } from '@/lib/parser';
 
@@ -12,11 +12,11 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const variant = await getVariantBySlug(slug);
-  if (!variant) return { title: 'Resume not found' };
+  const resume = await getResumeBySlug(slug);
+  if (!resume) return { title: 'Resume not found' };
 
-  const parsed = parseResume(variant.rawContent);
-  const name = parsed.meta.name ?? variant.title;
+  const parsed = parseResume(resume.rawContent);
+  const name = parsed.meta.name ?? resume.title;
   const jobTitle = parsed.meta.title ?? '';
   const description = jobTitle
     ? `${name} — ${jobTitle}`
@@ -35,11 +35,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicResumePage({ params }: Props) {
   const { slug } = await params;
-  const variant = await getVariantBySlug(slug);
-  if (!variant) notFound();
+  const resume = await getResumeBySlug(slug);
+  if (!resume) notFound();
 
-  const template = getTemplate(variant.templateId) ?? getTemplate('minimal')!;
-  const parsed = parseResume(variant.rawContent);
+  const template = getTemplate(resume.templateId) ?? getTemplate('minimal')!;
+  const parsed = parseResume(resume.rawContent);
   const TemplateComponent = template.component;
 
   return (

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { SpinnerGapIcon } from '@phosphor-icons/react';
-import type { ResumeVariant } from '@/types/resume';
+import type { Resume } from '@/types/resume';
 
 const SUGGESTED_NAMES = [
   'Software Engineering CV',
@@ -12,14 +12,14 @@ const SUGGESTED_NAMES = [
 ];
 
 interface CloneModalProps {
-  sourceVariant: ResumeVariant;
+  sourceResume: Resume;
   onConfirm: (title: string) => void;
   onClose: () => void;
   loading?: boolean;
 }
 
 export default function CloneModal({
-  sourceVariant,
+  sourceResume,
   onConfirm,
   onClose,
   loading = false,
@@ -44,7 +44,7 @@ export default function CloneModal({
         <h2 className="text-sm font-semibold text-text mb-1">Clone variant</h2>
         <p className="text-xs text-muted mb-4">
           Cloning from:{' '}
-          <span className="text-text font-medium">{sourceVariant.title}</span>
+          <span className="text-text font-medium">{sourceResume.title}</span>
         </p>
 
         <label className="text-xs text-muted block mb-1">

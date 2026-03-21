@@ -21,7 +21,7 @@ import {
   MoonIcon,
   ChatTeardropTextIcon,
 } from '@phosphor-icons/react';
-import type { ResumeVariant } from '@/types/resume';
+import type { Resume } from '@/types/resume';
 import { parseResume } from '@/lib/parser';
 import { getTemplate } from '@/lib/templates';
 import { LIMITS } from '@/lib/limits';
@@ -32,7 +32,7 @@ import FeedbackModal from '@/components/ui/FeedbackModal';
 import Navbar from '@/components/ui/Navbar';
 
 interface DashboardClientProps {
-  initialVariants: ResumeVariant[];
+  initialResumes: Resume[];
   userEmail: string;
 }
 
@@ -261,13 +261,13 @@ Open to creative development opportunities and design engineering roles.`,
 };
 
 export default function DashboardClient({
-  initialVariants,
+  initialResumes,
   userEmail,
 }: DashboardClientProps) {
-  const [variants, setVariants] = useState(initialVariants);
+  const [resumes, setResumes] = useState(initialResumes);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [cloneSource, setCloneSource] = useState<ResumeVariant | null>(null);
+  const [cloneSource, setCloneSource] = useState<Resume | null>(null);
   const [cloning, setCloning] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -278,7 +278,7 @@ export default function DashboardClient({
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [isDark, setIsDark] = useState(true);
   const router = useRouter();
-  const atLimit = variants.length >= LIMITS.MAX_VARIANTS;
+  const atLimit = resumes.length >= LIMITS.MAX_VARIANTS;
 
   useEffect(() => {
     const { themeId, mode } = getStoredThemePrefs();
@@ -299,9 +299,9 @@ export default function DashboardClient({
     }
   }, []);
 
-  // Filter and sort variants
-  const filteredVariants = useMemo(() => {
-    let result = [...variants];
+  // Filter and sort resumes
+  const filteredResumes = useMemo(() => {
+    let result = [...resumes];
 
     // Filter by search query
     if (searchQuery.trim()) {
@@ -328,12 +328,12 @@ export default function DashboardClient({
     });
 
     return result;
-  }, [variants, searchQuery, sortBy, sortDirection]);
+  }, [resumes, searchQuery, sortBy, sortDirection]);
 
   const handleNewResume = async () => {
     setCreating(true);
     try {
-      const res = await fetch('/api/variants', {
+      const res = await fetch('/api/resumes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -343,7 +343,7 @@ export default function DashboardClient({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Failed to create variant');
+      if (!res.ok) throw new Error(data.error ?? 'Failed to create resume');
       router.push(`/editor/${data.data.id}`);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to create resume');
@@ -354,11 +354,11 @@ export default function DashboardClient({
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/variants/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/resumes/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete');
-      setVariants((prev) => prev.filter((v) => v.id !== id));
+      setResumes((prev) => prev.filter((v) => v.id !== id));
     } catch {
-      alert('Failed to delete variant');
+      alert('Failed to delete resume');
     } finally {
       setDeletingId(null);
     }
@@ -368,7 +368,7 @@ export default function DashboardClient({
     if (!cloneSource) return;
     setCloning(true);
     try {
-      const res = await fetch(`/api/variants/${cloneSource.id}/clone`, {
+      const res = await fetch(`/api/resumes/${cloneSource.id}/clone`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title }),
@@ -377,7 +377,7 @@ export default function DashboardClient({
       if (!res.ok) throw new Error(data.error ?? 'Failed to clone');
       router.push(`/editor/${data.data.id}`);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to clone variant');
+      alert(err instanceof Error ? err.message : 'Failed to clone resume');
       setCloning(false);
     }
   };
@@ -488,7 +488,7 @@ export default function DashboardClient({
           <div>
             <h1 className="text-xl font-semibold text-text">My Resumes</h1>
             <p className="text-sm text-muted mt-0.5">
-              {variants.length} / {LIMITS.MAX_VARIANTS} resumes
+              {resumes.length} / {LIMITS.MAX_VARIANTS} resumes
             </p>
           </div>
 
@@ -517,7 +517,7 @@ export default function DashboardClient({
           </div>
         </div>
 
-        {variants.length === 0 ? (
+        {resumes.length === 0 ? (
           /* Enhanced Empty State */
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="relative mb-8">
@@ -642,7 +642,7 @@ export default function DashboardClient({
             </div>
 
             {/* No results message */}
-            {filteredVariants.length === 0 && searchQuery && (
+            {filteredResumes.length === 0 && searchQuery && (
               <div className="text-center py-12">
                 <p className="text-muted">
                   No resumes found matching &quot;{searchQuery}&quot;
@@ -656,46 +656,46 @@ export default function DashboardClient({
               </div>
             )}
 
-            {/* Variants Display */}
+            {/* Resumes */}
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredVariants.map((variant, index) => (
-                  <VariantCard
-                    key={variant.id}
-                    variant={variant}
+                {filteredResumes.map((resume, index) => (
+                  <ResumeCard
+                    key={resume.id}
+                    resume={resume}
                     index={index}
                     viewMode="grid"
                     clonedFromTitle={
-                      variant.clonedFromId
-                        ? (variants.find((v) => v.id === variant.clonedFromId)
+                      resume.clonedFromId
+                        ? (resumes.find((v) => v.id === resume.clonedFromId)
                             ?.title ?? null)
                         : null
                     }
-                    isDeleting={deletingId === variant.id}
-                    onDelete={() => handleDelete(variant.id)}
-                    onClone={() => setCloneSource(variant)}
-                    onOpen={() => router.push(`/editor/${variant.id}`)}
+                    isDeleting={deletingId === resume.id}
+                    onDelete={() => handleDelete(resume.id)}
+                    onClone={() => setCloneSource(resume)}
+                    onOpen={() => router.push(`/editor/${resume.id}`)}
                   />
                 ))}
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                {filteredVariants.map((variant, index) => (
-                  <VariantCard
-                    key={variant.id}
-                    variant={variant}
+                {filteredResumes.map((resume, index) => (
+                  <ResumeCard
+                    key={resume.id}
+                    resume={resume}
                     index={index}
                     viewMode="list"
                     clonedFromTitle={
-                      variant.clonedFromId
-                        ? (variants.find((v) => v.id === variant.clonedFromId)
+                      resume.clonedFromId
+                        ? (resumes.find((v) => v.id === resume.clonedFromId)
                             ?.title ?? null)
                         : null
                     }
-                    isDeleting={deletingId === variant.id}
-                    onDelete={() => handleDelete(variant.id)}
-                    onClone={() => setCloneSource(variant)}
-                    onOpen={() => router.push(`/editor/${variant.id}`)}
+                    isDeleting={deletingId === resume.id}
+                    onDelete={() => handleDelete(resume.id)}
+                    onClone={() => setCloneSource(resume)}
+                    onOpen={() => router.push(`/editor/${resume.id}`)}
                   />
                 ))}
               </div>
@@ -707,7 +707,7 @@ export default function DashboardClient({
       {/* Clone modal */}
       {cloneSource && (
         <CloneModal
-          sourceVariant={cloneSource}
+          sourceResume={cloneSource}
           loading={cloning}
           onConfirm={handleCloneConfirm}
           onClose={() => {
@@ -727,7 +727,7 @@ export default function DashboardClient({
   async function handleNewResumeWithTemplate(templateId: string) {
     setCreating(true);
     try {
-      const res = await fetch('/api/variants', {
+      const res = await fetch('/api/resumes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -737,7 +737,7 @@ export default function DashboardClient({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Failed to create variant');
+      if (!res.ok) throw new Error(data.error ?? 'Failed to create resume');
       router.push(`/editor/${data.data.id}`);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to create resume');
@@ -749,10 +749,10 @@ export default function DashboardClient({
 const RESUME_NATURAL_WIDTH = 595;
 
 function ResumeThumbnail({
-  variant,
+  resume,
   templateInfo,
 }: {
-  variant: ResumeVariant;
+  resume: Resume;
   templateInfo: { name: string; color: string };
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -769,13 +769,13 @@ function ResumeThumbnail({
 
   const parsedResume = useMemo(() => {
     try {
-      return parseResume(variant.rawContent);
+      return parseResume(resume.rawContent);
     } catch {
       return null;
     }
-  }, [variant.rawContent]);
+  }, [resume.rawContent]);
 
-  const templateDef = getTemplate(variant.templateId);
+  const templateDef = getTemplate(resume.templateId);
   const TemplateComponent = templateDef?.component;
 
   const scale = containerWidth > 0 ? containerWidth / RESUME_NATURAL_WIDTH : 0;
@@ -785,7 +785,7 @@ function ResumeThumbnail({
       className="w-full h-full flex items-center justify-center text-3xl font-bold"
       style={{ color: templateInfo.color }}
     >
-      {variant.title.charAt(0).toUpperCase() || 'R'}
+      {resume.title.charAt(0).toUpperCase() || 'R'}
     </div>
   );
 
@@ -811,8 +811,8 @@ function ResumeThumbnail({
   );
 }
 
-function VariantCard({
-  variant,
+function ResumeCard({
+  resume,
   index,
   viewMode,
   clonedFromTitle,
@@ -821,7 +821,7 @@ function VariantCard({
   onClone,
   onOpen,
 }: {
-  variant: ResumeVariant;
+  resume: Resume;
   index: number;
   viewMode: 'grid' | 'list';
   clonedFromTitle?: string | null;
@@ -830,10 +830,10 @@ function VariantCard({
   onClone: () => void;
   onOpen: () => void;
 }) {
-  const updatedAt = new Date(variant.updatedAt);
+  const updatedAt = new Date(resume.updatedAt);
   const relativeDate = formatRelative(updatedAt);
-  const templateInfo = TEMPLATE_INFO[variant.templateId] || {
-    name: variant.templateId,
+  const templateInfo = TEMPLATE_INFO[resume.templateId] || {
+    name: resume.templateId,
     color: 'var(--color-template-minimal)',
   };
 
@@ -846,7 +846,7 @@ function VariantCard({
       >
         {/* Preview Thumbnail */}
         <div className="h-40 bg-white relative overflow-hidden">
-          <ResumeThumbnail variant={variant} templateInfo={templateInfo} />
+          <ResumeThumbnail resume={resume} templateInfo={templateInfo} />
           <div className="absolute top-2 right-2">
             <span
               className="text-[10px] font-medium px-2 py-0.5 rounded-full"
@@ -863,7 +863,7 @@ function VariantCard({
         {/* Content */}
         <div className="p-4">
           <p className="text-sm font-medium text-text truncate">
-            {variant.title}
+            {resume.title}
           </p>
           <p className="text-xs text-muted mt-1">Updated {relativeDate}</p>
 
@@ -878,7 +878,7 @@ function VariantCard({
           {/* Actions */}
           <div className="flex items-center gap-1 mt-3 pt-3 border-t border-border">
             <Link
-              href={`/editor/${variant.id}`}
+              href={`/editor/${resume.id}`}
               onClick={(e) => e.stopPropagation()}
               className="flex-1 flex items-center justify-center gap-1 p-1.5 text-xs text-muted hover:text-text hover:bg-surface-2 rounded-lg transition-colors"
               title="Edit"
@@ -938,13 +938,13 @@ function VariantCard({
           color: templateInfo.color,
         }}
       >
-        {variant.title.charAt(0).toUpperCase() || 'R'}
+        {resume.title.charAt(0).toUpperCase() || 'R'}
       </div>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <p className="text-sm font-medium text-text truncate">
-            {variant.title}
+            {resume.title}
           </p>
           <span
             className="text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0"
@@ -968,7 +968,7 @@ function VariantCard({
 
       <div className="flex items-center gap-1 flex-shrink-0">
         <Link
-          href={`/editor/${variant.id}`}
+          href={`/editor/${resume.id}`}
           onClick={(e) => e.stopPropagation()}
           className="p-2 text-muted hover:text-text hover:bg-surface-2 rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           title="Edit"

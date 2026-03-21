@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
-import { createVariant, getUserVariants } from '@/lib/variantService';
+import { createResume, getUserResumes } from '@/lib/resumeService';
 import { LIMITS } from '@/lib/limits';
 
-// GET /api/variants — list authenticated user's variants
+// GET /api/resumes — list authenticated user's resumes
 export async function GET() {
   const supabase = createSupabaseServerClient();
   const {
@@ -13,17 +13,17 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const variants = await getUserVariants(user.id);
-    return NextResponse.json({ data: variants });
+    const resumes = await getUserResumes(user.id);
+    return NextResponse.json({ data: resumes });
   } catch {
     return NextResponse.json(
-      { error: 'Failed to load variants' },
+      { error: 'Failed to load resumes' },
       { status: 500 }
     );
   }
 }
 
-// POST /api/variants — create a new variant
+// POST /api/resumes — create a new resume
 export async function POST(req: NextRequest) {
   const supabase = createSupabaseServerClient();
   const {
@@ -33,9 +33,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    // Check guest variant limit
+    // Check guest resume limit
     if (user.is_anonymous) {
-      const existing = await getUserVariants(user.id);
+      const existing = await getUserResumes(user.id);
       if (existing.length >= LIMITS.GUEST_VARIANTS) {
         return NextResponse.json(
           {
@@ -47,12 +47,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Check variant limit for authenticated users
+    // Check resume limit for authenticated users
     if (!user.is_anonymous) {
-      const existing = await getUserVariants(user.id);
+      const existing = await getUserResumes(user.id);
       if (existing.length >= LIMITS.MAX_VARIANTS) {
         return NextResponse.json(
-          { error: 'Variant limit reached', code: 'limit_reached' },
+          { error: 'Resume limit reached', code: 'limit_reached' },
           { status: 402 }
         );
       }
@@ -72,12 +72,12 @@ export async function POST(req: NextRequest) {
       templateId = 'minimal',
     } = body;
 
-    const variant = await createVariant(user.id, title, rawContent, templateId);
-    return NextResponse.json({ data: variant });
+    const resume = await createResume(user.id, title, rawContent, templateId);
+    return NextResponse.json({ data: resume });
   } catch (err) {
-    console.error('[POST /api/variants]', err);
+    console.error('[POST /api/resumes]', err);
     return NextResponse.json(
-      { error: 'Failed to create variant' },
+      { error: 'Failed to create resume' },
       { status: 500 }
     );
   }

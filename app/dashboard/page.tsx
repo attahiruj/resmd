@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
-import { getUserVariants, getUserProfile } from '@/lib/variantService';
+import { getUserResumes, getUserProfile } from '@/lib/resumeService';
 import DashboardClient from '@/components/dashboard/DashboardClient';
 
 export default async function DashboardPage() {
@@ -13,14 +13,14 @@ export default async function DashboardPage() {
     redirect('/auth');
   }
 
-  const [variants, profile] = await Promise.all([
-    getUserVariants(user.id),
+  const [resumes, profile] = await Promise.all([
+    getUserResumes(user.id),
     getUserProfile(user.id),
   ]);
 
   return (
     <DashboardClient
-      initialVariants={variants}
+      initialResumes={resumes}
       userEmail={profile?.email ?? user.email ?? ''}
     />
   );
