@@ -5,7 +5,6 @@ import dynamic from 'next/dynamic';
 import Toolbar from '@/components/editor/Toolbar';
 import PreviewPane from '@/components/preview/PreviewPane';
 import AIChat from '@/components/editor/AIChat';
-import SnapshotModal from '@/components/editor/SnapshotModal';
 import ErrorBoundary from '@/components/editor/ErrorBoundary';
 import GuestBanner from '@/components/editor/GuestBanner';
 import type { ResumeVariant } from '@/types/resume';
@@ -34,7 +33,6 @@ export default function EditorClient({
   const [templateId, setTemplateId] = useState(variant.templateId);
   const [variantTitle, setVariantTitle] = useState(variant.title);
 
-  const [showSnapshotModal, setShowSnapshotModal] = useState(false);
   const [splitPct, setSplitPct] = useState(DEFAULT_SPLIT);
   const [mobileTab, setMobileTab] = useState<MobileTab>('write');
   const [isSaving, setIsSaving] = useState(false);
@@ -310,20 +308,6 @@ export default function EditorClient({
             </div>
           </div>
         </div>
-
-        {/* Snapshot modal */}
-        {showSnapshotModal && (
-          <SnapshotModal
-            variantId={variant.id}
-            rawContent={rawContent}
-            templateId={templateId}
-            onClose={() => setShowSnapshotModal(false)}
-            onSaved={() => {
-              setLastSaved(new Date());
-              setShowSnapshotModal(false);
-            }}
-          />
-        )}
       </div>
     </ErrorBoundary>
   );

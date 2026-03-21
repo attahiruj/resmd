@@ -8,7 +8,6 @@ import type { User } from '@supabase/supabase-js';
 interface ProfileState {
   user: User | null;
   profile: UserProfile | null;
-  isPro: boolean;
   loading: boolean;
   error: Error | null;
 }
@@ -17,7 +16,6 @@ export function useProfile() {
   const [state, setState] = useState<ProfileState>({
     user: null,
     profile: null,
-    isPro: false,
     loading: true,
     error: null,
   });
@@ -39,7 +37,6 @@ export function useProfile() {
         setState({
           user: null,
           profile: null,
-          isPro: false,
           loading: false,
           error: null,
         });
@@ -57,17 +54,12 @@ export function useProfile() {
       const profile: UserProfile = {
         id: row.id,
         email: row.email,
-        isPro: row.is_pro,
-        stripeCustomerId: row.stripe_customer_id ?? null,
-        proExpiresAt: row.pro_expires_at ?? null,
-        aiUsageThisMonth: row.ai_usage_this_month,
         createdAt: row.created_at,
       };
 
       setState({
         user,
         profile,
-        isPro: row.is_pro,
         loading: false,
         error: null,
       });

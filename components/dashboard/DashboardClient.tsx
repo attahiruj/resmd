@@ -33,7 +33,6 @@ import Navbar from '@/components/ui/Navbar';
 
 interface DashboardClientProps {
   initialVariants: ResumeVariant[];
-  isPro: boolean;
   userEmail: string;
 }
 
@@ -263,7 +262,6 @@ Open to creative development opportunities and design engineering roles.`,
 
 export default function DashboardClient({
   initialVariants,
-  isPro,
   userEmail,
 }: DashboardClientProps) {
   const [variants, setVariants] = useState(initialVariants);
@@ -280,6 +278,7 @@ export default function DashboardClient({
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [isDark, setIsDark] = useState(true);
   const router = useRouter();
+  const atLimit = variants.length >= LIMITS.MAX_VARIANTS;
 
   useEffect(() => {
     const { themeId, mode } = getStoredThemePrefs();
@@ -299,8 +298,6 @@ export default function DashboardClient({
       setShowOnboarding(true);
     }
   }, []);
-
-  const atLimit = !isPro && variants.length >= LIMITS.FREE_VARIANTS;
 
   // Filter and sort variants
   const filteredVariants = useMemo(() => {
@@ -475,11 +472,6 @@ export default function DashboardClient({
             <span className="text-xs text-muted hidden sm:block">
               {userEmail}
             </span>
-            {isPro && (
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent-muted text-accent">
-                Pro
-              </span>
-            )}
             <Link
               href="/auth"
               className="text-xs text-muted hover:text-text transition-colors duration-150"
@@ -496,24 +488,14 @@ export default function DashboardClient({
           <div>
             <h1 className="text-xl font-semibold text-text">My Resumes</h1>
             <p className="text-sm text-muted mt-0.5">
-              {isPro
-                ? 'Unlimited variants'
-                : `${variants.length} / ${LIMITS.FREE_VARIANTS} free variants`}
+              {variants.length} / {LIMITS.MAX_VARIANTS} resumes
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            {atLimit && (
-              <Link
-                href="/pricing"
-                className="text-xs text-accent hover:underline"
-              >
-                Upgrade for unlimited
-              </Link>
-            )}
             <button
               onClick={handleNewResume}
-              disabled={atLimit || creating}
+              disabled={creating || atLimit}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-accent-hover text-accent-text text-sm rounded-lg transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               {creating ? (
@@ -534,17 +516,6 @@ export default function DashboardClient({
             </button>
           </div>
         </div>
-
-        {/* Free tier upgrade nudge */}
-        {atLimit && variants.length > 0 && (
-          <div className="mb-6 p-4 bg-accent-muted border border-accent/20 rounded-xl text-sm text-text">
-            <span className="font-medium">Free plan limit reached.</span>{' '}
-            <Link href="/pricing" className="text-accent hover:underline">
-              Upgrade to Pro
-            </Link>{' '}
-            for unlimited resume variants.
-          </div>
-        )}
 
         {variants.length === 0 ? (
           /* Enhanced Empty State */
@@ -575,10 +546,8 @@ export default function DashboardClient({
               {TEMPLATE_PREVIEWS.map((template) => (
                 <button
                   key={template.id}
-                  onClick={() => {
-                    if (!atLimit) handleNewResumeWithTemplate(template.id);
-                  }}
-                  disabled={atLimit}
+                  onClick={() => handleNewResumeWithTemplate(template.id)}
+                  disabled={creating || atLimit}
                   className="flex flex-col items-center p-4 bg-surface border border-border rounded-xl hover:border-accent hover:bg-surface-2 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed group"
                 >
                   <div

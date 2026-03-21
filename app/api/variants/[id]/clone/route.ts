@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
-import {
-  cloneVariant,
-  getUserVariants,
-  getUserProfile,
-} from '@/lib/variantService';
+import { cloneVariant, getUserVariants } from '@/lib/variantService';
 import { LIMITS } from '@/lib/limits';
 
 // POST /api/variants/[id]/clone — clone an existing variant into a new one
@@ -21,20 +17,12 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const profile = await getUserProfile(user.id);
-
-    // Check free tier variant limit
-    if (!profile?.isPro) {
-      const existing = await getUserVariants(user.id);
-      if (existing.length >= LIMITS.FREE_VARIANTS) {
-        return NextResponse.json(
-          {
-            error: 'Variant limit reached for free plan',
-            code: 'limit_reached',
-          },
-          { status: 402 }
-        );
-      }
+    const existing = await getUserVariants(user.id);
+    if (existing.length >= LIMITS.MAX_VARIANTS) {
+      return NextResponse.json(
+        { error: 'Variant limit reached', code: 'limit_reached' },
+        { status: 402 }
+      );
     }
 
     const body = await req.json();
