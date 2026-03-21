@@ -9,7 +9,12 @@ export async function GET(request: NextRequest) {
     const supabase = createSupabaseServerClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}/dashboard`);
+      const returnVariant = searchParams.get('returnVariant');
+      return NextResponse.redirect(
+        returnVariant
+          ? `${origin}/editor/${returnVariant}`
+          : `${origin}/dashboard`
+      );
     }
   }
 

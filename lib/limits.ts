@@ -3,4 +3,5 @@ export const LIMITS = {
   FREE_AI_PER_MONTH: 10,
   FREE_SNAPSHOTS: 5,
   PRO_PRICE_MONTHLY: 7,
+  GUEST_VARIANTS: 1,
 } as const;

@@ -33,6 +33,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
+    // Check guest variant limit
+    if (user.is_anonymous) {
+      const existing = await getUserVariants(user.id);
+      if (existing.length >= LIMITS.GUEST_VARIANTS) {
+        return NextResponse.json(
+          {
+            error: 'Sign up to create more resumes',
+            code: 'guest_limit_reached',
+          },
+          { status: 402 }
+        );
+      }
+    }
+
     // Check free tier variant limit
     const { data: profile } = await supabase
       .from('profiles')
@@ -53,6 +67,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Ensure a profile row exists (anonymous users may not have one if the trigger missed them)
+    if (user.is_anonymous) {
+      await supabase
+        .from('profiles')
+        .upsert({ id: user.id }, { onConflict: 'id', ignoreDuplicates: true });
+    }
+
     const body = await req.json();
     const {
       title = 'My Resume',
@@ -62,7 +83,8 @@ export async function POST(req: NextRequest) {
 
     const variant = await createVariant(user.id, title, rawContent, templateId);
     return NextResponse.json({ data: variant });
-  } catch {
+  } catch (err) {
+    console.error('[POST /api/variants]', err);
     return NextResponse.json(
       { error: 'Failed to create variant' },
       { status: 500 }

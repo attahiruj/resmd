@@ -13,6 +13,11 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (user.is_anonymous)
+    return NextResponse.json(
+      { error: 'AI features require an account', code: 'guest_no_ai' },
+      { status: 403 }
+    );
 
   // Rate limit: 10 requests per user per minute
   const { allowed, retryAfter } = checkRateLimit(user.id);

@@ -24,5 +24,7 @@ export default async function EditorPage({ params }: Props) {
     redirect('/dashboard');
   }
 
-  return <EditorClient variant={variant} />;
+  return (
+    <EditorClient variant={variant} isGuest={user.is_anonymous ?? false} />
+  );
 }
