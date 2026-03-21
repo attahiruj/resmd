@@ -450,7 +450,7 @@ function MainItemBlock({
         <PdfEntryBlock
           entry={item}
           styles={{
-            entry: styles.entry,
+            entry: { ...styles.entry, marginBottom: s.entrySpacing },
             entryHeader: styles.entryHeader,
             entryLeft: styles.entryLeft,
             entryRole: styles.entryRole,

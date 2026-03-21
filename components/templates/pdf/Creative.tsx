@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     marginBottom: 22,
   },
   name: {
-    fontSize: 28,
+    fontSize: 30,
     fontFamily: 'NotoSans',
     fontWeight: 700,
     color: TEAL,
@@ -284,7 +284,7 @@ function ItemBlock({
       return (
         <PdfBulletRow
           text={item.text}
-          bullet="-"
+          bullet="·"
           styles={{
             row: styles.bulletRow,
             dash: styles.bulletDash,
