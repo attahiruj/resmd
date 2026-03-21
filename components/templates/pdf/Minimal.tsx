@@ -9,18 +9,20 @@ import {
 } from '@react-pdf/renderer';
 import type {
   TemplateProps,
-  ResumeSection,
   SectionItem,
   KeyValueItem,
-  EntryItem,
+  RequiredResumeSettings,
 } from '@/types/resume';
 import { DEFAULT_SETTINGS } from '@/types/resume';
-import { renderInlinePdf } from '@/lib/renderInlinePdf';
 import '@/lib/pdfFonts';
-import { isUrl, extractLink } from '@/lib/inline';
-
-const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
-const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
+import { parseResumeHeader } from '@/lib/templateUtils';
+import {
+  PdfSectionBlock,
+  PdfEntryBlock,
+  PdfBulletRow,
+  PdfTextPara,
+  PdfKvRow,
+} from '@/components/templates/pdf/shared';
 
 const styles = StyleSheet.create({
   page: {
@@ -83,9 +85,7 @@ const styles = StyleSheet.create({
   },
   entryOrg: { fontSize: 10, fontFamily: 'NotoSans', color: '#444444' },
   entryMeta: { fontSize: 9, color: '#888888', marginLeft: 8 },
-  entryChildren: {
-    marginTop: 3,
-  },
+  entryChildren: { marginTop: 3 },
   // Bullet
   bulletRow: { flexDirection: 'row', marginBottom: 2.5 },
   bulletDash: {
@@ -132,48 +132,11 @@ const styles = StyleSheet.create({
   footerText: { fontSize: 8, color: '#BBBBBB' },
 });
 
-type RS = Required<typeof DEFAULT_SETTINGS>;
-
 export default function MinimalPdf({ resume }: TemplateProps) {
   const { sections, meta } = resume;
-  const s: RS = { ...DEFAULT_SETTINGS, ...resume.settings };
-
-  const headerSection =
-    sections.find(
-      (sec) => sec.hint === 'keyvalue' || sec.title.toLowerCase() === 'bio'
-    ) ??
-    sections[0] ??
-    null;
-
-  type ContactEntry = { key: string; href: string | null; rawValue: string };
-  const contactEntries: ContactEntry[] = [];
-  const aboutLines: string[] = [];
-
-  for (const item of headerSection?.items ?? []) {
-    if (item.kind === 'keyvalue') {
-      const keyLower = item.key.toLowerCase();
-      if (HEADER_META_KEYS.has(keyLower)) continue;
-      if (HEADER_ABOUT_KEYS.has(keyLower)) {
-        aboutLines.push(item.value);
-        continue;
-      }
-      contactEntries.push({
-        key: item.key,
-        href: isUrl(item.value) ? item.value : null,
-        rawValue: item.value,
-      });
-    } else if (item.kind === 'text') {
-      const link = extractLink(item.text);
-      if (link)
-        contactEntries.push({
-          key: link.text,
-          href: link.href,
-          rawValue: link.href,
-        });
-    }
-  }
-
-  const bodySections = sections.filter((sec) => sec !== headerSection);
+  const s: RequiredResumeSettings = { ...DEFAULT_SETTINGS, ...resume.settings };
+  const { contactEntries, aboutLines, bodySections } =
+    parseResumeHeader(sections);
 
   return (
     <Document>
@@ -223,150 +186,88 @@ export default function MinimalPdf({ resume }: TemplateProps) {
 
         {/* Body sections */}
         {bodySections.map((section) => (
-          <PdfSectionBlock key={section.id} section={section} s={s} />
+          <PdfSectionBlock
+            key={section.id}
+            section={section}
+            styles={{ section: styles.section }}
+            renderTitle={(title) => (
+              <Text style={styles.sectionTitle}>{title}</Text>
+            )}
+            renderItem={(item, isKv) => (
+              <ItemBlock item={item} isKv={isKv} s={s} />
+            )}
+          />
         ))}
       </Page>
     </Document>
   );
 }
 
-function PdfSectionBlock({ section, s }: { section: ResumeSection; s: RS }) {
-  if (section.items.length === 0) return null;
-  return (
-    <View style={styles.section}>
-      <View minPresenceAhead={30}>
-        <Text style={styles.sectionTitle}>{section.title}</Text>
-      </View>
-      {section.items.map((item, i) => (
-        <PdfItemBlock
-          key={i}
-          item={item}
-          isKeyValueSection={section.hint === 'keyvalue'}
-          s={s}
-        />
-      ))}
-    </View>
-  );
-}
-
-function PdfItemBlock({
+function ItemBlock({
   item,
-  isKeyValueSection,
+  isKv,
   s,
 }: {
   item: SectionItem;
-  isKeyValueSection: boolean;
-  s: RS;
+  isKv: boolean;
+  s: RequiredResumeSettings;
 }) {
   switch (item.kind) {
-    case 'keyvalue': {
-      if (isKeyValueSection) {
-        return (
-          <View style={styles.kvSkillsRow}>
-            <Text style={[styles.kvSkillsLabel, { fontSize: s.fontSize }]}>
-              {item.key}:
-            </Text>
-            <Text style={styles.kvSkillsValue}>{item.value}</Text>
-          </View>
-        );
-      }
+    case 'keyvalue':
       return (
-        <View style={styles.kvRow}>
-          {isUrl(item.value) ? (
-            <Link
-              src={item.value}
-              style={{ color: 'inherit', textDecoration: 'none' }}
-            >
-              <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>
-                *{item.key}
+        <PdfKvRow
+          item={item}
+          isKeyValueSection={isKv}
+          kvStyles={{
+            row: styles.kvRow,
+            key: styles.kvKey,
+            value: styles.kvValue,
+          }}
+          renderSkills={(kv: KeyValueItem) => (
+            <View style={styles.kvSkillsRow}>
+              <Text style={[styles.kvSkillsLabel, { fontSize: s.fontSize }]}>
+                {kv.key}:
               </Text>
-            </Link>
-          ) : (
-            <>
-              <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>
-                {item.key}:
-              </Text>
-              <Text style={[styles.kvValue, { fontSize: s.fontSize }]}>
-                {renderInlinePdf(item.value)}
-              </Text>
-            </>
+              <Text style={styles.kvSkillsValue}>{kv.value}</Text>
+            </View>
           )}
-        </View>
+          s={s}
+        />
       );
-    }
     case 'entry':
-      return <PdfEntryBlock entry={item} s={s} />;
+      return (
+        <PdfEntryBlock
+          entry={item}
+          styles={{
+            entry: styles.entry,
+            entryHeader: styles.entryHeader,
+            entryLeft: styles.entryLeft,
+            entryRole: styles.entryRole,
+            entryOrg: styles.entryOrg,
+            entryMeta: styles.entryMeta,
+            entryChildren: styles.entryChildren,
+          }}
+          orgSeparator=" · "
+          renderChildren={(child) => (
+            <ItemBlock item={child} isKv={false} s={s} />
+          )}
+          s={s}
+        />
+      );
     case 'bullet':
       return (
-        <View style={styles.bulletRow}>
-          <Text
-            style={[
-              styles.bulletDash,
-              { fontSize: s.fontSize, lineHeight: s.lineHeight },
-            ]}
-          >
-            –
-          </Text>
-          <Text
-            style={[
-              styles.bulletText,
-              { fontSize: s.fontSize, lineHeight: s.lineHeight },
-            ]}
-          >
-            {renderInlinePdf(item.text)}
-          </Text>
-        </View>
+        <PdfBulletRow
+          text={item.text}
+          bullet="–"
+          styles={{
+            row: styles.bulletRow,
+            dash: styles.bulletDash,
+            text: styles.bulletText,
+          }}
+          s={s}
+        />
       );
     case 'text':
-      return (
-        <Text style={[styles.textPara, { fontSize: s.fontSize }]}>
-          {renderInlinePdf(item.text)}
-        </Text>
-      );
+      return <PdfTextPara text={item.text} style={styles.textPara} s={s} />;
   }
-}
-
-function PdfEntryBlock({ entry, s }: { entry: EntryItem; s: RS }) {
-  return (
-    <View style={[styles.entry, { marginBottom: s.entrySpacing }]} wrap={false}>
-      <View style={styles.entryHeader}>
-        <View style={styles.entryLeft}>
-          {entry.role ? (
-            <Text>
-              <Text style={[styles.entryRole, { fontSize: s.fontSize }]}>
-                {renderInlinePdf(entry.role)}
-              </Text>
-              {entry.organization && (
-                <Text style={[styles.entryOrg, { fontSize: s.fontSize }]}>
-                  {' '}
-                  · {renderInlinePdf(entry.organization)}
-                </Text>
-              )}
-            </Text>
-          ) : (
-            <Text style={[styles.entryRole, { fontSize: s.fontSize }]}>
-              {renderInlinePdf(entry.heading)}
-            </Text>
-          )}
-        </View>
-        {entry.meta.length > 0 && (
-          <Text style={[styles.entryMeta, { fontSize: s.fontSize - 1 }]}>
-            {entry.meta.join(' · ')}
-          </Text>
-        )}
-      </View>
-      {entry.children.length > 0 && (
-        <View style={styles.entryChildren}>
-          {entry.children.map((child, i) => (
-            <PdfItemBlock
-              key={i}
-              item={child}
-              isKeyValueSection={false}
-              s={s}
-            />
-          ))}
-        </View>
-      )}
-    </View>
-  );
 }

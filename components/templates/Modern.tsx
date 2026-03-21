@@ -3,22 +3,32 @@
 import React from 'react';
 import type {
   TemplateProps,
-  ResumeSection,
   SectionItem,
   KeyValueItem,
-  EntryItem,
+  ResumeSection,
 } from '@/types/resume';
 import { DEFAULT_SETTINGS } from '@/types/resume';
 import { renderInline } from '@/lib/renderInline';
-import { isUrl, extractLink } from '@/lib/inline';
+import { isUrl } from '@/lib/inline';
+import {
+  HEADER_META_KEYS,
+  HEADER_ABOUT_KEYS,
+  ContactEntry,
+  splitTagValue,
+} from '@/lib/templateUtils';
+import {
+  WebEntryBlock,
+  WebBulletRow,
+  WebKvRow,
+} from '@/components/templates/shared';
 
 const FONT = "var(--font-noto-sans), 'Noto Sans', sans-serif";
-const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
-const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ModernStyles = Record<string, any>;
 
+// Modern uses a two-column layout — sidebar sections are routed differently
+// from main sections, so WebSectionBlock is not used here.
 function isSidebarSection(section: ResumeSection): boolean {
   const lower = section.title.toLowerCase();
   return (
@@ -164,9 +174,7 @@ export default function Modern({ resume, showHeader = true }: TemplateProps) {
       flexShrink: 0,
       marginLeft: 8,
     },
-    entryChildren: {
-      marginTop: 3,
-    },
+    entryChildren: { marginTop: 3 },
     bulletRow: {
       display: 'flex',
       flexDirection: 'row' as const,
@@ -221,13 +229,6 @@ export default function Modern({ resume, showHeader = true }: TemplateProps) {
       paddingBottom: 2,
       borderRadius: 3,
     },
-    footer: {
-      marginTop: 20,
-      borderTop: '1px solid #E8E8E8',
-      paddingTop: 6,
-      textAlign: 'center' as const,
-    },
-    footerText: { fontSize: 8, color: '#BBBBCC' },
     sidebarAbout: {
       fontSize: 8.5,
       color: '#B0B8CC',
@@ -236,6 +237,7 @@ export default function Modern({ resume, showHeader = true }: TemplateProps) {
     },
   };
 
+  // Modern has a custom header (sidebar) so we parse manually instead of using parseResumeHeader
   const headerSection = showHeader
     ? (sections.find(
         (sec) => sec.hint === 'keyvalue' || sec.title.toLowerCase() === 'bio'
@@ -244,7 +246,6 @@ export default function Modern({ resume, showHeader = true }: TemplateProps) {
       null)
     : null;
 
-  type ContactEntry = { key: string; href: string | null; rawValue: string };
   const contactEntries: ContactEntry[] = [];
   const aboutLines: string[] = [];
 
@@ -261,14 +262,6 @@ export default function Modern({ resume, showHeader = true }: TemplateProps) {
         href: isUrl(item.value) ? item.value : null,
         rawValue: item.value,
       });
-    } else if (item.kind === 'text') {
-      const link = extractLink(item.text);
-      if (link)
-        contactEntries.push({
-          key: link.text,
-          href: link.href,
-          rawValue: link.href,
-        });
     }
   }
 
@@ -336,12 +329,21 @@ export default function Modern({ resume, showHeader = true }: TemplateProps) {
       {/* Main */}
       <main style={S.main}>
         {mainSections.map((section, idx) => (
-          <MainSectionBlock
-            key={section.id}
-            section={section}
-            first={idx === 0}
-            S={S}
-          />
+          <section key={section.id} data-section={section.id}>
+            <h2
+              style={idx === 0 ? S.mainSectionTitleFirst : S.mainSectionTitle}
+            >
+              {section.title}
+            </h2>
+            {section.items.map((item, i) => (
+              <MainItemBlock
+                key={i}
+                item={item}
+                isKeyValueSection={section.hint === 'keyvalue'}
+                S={S}
+              />
+            ))}
+          </section>
         ))}
       </main>
     </article>
@@ -360,10 +362,7 @@ function SidebarItemBlock({
   switch (item.kind) {
     case 'keyvalue': {
       if (isKeyValueSection) {
-        const tags = item.value
-          .split(',')
-          .map((v) => v.trim())
-          .filter(Boolean);
+        const tags = splitTagValue(item.value);
         return (
           <div style={{ marginBottom: 5 }}>
             <p style={S.sidebarSkillLabel}>{item.key}</p>
@@ -419,33 +418,6 @@ function SidebarItemBlock({
   }
 }
 
-function MainSectionBlock({
-  section,
-  first,
-  S,
-}: {
-  section: ResumeSection;
-  first: boolean;
-  S: ModernStyles;
-}) {
-  if (section.items.length === 0) return null;
-  return (
-    <section data-section={section.id}>
-      <h2 style={first ? S.mainSectionTitleFirst : S.mainSectionTitle}>
-        {section.title}
-      </h2>
-      {section.items.map((item, i) => (
-        <MainItemBlock
-          key={i}
-          item={item}
-          isKeyValueSection={section.hint === 'keyvalue'}
-          S={S}
-        />
-      ))}
-    </section>
-  );
-}
-
 function MainItemBlock({
   item,
   isKeyValueSection,
@@ -456,93 +428,60 @@ function MainItemBlock({
   S: ModernStyles;
 }) {
   switch (item.kind) {
-    case 'keyvalue': {
-      if (isKeyValueSection) {
-        const tags = item.value
-          .split(',')
-          .map((v) => v.trim())
-          .filter(Boolean);
-        return (
-          <div style={S.kvSkillsRow}>
-            <span style={S.kvSkillsLabel}>{item.key}:</span>
-            <div style={S.kvSkillsTags}>
-              {tags.map((tag) => (
-                <span key={tag} style={S.tag}>
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-        );
-      }
+    case 'keyvalue':
       return (
-        <div style={S.kvRow}>
-          {isUrl(item.value) ? (
-            <a
-              href={item.value}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: 'inherit', textDecoration: 'none' }}
-            >
-              <span style={S.kvKey}>*{item.key}</span>
-            </a>
-          ) : (
-            <>
-              <span style={S.kvKey}>{item.key}:</span>
-              <span style={S.kvValue}>{renderInline(item.value)}</span>
-            </>
-          )}
-        </div>
+        <WebKvRow
+          item={item}
+          isKeyValueSection={isKeyValueSection}
+          kvStyles={{ row: S.kvRow, key: S.kvKey, value: S.kvValue }}
+          renderSkills={(kv: KeyValueItem) => {
+            const tags = splitTagValue(kv.value);
+            return (
+              <div style={S.kvSkillsRow}>
+                <span style={S.kvSkillsLabel}>{kv.key}:</span>
+                <div style={S.kvSkillsTags}>
+                  {tags.map((tag) => (
+                    <span key={tag} style={S.tag}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          }}
+        />
       );
-    }
     case 'entry':
-      return <MainEntryBlock entry={item} S={S} />;
+      return (
+        <WebEntryBlock
+          entry={item}
+          styles={{
+            entry: S.entry,
+            entryHeader: S.entryHeader,
+            entryRole: S.entryRole,
+            entryOrg: S.entryOrg,
+            entryMeta: S.entryMeta,
+            entryChildren: S.entryChildren,
+          }}
+          orgSeparator=", "
+          renderChildren={(child) => (
+            <MainItemBlock item={child} isKeyValueSection={false} S={S} />
+          )}
+        />
+      );
     case 'bullet':
       return (
-        <div style={S.bulletRow}>
-          <span style={S.bulletDash}>–</span>
-          <span style={S.bulletText}>{renderInline(item.text)}</span>
-        </div>
+        <WebBulletRow
+          text={item.text}
+          bullet="–"
+          styles={{
+            row: S.bulletRow,
+            dash: S.bulletDash,
+            text: S.bulletText,
+          }}
+        />
       );
     case 'text':
       return <p style={S.textPara}>{renderInline(item.text)}</p>;
   }
-}
-
-function MainEntryBlock({ entry, S }: { entry: EntryItem; S: ModernStyles }) {
-  return (
-    <div data-block="avoid" style={S.entry}>
-      <div style={S.entryHeader}>
-        <div>
-          {entry.role ? (
-            <span>
-              <span style={S.entryRole}>{renderInline(entry.role)}</span>
-              {entry.organization && (
-                <span style={S.entryOrg}>
-                  , {renderInline(entry.organization)}
-                </span>
-              )}
-            </span>
-          ) : (
-            <span style={S.entryRole}>{renderInline(entry.heading)}</span>
-          )}
-        </div>
-        {entry.meta.length > 0 && (
-          <span style={S.entryMeta}>{entry.meta.join(' · ')}</span>
-        )}
-      </div>
-      {entry.children.length > 0 && (
-        <div style={S.entryChildren}>
-          {entry.children.map((child, i) => (
-            <MainItemBlock
-              key={i}
-              item={child}
-              isKeyValueSection={false}
-              S={S}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
 }

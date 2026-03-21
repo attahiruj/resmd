@@ -9,20 +9,29 @@ import {
 } from '@react-pdf/renderer';
 import type {
   TemplateProps,
-  ResumeSection,
   SectionItem,
-  EntryItem,
+  KeyValueItem,
+  ResumeSection,
+  RequiredResumeSettings,
 } from '@/types/resume';
 import { DEFAULT_SETTINGS } from '@/types/resume';
 import { renderInlinePdf } from '@/lib/renderInlinePdf';
 import '@/lib/pdfFonts';
 import { isUrl, extractLink } from '@/lib/inline';
+import {
+  HEADER_META_KEYS,
+  HEADER_ABOUT_KEYS,
+  splitTagValue,
+} from '@/lib/templateUtils';
+import {
+  PdfEntryBlock,
+  PdfBulletRow,
+  PdfTextPara,
+  PdfKvRow,
+} from '@/components/templates/pdf/shared';
 
-type RS = Required<typeof DEFAULT_SETTINGS>;
-
-const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
-const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
-
+// Modern uses a two-column layout — sidebar sections are routed differently
+// from main sections, so PdfSectionBlock is not used here.
 function isSidebarSection(section: ResumeSection): boolean {
   const lower = section.title.toLowerCase();
   return (
@@ -118,6 +127,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
+  entryLeft: { flex: 1 },
   entryRole: {
     fontSize: 10.5,
     fontFamily: 'NotoSans',
@@ -126,9 +136,7 @@ const styles = StyleSheet.create({
   },
   entryOrg: { fontSize: 10.5, fontFamily: 'NotoSans', color: '#444466' },
   entryMeta: { fontSize: 8.5, color: '#888899' },
-  entryChildren: {
-    marginTop: 3,
-  },
+  entryChildren: { marginTop: 3 },
   bulletRow: { flexDirection: 'row', marginBottom: 2.5 },
   bulletDash: { fontSize: 10, color: '#AAAACC', marginRight: 5 },
   bulletText: { fontSize: 10, color: '#333344', flex: 1 },
@@ -160,14 +168,6 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 3,
   },
-  footer: {
-    marginTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#E8E8E8',
-    paddingTop: 6,
-    textAlign: 'center',
-  },
-  footerText: { fontSize: 8, color: '#BBBBCC' },
   sidebarAbout: {
     fontSize: 8.5,
     color: '#B0B8CC',
@@ -178,8 +178,9 @@ const styles = StyleSheet.create({
 
 export default function ModernPdf({ resume }: TemplateProps) {
   const { sections, meta } = resume;
-  const s: RS = { ...DEFAULT_SETTINGS, ...resume.settings };
+  const s: RequiredResumeSettings = { ...DEFAULT_SETTINGS, ...resume.settings };
 
+  // Modern has a custom header (sidebar) so we parse manually instead of using parseResumeHeader
   const headerSection =
     sections.find(
       (sec) => sec.hint === 'keyvalue' || sec.title.toLowerCase() === 'bio'
@@ -233,9 +234,7 @@ export default function ModernPdf({ resume }: TemplateProps) {
           },
         ]}
       >
-        {/* Sidebar background — fixed so it covers every page top-to-bottom.
-            position:absolute is relative to the Page content box, so top:-marginV reaches the page top edge.
-            Rendered first so it sits behind the flex content. */}
+        {/* Sidebar background — fixed so it covers every page top-to-bottom */}
         <View
           fixed
           style={{
@@ -299,14 +298,7 @@ export default function ModernPdf({ resume }: TemplateProps) {
         </View>
 
         {/* Main */}
-        <View
-          style={[
-            styles.main,
-            {
-              paddingRight: s.marginH,
-            },
-          ]}
-        >
+        <View style={[styles.main, { paddingRight: s.marginH }]}>
           {mainSections.map((section, idx) => (
             <View key={section.id}>
               <View minPresenceAhead={30}>
@@ -335,6 +327,7 @@ export default function ModernPdf({ resume }: TemplateProps) {
   );
 }
 
+// Sidebar rendering is fully custom (dark theme, compact layout)
 function SidebarItemBlock({
   item,
   isKeyValueSection,
@@ -345,10 +338,7 @@ function SidebarItemBlock({
   switch (item.kind) {
     case 'keyvalue': {
       if (isKeyValueSection) {
-        const tags = item.value
-          .split(',')
-          .map((v) => v.trim())
-          .filter(Boolean);
+        const tags = splitTagValue(item.value);
         return (
           <View style={{ marginBottom: 5 }}>
             <Text style={styles.sidebarSkillLabel}>{item.key}</Text>
@@ -422,114 +412,75 @@ function MainItemBlock({
 }: {
   item: SectionItem;
   isKeyValueSection: boolean;
-  s: RS;
+  s: RequiredResumeSettings;
 }) {
   switch (item.kind) {
-    case 'keyvalue': {
-      if (isKeyValueSection) {
-        const tags = item.value
-          .split(',')
-          .map((v) => v.trim())
-          .filter(Boolean);
-        return (
-          <View style={styles.kvSkillsRow}>
-            <Text style={[styles.kvSkillsLabel, { fontSize: s.fontSize }]}>
-              {item.key}:
-            </Text>
-            <View style={styles.kvSkillsTags}>
-              {tags.map((tag) => (
-                <View key={tag} style={styles.tag}>
-                  <Text>{tag}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        );
-      }
+    case 'keyvalue':
       return (
-        <View style={styles.kvRow}>
-          {isUrl(item.value) ? (
-            <Link
-              src={item.value}
-              style={{ color: 'inherit', textDecoration: 'none' }}
-            >
-              <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>
-                *{item.key}
-              </Text>
-            </Link>
-          ) : (
-            <>
-              <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>
-                {item.key}:
-              </Text>
-              <Text style={[styles.kvValue, { fontSize: s.fontSize }]}>
-                {renderInlinePdf(item.value)}
-              </Text>
-            </>
-          )}
-        </View>
+        <PdfKvRow
+          item={item}
+          isKeyValueSection={isKeyValueSection}
+          kvStyles={{
+            row: styles.kvRow,
+            key: styles.kvKey,
+            value: styles.kvValue,
+          }}
+          renderSkills={(kv: KeyValueItem) => {
+            const tags = splitTagValue(kv.value);
+            return (
+              <View style={styles.kvSkillsRow}>
+                <Text style={[styles.kvSkillsLabel, { fontSize: s.fontSize }]}>
+                  {kv.key}:
+                </Text>
+                <View style={styles.kvSkillsTags}>
+                  {tags.map((tag) => (
+                    <View key={tag} style={styles.tag}>
+                      <Text>{tag}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            );
+          }}
+          s={s}
+        />
       );
-    }
     case 'entry':
-      return <MainEntryBlock entry={item} s={s} />;
+      return (
+        <PdfEntryBlock
+          entry={item}
+          styles={{
+            entry: styles.entry,
+            entryHeader: styles.entryHeader,
+            entryLeft: styles.entryLeft,
+            entryRole: styles.entryRole,
+            entryOrg: styles.entryOrg,
+            entryMeta: styles.entryMeta,
+            entryChildren: styles.entryChildren,
+          }}
+          orgSeparator=", "
+          roleFontSizeDelta={0.5}
+          metaFontSizeDelta={-1.5}
+          renderChildren={(child) => (
+            <MainItemBlock item={child} isKeyValueSection={false} s={s} />
+          )}
+          s={s}
+        />
+      );
     case 'bullet':
       return (
-        <View style={styles.bulletRow}>
-          <Text style={[styles.bulletDash, { fontSize: s.fontSize }]}>–</Text>
-          <Text style={[styles.bulletText, { fontSize: s.fontSize }]}>
-            {renderInlinePdf(item.text)}
-          </Text>
-        </View>
+        <PdfBulletRow
+          text={item.text}
+          bullet="–"
+          styles={{
+            row: styles.bulletRow,
+            dash: styles.bulletDash,
+            text: styles.bulletText,
+          }}
+          s={s}
+        />
       );
     case 'text':
-      return (
-        <Text style={[styles.textPara, { fontSize: s.fontSize }]}>
-          {renderInlinePdf(item.text)}
-        </Text>
-      );
+      return <PdfTextPara text={item.text} style={styles.textPara} s={s} />;
   }
-}
-
-function MainEntryBlock({ entry, s }: { entry: EntryItem; s: RS }) {
-  return (
-    <View style={[styles.entry, { marginBottom: s.entrySpacing }]} wrap={false}>
-      <View style={styles.entryHeader}>
-        <View style={{ flex: 1 }}>
-          {entry.role ? (
-            <Text>
-              <Text style={[styles.entryRole, { fontSize: s.fontSize + 0.5 }]}>
-                {renderInlinePdf(entry.role)}
-              </Text>
-              {entry.organization && (
-                <Text style={[styles.entryOrg, { fontSize: s.fontSize + 0.5 }]}>
-                  , {renderInlinePdf(entry.organization)}
-                </Text>
-              )}
-            </Text>
-          ) : (
-            <Text style={[styles.entryRole, { fontSize: s.fontSize + 0.5 }]}>
-              {renderInlinePdf(entry.heading)}
-            </Text>
-          )}
-        </View>
-        {entry.meta.length > 0 && (
-          <Text style={[styles.entryMeta, { fontSize: s.fontSize - 1.5 }]}>
-            {entry.meta.join(' · ')}
-          </Text>
-        )}
-      </View>
-      {entry.children.length > 0 && (
-        <View style={styles.entryChildren}>
-          {entry.children.map((child, i) => (
-            <MainItemBlock
-              key={i}
-              item={child}
-              isKeyValueSection={false}
-              s={s}
-            />
-          ))}
-        </View>
-      )}
-    </View>
-  );
 }

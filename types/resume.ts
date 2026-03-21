@@ -16,6 +16,9 @@ export const DEFAULT_SETTINGS: Required<ResumeSettings> = {
   entrySpacing: 8,
 };
 
+/** Resolved settings with all fields guaranteed */
+export type RequiredResumeSettings = Required<ResumeSettings>;
+
 export interface ParsedResume {
   sections: ResumeSection[];
   meta: ResumeMeta;
