@@ -7,7 +7,6 @@ const templates: TemplateDefinition[] = [
     name: 'Minimal',
     description: 'Clean and simple design focused on content',
     category: 'minimal',
-    isPro: false,
     thumbnail: '',
     component: React.lazy(
       () => import('@/components/templates/Minimal')
@@ -21,7 +20,6 @@ const templates: TemplateDefinition[] = [
     name: 'Modern',
     description: 'Two-column layout with professional styling',
     category: 'professional',
-    isPro: false,
     thumbnail: '',
     component: React.lazy(
       () => import('@/components/templates/Modern')
@@ -35,7 +33,6 @@ const templates: TemplateDefinition[] = [
     name: 'Technical',
     description: 'Designed specifically for technical roles',
     category: 'technical',
-    isPro: false,
     thumbnail: '',
     component: React.lazy(
       () => import('@/components/templates/Technical')
@@ -47,29 +44,27 @@ const templates: TemplateDefinition[] = [
   {
     id: 'executive',
     name: 'Executive',
-    description: 'Premium design for senior positions',
+    description: 'Elegant design for senior positions',
     category: 'professional',
-    isPro: true,
     thumbnail: '',
     component: React.lazy(
       () => import('@/components/templates/Executive')
     ) as React.ComponentType<TemplateProps>,
     pdfComponent: React.lazy(
-      () => import('@/components/templates/pdf/Minimal')
+      () => import('@/components/templates/pdf/Executive')
     ) as React.ComponentType<TemplateProps>,
   },
   {
     id: 'creative',
     name: 'Creative',
-    description: 'Artistic design for creative professionals',
+    description: 'Vibrant design for creative professionals',
     category: 'creative',
-    isPro: true,
     thumbnail: '',
     component: React.lazy(
       () => import('@/components/templates/Creative')
     ) as React.ComponentType<TemplateProps>,
     pdfComponent: React.lazy(
-      () => import('@/components/templates/pdf/Minimal')
+      () => import('@/components/templates/pdf/Creative')
     ) as React.ComponentType<TemplateProps>,
   },
 ];
@@ -82,10 +77,6 @@ export function getTemplate(id: string): TemplateDefinition | null {
   return templates.find((t) => t.id === id) ?? null;
 }
 
-export function getFreeTemplates(): TemplateDefinition[] {
-  return templates;
-}
-
 // Server-safe: dynamic import (no React.lazy) for use in API routes / renderToBuffer
 export async function getPdfComponent(
   templateId: string
@@ -95,6 +86,10 @@ export async function getPdfComponent(
       return (await import('@/components/templates/pdf/Modern')).default;
     case 'technical':
       return (await import('@/components/templates/pdf/Technical')).default;
+    case 'executive':
+      return (await import('@/components/templates/pdf/Executive')).default;
+    case 'creative':
+      return (await import('@/components/templates/pdf/Creative')).default;
     case 'minimal':
     default:
       return (await import('@/components/templates/pdf/Minimal')).default;

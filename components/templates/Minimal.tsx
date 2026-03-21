@@ -16,11 +16,7 @@ const FONT = "var(--font-noto-sans), 'Noto Sans', sans-serif";
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
 const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
-export default function Minimal({
-  resume,
-  isPro,
-  showHeader = true,
-}: TemplateProps) {
+export default function Minimal({ resume, showHeader = true }: TemplateProps) {
   const { sections, meta } = resume;
   const s = { ...DEFAULT_SETTINGS, ...resume.settings };
 
@@ -234,12 +230,6 @@ export default function Minimal({
       {bodySections.map((section) => (
         <SectionBlock key={section.id} section={section} S={S} />
       ))}
-
-      {!isPro && (
-        <footer style={S.footer}>
-          <span style={S.footerText}>Created with resmd · resmd.app</span>
-        </footer>
-      )}
     </article>
   );
 }

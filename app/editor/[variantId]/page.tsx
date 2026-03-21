@@ -24,11 +24,5 @@ export default async function EditorPage({ params }: Props) {
     redirect('/dashboard');
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_pro')
-    .eq('id', user.id)
-    .single();
-
-  return <EditorClient variant={variant} isPro={profile?.is_pro ?? false} />;
+  return <EditorClient variant={variant} />;
 }

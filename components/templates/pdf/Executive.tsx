@@ -11,7 +11,6 @@ import type {
   TemplateProps,
   ResumeSection,
   SectionItem,
-  KeyValueItem,
   EntryItem,
 } from '@/types/resume';
 import { DEFAULT_SETTINGS } from '@/types/resume';
@@ -22,52 +21,87 @@ import { isUrl, extractLink } from '@/lib/inline';
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
 const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
+type RS = Required<typeof DEFAULT_SETTINGS>;
+
 const styles = StyleSheet.create({
   page: {
     fontFamily: 'NotoSans',
     fontSize: 10,
-    color: '#1C1B18',
-    paddingTop: 40,
-    paddingBottom: 40,
+    color: '#1C1C1C',
+  },
+  headerBox: {
+    backgroundColor: '#1B2438',
     paddingLeft: 50,
     paddingRight: 50,
-    lineHeight: 1.5,
+    paddingTop: 40,
+    paddingBottom: 32,
   },
-  // Header
-  header: { marginBottom: 20 },
   name: {
-    fontSize: 24,
+    fontSize: 26,
     fontFamily: 'NotoSans',
     fontWeight: 700,
-    color: '#1A1A1A',
+    color: '#FFFFFF',
     lineHeight: 1.1,
-    marginBottom: 12,
+    marginBottom: 4,
   },
-  jobTitle: { fontSize: 11, color: '#666666', marginBottom: 10 },
-  contactRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  contactItem: { fontSize: 9, color: '#555555' },
-  contactSep: { fontSize: 9, color: '#CCCCCC', marginHorizontal: 4 },
+  jobTitle: {
+    fontSize: 11,
+    color: '#A8B4CC',
+    marginBottom: 14,
+  },
+  goldLine: {
+    height: 1,
+    backgroundColor: '#B8973C',
+    marginBottom: 10,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  contactItem: { fontSize: 8.5, color: '#9AAABF' },
+  contactSep: {
+    fontSize: 8.5,
+    color: '#B8973C',
+    marginHorizontal: 4,
+  },
   headerAbout: {
     fontSize: 10,
-    color: '#444444',
+    color: '#A8B4CC',
     lineHeight: 1.6,
-    marginTop: 8,
+    marginTop: 12,
   },
-  // Section
-  section: { marginBottom: 14 },
+  body: {
+    paddingLeft: 50,
+    paddingRight: 50,
+    paddingTop: 32,
+    paddingBottom: 40,
+  },
+  section: { marginBottom: 16 },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 3,
+  },
+  sectionAccent: {
+    width: 3,
+    height: 12,
+    backgroundColor: '#B8973C',
+    marginRight: 8,
+  },
   sectionTitle: {
     fontSize: 7.5,
     fontFamily: 'NotoSans',
     fontWeight: 700,
     textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    color: '#888888',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-    paddingBottom: 3,
-    marginBottom: 7,
+    letterSpacing: 1.5,
+    color: '#1B2438',
   },
-  // Entry
+  sectionDivider: {
+    height: 1,
+    backgroundColor: '#E8E4D8',
+    marginBottom: 8,
+  },
   entry: { marginBottom: 8 },
   entryHeader: {
     flexDirection: 'row',
@@ -79,62 +113,49 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: 'NotoSans',
     fontWeight: 700,
-    color: '#1A1A1A',
+    color: '#1B2438',
   },
-  entryOrg: { fontSize: 10, fontFamily: 'NotoSans', color: '#444444' },
-  entryMeta: { fontSize: 9, color: '#888888', marginLeft: 8 },
-  entryChildren: {
-    marginTop: 3,
+  entryOrg: {
+    fontSize: 10,
+    fontFamily: 'NotoSans',
+    color: '#5A6070',
+    fontStyle: 'italic',
   },
-  // Bullet
+  entryMeta: { fontSize: 9, color: '#8890A8', marginLeft: 8 },
+  entryChildren: { marginTop: 4 },
   bulletRow: { flexDirection: 'row', marginBottom: 2.5 },
   bulletDash: {
     fontSize: 10,
-    color: '#AAAAAA',
-    marginRight: 5,
+    color: '#B8973C',
+    marginRight: 6,
     lineHeight: 1.5,
   },
   bulletText: { fontSize: 10, color: '#333333', flex: 1, lineHeight: 1.5 },
-  // Text
   textPara: {
     fontSize: 10,
     color: '#444444',
     marginBottom: 4,
     lineHeight: 1.6,
   },
-  // KeyValue inline
   kvRow: { flexDirection: 'row', marginBottom: 3, gap: 6 },
-  kvKey: { fontSize: 9, color: '#888888', width: 60 },
+  kvKey: { fontSize: 9, color: '#888888', width: 64 },
   kvValue: { fontSize: 10, color: '#333333', flex: 1 },
-  // KeyValue skills (plain)
   kvSkillsRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 4,
   },
   kvSkillsLabel: {
-    fontSize: 8,
-    color: '#888888',
-    marginRight: 6,
+    fontSize: 9,
+    fontFamily: 'NotoSans',
+    fontWeight: 700,
+    color: '#5A6070',
+    marginRight: 8,
   },
-  kvSkillsValue: {
-    fontSize: 10,
-    color: '#333333',
-  },
-  // Watermark footer
-  footer: {
-    marginTop: 24,
-    borderTopWidth: 1,
-    borderTopColor: '#E8E8E8',
-    paddingTop: 6,
-    textAlign: 'center',
-  },
-  footerText: { fontSize: 8, color: '#BBBBBB' },
+  kvSkillsValue: { fontSize: 10, color: '#333333', flex: 1 },
 });
 
-type RS = Required<typeof DEFAULT_SETTINGS>;
-
-export default function MinimalPdf({ resume }: TemplateProps) {
+export default function ExecutivePdf({ resume }: TemplateProps) {
   const { sections, meta } = resume;
   const s: RS = { ...DEFAULT_SETTINGS, ...resume.settings };
 
@@ -181,38 +202,43 @@ export default function MinimalPdf({ resume }: TemplateProps) {
         size="A4"
         style={[
           styles.page,
-          {
-            fontSize: s.fontSize,
-            lineHeight: s.lineHeight,
-            paddingTop: s.marginV,
-            paddingBottom: s.marginV,
-            paddingLeft: s.marginH,
-            paddingRight: s.marginH,
-          },
+          { fontSize: s.fontSize, lineHeight: s.lineHeight },
         ]}
       >
-        {/* Header */}
-        <View style={styles.header}>
+        {/* Dark header */}
+        <View
+          style={[
+            styles.headerBox,
+            {
+              paddingTop: s.marginV,
+              paddingLeft: s.marginH,
+              paddingRight: s.marginH,
+            },
+          ]}
+        >
           {meta.name && <Text style={styles.name}>{meta.name}</Text>}
           {meta.title && <Text style={styles.jobTitle}>{meta.title}</Text>}
           {contactEntries.length > 0 && (
-            <View style={styles.contactRow}>
-              {contactEntries.map((entry, i) => (
-                <React.Fragment key={entry.key}>
-                  {i > 0 && <Text style={styles.contactSep}>·</Text>}
-                  {entry.href ? (
-                    <Link
-                      src={entry.href}
-                      style={{ color: 'inherit', textDecoration: 'none' }}
-                    >
-                      <Text style={styles.contactItem}>*{entry.key}</Text>
-                    </Link>
-                  ) : (
-                    <Text style={styles.contactItem}>{entry.rawValue}</Text>
-                  )}
-                </React.Fragment>
-              ))}
-            </View>
+            <>
+              <View style={styles.goldLine} />
+              <View style={styles.contactRow}>
+                {contactEntries.map((entry, i) => (
+                  <React.Fragment key={entry.key}>
+                    {i > 0 && <Text style={styles.contactSep}>·</Text>}
+                    {entry.href ? (
+                      <Link
+                        src={entry.href}
+                        style={{ color: 'inherit', textDecoration: 'none' }}
+                      >
+                        <Text style={styles.contactItem}>{entry.key}</Text>
+                      </Link>
+                    ) : (
+                      <Text style={styles.contactItem}>{entry.rawValue}</Text>
+                    )}
+                  </React.Fragment>
+                ))}
+              </View>
+            </>
           )}
           {aboutLines.map((line, i) => (
             <Text key={i} style={styles.headerAbout}>
@@ -221,10 +247,22 @@ export default function MinimalPdf({ resume }: TemplateProps) {
           ))}
         </View>
 
-        {/* Body sections */}
-        {bodySections.map((section) => (
-          <PdfSectionBlock key={section.id} section={section} s={s} />
-        ))}
+        {/* Body */}
+        <View
+          style={[
+            styles.body,
+            {
+              paddingTop: s.marginV * 0.85,
+              paddingBottom: s.marginV,
+              paddingLeft: s.marginH,
+              paddingRight: s.marginH,
+            },
+          ]}
+        >
+          {bodySections.map((section) => (
+            <PdfSectionBlock key={section.id} section={section} s={s} />
+          ))}
+        </View>
       </Page>
     </Document>
   );
@@ -235,7 +273,11 @@ function PdfSectionBlock({ section, s }: { section: ResumeSection; s: RS }) {
   return (
     <View style={styles.section}>
       <View minPresenceAhead={30}>
-        <Text style={styles.sectionTitle}>{section.title}</Text>
+        <View style={styles.sectionTitleRow}>
+          <View style={styles.sectionAccent} />
+          <Text style={styles.sectionTitle}>{section.title}</Text>
+        </View>
+        <View style={styles.sectionDivider} />
       </View>
       {section.items.map((item, i) => (
         <PdfItemBlock
@@ -263,10 +305,12 @@ function PdfItemBlock({
       if (isKeyValueSection) {
         return (
           <View style={styles.kvSkillsRow}>
-            <Text style={[styles.kvSkillsLabel, { fontSize: s.fontSize }]}>
+            <Text style={[styles.kvSkillsLabel, { fontSize: s.fontSize - 1 }]}>
               {item.key}:
             </Text>
-            <Text style={styles.kvSkillsValue}>{item.value}</Text>
+            <Text style={[styles.kvSkillsValue, { fontSize: s.fontSize }]}>
+              {item.value}
+            </Text>
           </View>
         );
       }
@@ -299,13 +343,8 @@ function PdfItemBlock({
     case 'bullet':
       return (
         <View style={styles.bulletRow}>
-          <Text
-            style={[
-              styles.bulletDash,
-              { fontSize: s.fontSize, lineHeight: s.lineHeight },
-            ]}
-          >
-            –
+          <Text style={[styles.bulletDash, { fontSize: s.fontSize }]}>
+            {'>'}
           </Text>
           <Text
             style={[
@@ -339,7 +378,7 @@ function PdfEntryBlock({ entry, s }: { entry: EntryItem; s: RS }) {
               {entry.organization && (
                 <Text style={[styles.entryOrg, { fontSize: s.fontSize }]}>
                   {' '}
-                  · {renderInlinePdf(entry.organization)}
+                  – {renderInlinePdf(entry.organization)}
                 </Text>
               )}
             </Text>

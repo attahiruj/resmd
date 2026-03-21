@@ -11,7 +11,6 @@ import type {
   TemplateProps,
   ResumeSection,
   SectionItem,
-  KeyValueItem,
   EntryItem,
 } from '@/types/resume';
 import { DEFAULT_SETTINGS } from '@/types/resume';
@@ -22,52 +21,89 @@ import { isUrl, extractLink } from '@/lib/inline';
 const HEADER_META_KEYS = new Set(['name', 'title', 'role', 'position']);
 const HEADER_ABOUT_KEYS = new Set(['about', 'summary', 'objective', 'profile']);
 
+const TEAL = '#0E7C7B';
+const TEAL_LIGHT = '#E0F4F4';
+const TEAL_MID = '#3BAAA9';
+
+type RS = Required<typeof DEFAULT_SETTINGS>;
+
 const styles = StyleSheet.create({
   page: {
     fontFamily: 'NotoSans',
     fontSize: 10,
-    color: '#1C1B18',
+    color: '#222222',
     paddingTop: 40,
     paddingBottom: 40,
     paddingLeft: 50,
     paddingRight: 50,
     lineHeight: 1.5,
   },
-  // Header
-  header: { marginBottom: 20 },
+  headerAccentBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 4,
+    bottom: 0,
+    backgroundColor: TEAL,
+  },
+  headerInner: {
+    paddingLeft: 12,
+    marginBottom: 22,
+  },
   name: {
-    fontSize: 24,
+    fontSize: 28,
     fontFamily: 'NotoSans',
     fontWeight: 700,
-    color: '#1A1A1A',
+    color: TEAL,
     lineHeight: 1.1,
-    marginBottom: 12,
+    marginBottom: 3,
   },
-  jobTitle: { fontSize: 11, color: '#666666', marginBottom: 10 },
-  contactRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  contactItem: { fontSize: 9, color: '#555555' },
-  contactSep: { fontSize: 9, color: '#CCCCCC', marginHorizontal: 4 },
+  jobTitle: {
+    fontSize: 11.5,
+    color: '#555555',
+    marginBottom: 8,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5,
+    marginTop: 6,
+  },
+  contactChip: {
+    fontSize: 8.5,
+    color: TEAL,
+    backgroundColor: TEAL_LIGHT,
+    paddingLeft: 7,
+    paddingRight: 7,
+    paddingTop: 2,
+    paddingBottom: 2,
+    borderRadius: 10,
+  },
   headerAbout: {
     fontSize: 10,
-    color: '#444444',
+    color: '#555555',
     lineHeight: 1.6,
     marginTop: 8,
   },
-  // Section
-  section: { marginBottom: 14 },
+  section: { marginBottom: 16 },
+  sectionTitleWrap: {
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+  },
   sectionTitle: {
     fontSize: 7.5,
     fontFamily: 'NotoSans',
     fontWeight: 700,
     textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    color: '#888888',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    letterSpacing: 1.5,
+    color: '#FFFFFF',
+    backgroundColor: TEAL,
+    paddingLeft: 10,
+    paddingRight: 10,
+    paddingTop: 3,
     paddingBottom: 3,
-    marginBottom: 7,
+    borderRadius: 3,
   },
-  // Entry
   entry: { marginBottom: 8 },
   entryHeader: {
     flexDirection: 'row',
@@ -81,60 +117,42 @@ const styles = StyleSheet.create({
     fontWeight: 700,
     color: '#1A1A1A',
   },
-  entryOrg: { fontSize: 10, fontFamily: 'NotoSans', color: '#444444' },
+  entryOrg: { fontSize: 10, color: TEAL_MID },
   entryMeta: { fontSize: 9, color: '#888888', marginLeft: 8 },
-  entryChildren: {
-    marginTop: 3,
-  },
-  // Bullet
-  bulletRow: { flexDirection: 'row', marginBottom: 2.5 },
-  bulletDash: {
-    fontSize: 10,
-    color: '#AAAAAA',
-    marginRight: 5,
-    lineHeight: 1.5,
-  },
+  entryChildren: { marginTop: 4 },
+  bulletRow: { flexDirection: 'row', marginBottom: 3 },
+  bulletDash: { fontSize: 10, color: TEAL, marginRight: 6, lineHeight: 1.5 },
   bulletText: { fontSize: 10, color: '#333333', flex: 1, lineHeight: 1.5 },
-  // Text
   textPara: {
     fontSize: 10,
     color: '#444444',
     marginBottom: 4,
     lineHeight: 1.6,
   },
-  // KeyValue inline
-  kvRow: { flexDirection: 'row', marginBottom: 3, gap: 6 },
-  kvKey: { fontSize: 9, color: '#888888', width: 60 },
-  kvValue: { fontSize: 10, color: '#333333', flex: 1 },
-  // KeyValue skills (plain)
   kvSkillsRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 4,
+    marginBottom: 5,
+    gap: 6,
   },
-  kvSkillsLabel: {
+  kvSkillsLabel: { fontSize: 10, color: '#666666', minWidth: 60 },
+  tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, flex: 1 },
+  tag: {
     fontSize: 8,
-    color: '#888888',
-    marginRight: 6,
+    color: TEAL,
+    backgroundColor: TEAL_LIGHT,
+    paddingLeft: 6,
+    paddingRight: 6,
+    paddingTop: 2,
+    paddingBottom: 2,
+    borderRadius: 10,
   },
-  kvSkillsValue: {
-    fontSize: 10,
-    color: '#333333',
-  },
-  // Watermark footer
-  footer: {
-    marginTop: 24,
-    borderTopWidth: 1,
-    borderTopColor: '#E8E8E8',
-    paddingTop: 6,
-    textAlign: 'center',
-  },
-  footerText: { fontSize: 8, color: '#BBBBBB' },
+  kvRow: { flexDirection: 'row', marginBottom: 3, gap: 6 },
+  kvKey: { fontSize: 9, color: '#888888', width: 64 },
+  kvValue: { fontSize: 10, color: '#333333', flex: 1 },
 });
 
-type RS = Required<typeof DEFAULT_SETTINGS>;
-
-export default function MinimalPdf({ resume }: TemplateProps) {
+export default function CreativePdf({ resume }: TemplateProps) {
   const { sections, meta } = resume;
   const s: RS = { ...DEFAULT_SETTINGS, ...resume.settings };
 
@@ -191,27 +209,30 @@ export default function MinimalPdf({ resume }: TemplateProps) {
           },
         ]}
       >
+        {/* Teal left accent bar */}
+        <View style={styles.headerAccentBar} fixed />
+
         {/* Header */}
-        <View style={styles.header}>
+        <View style={styles.headerInner}>
           {meta.name && <Text style={styles.name}>{meta.name}</Text>}
           {meta.title && <Text style={styles.jobTitle}>{meta.title}</Text>}
           {contactEntries.length > 0 && (
             <View style={styles.contactRow}>
-              {contactEntries.map((entry, i) => (
-                <React.Fragment key={entry.key}>
-                  {i > 0 && <Text style={styles.contactSep}>·</Text>}
-                  {entry.href ? (
-                    <Link
-                      src={entry.href}
-                      style={{ color: 'inherit', textDecoration: 'none' }}
-                    >
-                      <Text style={styles.contactItem}>*{entry.key}</Text>
-                    </Link>
-                  ) : (
-                    <Text style={styles.contactItem}>{entry.rawValue}</Text>
-                  )}
-                </React.Fragment>
-              ))}
+              {contactEntries.map((entry) =>
+                entry.href ? (
+                  <Link
+                    key={entry.key}
+                    src={entry.href}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <Text style={styles.contactChip}>{entry.key}</Text>
+                  </Link>
+                ) : (
+                  <Text key={entry.key} style={styles.contactChip}>
+                    {entry.rawValue}
+                  </Text>
+                )
+              )}
             </View>
           )}
           {aboutLines.map((line, i) => (
@@ -235,7 +256,9 @@ function PdfSectionBlock({ section, s }: { section: ResumeSection; s: RS }) {
   return (
     <View style={styles.section}>
       <View minPresenceAhead={30}>
-        <Text style={styles.sectionTitle}>{section.title}</Text>
+        <View style={styles.sectionTitleWrap}>
+          <Text style={styles.sectionTitle}>{section.title}</Text>
+        </View>
       </View>
       {section.items.map((item, i) => (
         <PdfItemBlock
@@ -261,12 +284,22 @@ function PdfItemBlock({
   switch (item.kind) {
     case 'keyvalue': {
       if (isKeyValueSection) {
+        const tags = item.value
+          .split(',')
+          .map((v) => v.trim())
+          .filter(Boolean);
         return (
           <View style={styles.kvSkillsRow}>
             <Text style={[styles.kvSkillsLabel, { fontSize: s.fontSize }]}>
               {item.key}:
             </Text>
-            <Text style={styles.kvSkillsValue}>{item.value}</Text>
+            <View style={styles.tagsRow}>
+              {tags.map((tag) => (
+                <Text key={tag} style={styles.tag}>
+                  {tag}
+                </Text>
+              ))}
+            </View>
           </View>
         );
       }
@@ -278,7 +311,7 @@ function PdfItemBlock({
               style={{ color: 'inherit', textDecoration: 'none' }}
             >
               <Text style={[styles.kvKey, { fontSize: s.fontSize - 1 }]}>
-                *{item.key}
+                {item.key}
               </Text>
             </Link>
           ) : (
@@ -299,14 +332,7 @@ function PdfItemBlock({
     case 'bullet':
       return (
         <View style={styles.bulletRow}>
-          <Text
-            style={[
-              styles.bulletDash,
-              { fontSize: s.fontSize, lineHeight: s.lineHeight },
-            ]}
-          >
-            –
-          </Text>
+          <Text style={[styles.bulletDash, { fontSize: s.fontSize }]}>-</Text>
           <Text
             style={[
               styles.bulletText,

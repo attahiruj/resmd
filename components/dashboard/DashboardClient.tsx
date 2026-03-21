@@ -696,7 +696,6 @@ export default function DashboardClient({
                     variant={variant}
                     index={index}
                     viewMode="grid"
-                    isPro={isPro}
                     clonedFromTitle={
                       variant.clonedFromId
                         ? (variants.find((v) => v.id === variant.clonedFromId)
@@ -718,7 +717,6 @@ export default function DashboardClient({
                     variant={variant}
                     index={index}
                     viewMode="list"
-                    isPro={isPro}
                     clonedFromTitle={
                       variant.clonedFromId
                         ? (variants.find((v) => v.id === variant.clonedFromId)
@@ -783,11 +781,9 @@ const RESUME_NATURAL_WIDTH = 595;
 
 function ResumeThumbnail({
   variant,
-  isPro,
   templateInfo,
 }: {
   variant: ResumeVariant;
-  isPro: boolean;
   templateInfo: { name: string; color: string };
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -836,7 +832,7 @@ function ResumeThumbnail({
               pointerEvents: 'none',
             }}
           >
-            <TemplateComponent resume={parsedResume} isPro={isPro} />
+            <TemplateComponent resume={parsedResume} />
           </div>
         </Suspense>
       ) : (
@@ -852,7 +848,6 @@ function VariantCard({
   viewMode,
   clonedFromTitle,
   isDeleting,
-  isPro,
   onDelete,
   onClone,
   onOpen,
@@ -862,7 +857,6 @@ function VariantCard({
   viewMode: 'grid' | 'list';
   clonedFromTitle?: string | null;
   isDeleting: boolean;
-  isPro: boolean;
   onDelete: () => void;
   onClone: () => void;
   onOpen: () => void;
@@ -883,11 +877,7 @@ function VariantCard({
       >
         {/* Preview Thumbnail */}
         <div className="h-40 bg-white relative overflow-hidden">
-          <ResumeThumbnail
-            variant={variant}
-            isPro={isPro}
-            templateInfo={templateInfo}
-          />
+          <ResumeThumbnail variant={variant} templateInfo={templateInfo} />
           <div className="absolute top-2 right-2">
             <span
               className="text-[10px] font-medium px-2 py-0.5 rounded-full"

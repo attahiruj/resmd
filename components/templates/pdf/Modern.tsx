@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function ModernPdf({ resume, isPro }: TemplateProps) {
+export default function ModernPdf({ resume }: TemplateProps) {
   const { sections, meta } = resume;
   const s: RS = { ...DEFAULT_SETTINGS, ...resume.settings };
 
@@ -324,14 +324,6 @@ export default function ModernPdf({ resume, isPro }: TemplateProps) {
               ))}
             </View>
           ))}
-
-          {!isPro && (
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>
-                Created with resmd · resmd.app
-              </Text>
-            </View>
-          )}
         </View>
       </Page>
     </Document>

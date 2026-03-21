@@ -73,7 +73,7 @@ export default async function PublicResumePage({ params }: Props) {
               </div>
             }
           >
-            <TemplateComponent resume={parsed} isPro={true} />
+            <TemplateComponent resume={parsed} />
           </Suspense>
         </div>
       </main>

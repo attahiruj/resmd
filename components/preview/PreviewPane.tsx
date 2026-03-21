@@ -16,7 +16,6 @@ interface PreviewPaneProps {
   templateId: string;
   onTemplateChange: (id: string) => void;
   onContentChange?: (value: string) => void;
-  isPro?: boolean;
   onTextDoubleClick?: (word: string, context: string) => void;
 }
 
@@ -35,7 +34,6 @@ export default function PreviewPane({
   templateId,
   onTemplateChange,
   onContentChange,
-  isPro = false,
   onTextDoubleClick,
 }: PreviewPaneProps) {
   const [showPicker, setShowPicker] = useState(false);
@@ -95,7 +93,6 @@ export default function PreviewPane({
         <LivePreview
           rawContent={rawContent}
           templateId={templateId}
-          isPro={isPro}
           onTextDoubleClick={onTextDoubleClick}
         />
       </div>
@@ -138,24 +135,18 @@ export default function PreviewPane({
           >
             {templates.map((tpl) => {
               const isActive = tpl.id === templateId;
-              const isLocked = tpl.isPro && !isPro;
               return (
                 <button
                   key={tpl.id}
-                  disabled={isLocked}
                   onClick={() => {
-                    if (!isLocked) {
-                      onTemplateChange(tpl.id);
-                      setShowPicker(false);
-                    }
+                    onTemplateChange(tpl.id);
+                    setShowPicker(false);
                   }}
-                  title={isLocked ? 'Upgrade to Pro' : tpl.name}
+                  title={tpl.name}
                   className={`flex-none flex flex-col items-start px-3 py-2 rounded-lg border transition-colors duration-150 min-w-[96px] ${
                     isActive
                       ? 'border-accent bg-accent-muted'
-                      : isLocked
-                        ? 'border-border opacity-40 cursor-not-allowed'
-                        : 'border-border hover:bg-surface-2 cursor-pointer'
+                      : 'border-border hover:bg-surface-2 cursor-pointer'
                   }`}
                 >
                   <span
@@ -163,16 +154,9 @@ export default function PreviewPane({
                   >
                     {tpl.name}
                   </span>
-                  {tpl.isPro && (
-                    <span className="mt-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-warning/10 text-warning">
-                      Pro
-                    </span>
-                  )}
-                  {!tpl.isPro && (
-                    <span className="mt-0.5 text-[10px] text-faint">
-                      {tpl.category}
-                    </span>
-                  )}
+                  <span className="mt-0.5 text-[10px] text-faint">
+                    {tpl.category}
+                  </span>
                 </button>
               );
             })}

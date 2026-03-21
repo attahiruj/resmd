@@ -22,10 +22,9 @@ type MobileTab = 'write' | 'preview';
 
 interface EditorClientProps {
   variant: ResumeVariant;
-  isPro: boolean;
 }
 
-export default function EditorClient({ variant, isPro }: EditorClientProps) {
+export default function EditorClient({ variant }: EditorClientProps) {
   const [rawContent, setRawContent] = useState(variant.rawContent);
   const [templateId, setTemplateId] = useState(variant.templateId);
   const [variantTitle, setVariantTitle] = useState(variant.title);
@@ -191,7 +190,6 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
           variantTitle={variantTitle}
           onTitleChange={handleTitleChange}
           variantId={variant.id}
-          isPro={isPro}
           rawContent={rawContent}
         />
 
@@ -246,7 +244,6 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
               templateId={templateId}
               onTemplateChange={handleTemplateChange}
               onContentChange={handleContentChange}
-              isPro={isPro}
               onTextDoubleClick={handlePreviewDoubleClick}
             />
           )}
@@ -300,7 +297,6 @@ export default function EditorClient({ variant, isPro }: EditorClientProps) {
                 templateId={templateId}
                 onTemplateChange={handleTemplateChange}
                 onContentChange={handleContentChange}
-                isPro={isPro}
                 onTextDoubleClick={handlePreviewDoubleClick}
               />
             </div>

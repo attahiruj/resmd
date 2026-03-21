@@ -15,7 +15,6 @@ const PAGE_PADDING = 32;
 interface LivePreviewProps {
   rawContent: string;
   templateId: string;
-  isPro: boolean;
   onTextDoubleClick?: (word: string, context: string) => void;
 }
 
@@ -75,7 +74,6 @@ function buildPageSlices(
 export default function LivePreview({
   rawContent,
   templateId,
-  isPro,
   onTextDoubleClick,
 }: LivePreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -216,7 +214,7 @@ export default function LivePreview({
           }}
         >
           <Suspense fallback={null}>
-            <TemplateComponent resume={parsedResume} isPro={isPro} showHeader />
+            <TemplateComponent resume={parsedResume} showHeader />
           </Suspense>
         </div>
       </div>
@@ -271,7 +269,6 @@ export default function LivePreview({
                   <Suspense fallback={null}>
                     <TemplateComponent
                       resume={pageResume}
-                      isPro={isPro}
                       showHeader={page.showHeader}
                     />
                   </Suspense>

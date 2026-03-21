@@ -20,7 +20,6 @@ interface ToolbarProps {
   variantTitle?: string;
   onTitleChange?: (title: string) => void;
   variantId?: string;
-  isPro?: boolean;
   rawContent?: string;
 }
 
@@ -30,7 +29,6 @@ export default function Toolbar({
   variantTitle,
   onTitleChange,
   variantId,
-  isPro,
   rawContent,
 }: ToolbarProps) {
   const [isDark, setIsDark] = useState(true);
@@ -182,9 +180,7 @@ export default function Toolbar({
                   ? 'Sign in to export'
                   : isExporting
                     ? 'Generating…'
-                    : isPro
-                      ? 'Export PDF'
-                      : 'Export PDF (watermarked)'
+                    : 'Export PDF'
               }
               className={`text-sm px-3 py-1.5 rounded-lg border border-border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                 !variantId || isExporting
