@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   SquaresFourIcon,
-  CaretDownIcon,
   SlidersHorizontalIcon,
+  CaretDownIcon,
 } from '@phosphor-icons/react';
 import LivePreview from './LivePreview';
 import SettingsPanel from './SettingsPanel';
+import TemplateGallery from './TemplateGallery';
 import { getAllTemplates } from '@/lib/templates';
 import { parseResume } from '@/lib/parser';
 
@@ -36,33 +37,14 @@ export default function PreviewPane({
   onContentChange,
   onTextDoubleClick,
 }: PreviewPaneProps) {
-  const [showPicker, setShowPicker] = useState(false);
+  const [showGallery, setShowGallery] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const pickerRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
   const settingsPanelRef = useRef<HTMLDivElement>(null);
   const settingsTriggerRef = useRef<HTMLButtonElement>(null);
   const templates = getAllTemplates();
   const current = templates.find((t) => t.id === templateId);
 
   const parsedResume = useMemo(() => parseResume(rawContent), [rawContent]);
-
-  // Close picker on outside click
-  useEffect(() => {
-    if (!showPicker) return;
-    const handler = (e: MouseEvent) => {
-      if (
-        pickerRef.current &&
-        !pickerRef.current.contains(e.target as Node) &&
-        triggerRef.current &&
-        !triggerRef.current.contains(e.target as Node)
-      ) {
-        setShowPicker(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showPicker]);
 
   // Close settings panel on outside click
   useEffect(() => {
@@ -87,96 +69,72 @@ export default function PreviewPane({
   }
 
   return (
-    <div className="relative h-full flex flex-col bg-surface-2">
-      {/* Resume preview scroll area */}
-      <div className="flex-1 overflow-hidden">
-        <LivePreview
-          rawContent={rawContent}
-          templateId={templateId}
-          onTextDoubleClick={onTextDoubleClick}
-        />
-      </div>
-
-      {/* Settings trigger — top-right corner */}
-      <div className="absolute top-3 right-3 z-50">
-        {showSettings && (
-          <div
-            ref={settingsPanelRef}
-            className="absolute top-full right-0 mt-2"
-          >
-            <SettingsPanel
-              settings={parsedResume.settings}
-              onSettingChange={handleSettingChange}
-            />
-          </div>
-        )}
+    <div className="flex flex-col h-full bg-surface-2">
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-2.5 h-[37px] flex-shrink-0 border-b border-border bg-surface z-10">
+        {/* Left: template selector chip */}
         <button
-          ref={settingsTriggerRef}
-          onClick={() => setShowSettings((v) => !v)}
-          title="Layout settings"
-          className={`flex items-center justify-center w-7 h-7 rounded-lg border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-            showSettings
-              ? 'bg-accent-muted border-accent text-accent'
-              : 'bg-surface border-border text-muted hover:text-text hover:bg-surface-2'
-          }`}
+          onClick={() => setShowGallery(true)}
+          className="flex items-center gap-1.5 pl-2 pr-2.5 py-1 rounded-md border border-border bg-surface-2 hover:border-accent/60 hover:bg-surface-3 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent group"
         >
-          <SlidersHorizontalIcon size={13} />
-        </button>
-      </div>
-
-      {/* Template picker trigger — floating pill at bottom center */}
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-        {/* Picker card — appears above the trigger */}
-        {showPicker && (
-          <div
-            ref={pickerRef}
-            className="bg-surface border border-border rounded-xl shadow-xl p-2.5 flex gap-2 overflow-x-auto max-w-[480px]"
-            style={{ scrollbarWidth: 'none' }}
-          >
-            {templates.map((tpl) => {
-              const isActive = tpl.id === templateId;
-              return (
-                <button
-                  key={tpl.id}
-                  onClick={() => {
-                    onTemplateChange(tpl.id);
-                    setShowPicker(false);
-                  }}
-                  title={tpl.name}
-                  className={`flex-none flex flex-col items-start px-3 py-2 rounded-lg border transition-colors duration-150 min-w-[96px] ${
-                    isActive
-                      ? 'border-accent bg-accent-muted'
-                      : 'border-border hover:bg-surface-2 cursor-pointer'
-                  }`}
-                >
-                  <span
-                    className={`text-sm font-medium ${isActive ? 'text-accent' : 'text-text'}`}
-                  >
-                    {tpl.name}
-                  </span>
-                  <span className="mt-0.5 text-[10px] text-faint">
-                    {tpl.category}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Trigger pill */}
-        <button
-          ref={triggerRef}
-          onClick={() => setShowPicker((v) => !v)}
-          className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface border border-border shadow-lg text-sm text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          <SquaresFourIcon size={13} className="text-muted" />
-          <span>{current?.name ?? templateId}</span>
+          <SquaresFourIcon
+            size={12}
+            className="text-muted flex-shrink-0 group-hover:text-accent transition-colors duration-150"
+          />
+          <span className="text-xs font-medium text-text truncate max-w-[140px]">
+            {current?.name ?? templateId}
+          </span>
           <CaretDownIcon
-            size={11}
+            size={10}
             weight="bold"
-            className={`text-muted transition-transform duration-150 ${showPicker ? 'rotate-180' : ''}`}
+            className="text-muted flex-shrink-0 group-hover:text-accent transition-colors duration-150"
           />
         </button>
+
+        {/* Right: settings button */}
+        <div className="relative flex-shrink-0">
+          {showSettings && (
+            <div
+              ref={settingsPanelRef}
+              className="absolute top-full right-0 mt-2 z-50"
+            >
+              <SettingsPanel
+                settings={parsedResume.settings}
+                onSettingChange={handleSettingChange}
+              />
+            </div>
+          )}
+          <button
+            ref={settingsTriggerRef}
+            onClick={() => setShowSettings((v) => !v)}
+            title="Layout settings"
+            className={`flex items-center justify-center w-7 h-7 rounded-lg border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+              showSettings
+                ? 'bg-accent-muted border-accent text-accent'
+                : 'bg-surface border-border text-muted hover:text-text hover:bg-surface-2'
+            }`}
+          >
+            <SlidersHorizontalIcon size={13} />
+          </button>
+        </div>
+      </div>
+
+      {/* Content: gallery or live preview */}
+      <div className="flex-1 overflow-hidden">
+        {showGallery ? (
+          <TemplateGallery
+            resume={parsedResume}
+            templateId={templateId}
+            onSelect={onTemplateChange}
+            onClose={() => setShowGallery(false)}
+          />
+        ) : (
+          <LivePreview
+            rawContent={rawContent}
+            templateId={templateId}
+            onTextDoubleClick={onTextDoubleClick}
+          />
+        )}
       </div>
     </div>
   );
