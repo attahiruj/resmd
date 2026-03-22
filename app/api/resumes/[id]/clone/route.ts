@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { cloneResume, getUserResumes } from '@/lib/resumeService';
 import { LIMITS } from '@/lib/limits';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 // POST /api/resumes/[id]/clone — clone an existing resume
 export async function POST(
@@ -15,6 +16,15 @@ export async function POST(
   } = await supabase.auth.getUser();
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // Rate limit: 30 requests per user per minute
+  const { allowed, retryAfter } = checkRateLimit(user.id);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+    );
+  }
 
   try {
     const existing = await getUserResumes(user.id);

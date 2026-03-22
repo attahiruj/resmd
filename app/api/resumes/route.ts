@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { createResume, getUserResumes } from '@/lib/resumeService';
 import { LIMITS } from '@/lib/limits';
 import { getAllTemplates } from '@/lib/templates';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 // GET /api/resumes — list authenticated user's resumes
 export async function GET() {
@@ -32,6 +33,15 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // Rate limit: 30 requests per user per minute (stricter for mutations)
+  const { allowed, retryAfter } = checkRateLimit(user.id);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+    );
+  }
 
   try {
     // Check guest resume limit
