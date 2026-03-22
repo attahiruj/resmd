@@ -156,20 +156,6 @@ export default function PrivacyPage() {
 
           <div className="mb-8">
             <h2 className="text-lg font-semibold text-text mb-3">
-              Data Security
-            </h2>
-            <p className="text-sm text-muted">
-              We use industry-standard security measures to protect your data.
-              Your resume content is stored securely with row-level security,
-              ensuring only you can access your resumes. We also implement
-              encryption in transit and at rest. While no method of transmission
-              over the internet is 100% secure, we continuously monitor and
-              improve our security practices.
-            </p>
-          </div>
-
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold text-text mb-3">
               Data Breaches
             </h2>
             <p className="text-sm text-muted">

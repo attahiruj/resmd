@@ -29,10 +29,6 @@ export async function POST(req: NextRequest) {
   }
 
   const apiKey = process.env.OPENROUTER_API_KEY;
-  console.log('[AI] key check:', {
-    len: apiKey?.length,
-    prefix: apiKey?.slice(0, 8),
-  });
   if (!apiKey) {
     return NextResponse.json(
       { error: 'AI service not configured' },
@@ -68,13 +64,6 @@ export async function POST(req: NextRequest) {
       { role: 'user', content: message },
     ];
 
-    console.log('[AI] →', {
-      model: AI_MODEL,
-      historyLength: (history ?? []).length,
-      resumeContentLength: resumeContent.length,
-      userMessage: message,
-    });
-
     const response = await fetch(OPENROUTER_API_URL, {
       method: 'POST',
       headers: {
@@ -99,13 +88,6 @@ export async function POST(req: NextRequest) {
 
     const data = await response.json();
     const reply: string = data.choices?.[0]?.message?.content ?? '';
-
-    console.log('[AI] ←', {
-      status: response.status,
-      model: data.model,
-      usage: data.usage,
-      reply,
-    });
 
     return NextResponse.json({ reply });
   } catch (err) {

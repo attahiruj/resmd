@@ -521,15 +521,11 @@ GitHub: github.com/alexrivera`}</Code>
                   <td className="py-2">Compact, good for tech roles</td>
                 </tr>
                 <tr className="border-b border-border/50">
-                  <td className="py-2 pr-6">
-                    Executive <span className="text-xs text-accent">Pro</span>
-                  </td>
+                  <td className="py-2 pr-6">Executive</td>
                   <td className="py-2">Senior / leadership positions</td>
                 </tr>
                 <tr>
-                  <td className="py-2 pr-6">
-                    Creative <span className="text-xs text-accent">Pro</span>
-                  </td>
+                  <td className="py-2 pr-6">Creative</td>
                   <td className="py-2">Design and creative roles</td>
                 </tr>
               </tbody>
@@ -559,10 +555,9 @@ GitHub: github.com/alexrivera`}</Code>
           <section id="publishing" className="scroll-mt-8">
             <H2>Publishing</H2>
             <p className="text-muted text-sm mb-3">
-              You can publish any variant to get a public URL at{' '}
-              <C>resmd.app/r/your-slug</C>. Use the overflow menu in the editor
-              to publish or unpublish. The URL goes live immediately;
-              unpublishing deactivates it without affecting your data.
+              Public resume sharing is coming soon. You&apos;ll be able to
+              publish any variant to get a shareable URL at{' '}
+              <C>resmd.app/r/your-slug</C>.
             </p>
           </section>
 
