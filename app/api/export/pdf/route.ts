@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { getResume } from '@/lib/resumeService';
 import { parseResume } from '@/lib/parser';
 import { getTemplate, getPdfComponent } from '@/lib/templates';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,6 +15,15 @@ export async function POST(req: NextRequest) {
     } = await supabase.auth.getUser();
     if (!user)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // Rate limit: 10 requests per user per minute (PDF generation is expensive)
+    const { allowed, retryAfter } = checkRateLimit(user.id);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded' },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+      );
+    }
 
     const body = await req.json();
     const { resumeId } = body as { resumeId: string };

@@ -6,6 +6,7 @@ import {
   deleteResume,
 } from '@/lib/resumeService';
 import { getAllTemplates } from '@/lib/templates';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -44,6 +45,15 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   } = await supabase.auth.getUser();
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // Rate limit: 60 requests per user per minute (autosave can be frequent)
+  const { allowed, retryAfter } = checkRateLimit(user.id);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+    );
+  }
 
   try {
     const resume = await getResume(id);
@@ -101,6 +111,15 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   } = await supabase.auth.getUser();
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // Rate limit: 30 requests per user per minute
+  const { allowed, retryAfter } = checkRateLimit(user.id);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+    );
+  }
 
   try {
     const resume = await getResume(id);
