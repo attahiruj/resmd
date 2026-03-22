@@ -327,9 +327,13 @@ export default function Modern({ resume, showHeader = true }: TemplateProps) {
       </aside>
 
       {/* Main */}
-      <main style={S.main}>
+      <main style={S.main} data-main-col>
         {mainSections.map((section, idx) => (
-          <section key={section.id} data-section={section.id}>
+          <section
+            key={section.id}
+            data-section={section.id}
+            data-main-section={section.id}
+          >
             <h2
               style={idx === 0 ? S.mainSectionTitleFirst : S.mainSectionTitle}
             >

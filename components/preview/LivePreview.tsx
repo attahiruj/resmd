@@ -71,6 +71,61 @@ function buildPageSlices(
   return pages;
 }
 
+/**
+ * Two-column layout pagination (e.g. Modern template).
+ * Sidebar sections repeat on every page; only main sections are paginated.
+ */
+function buildTwoColumnPageSlices(
+  allSections: ResumeSection[],
+  headerSection: ResumeSection | null,
+  sidebarSectionIds: Set<string>,
+  mainSectionHeights: Map<string, number>,
+  usableHeight: number
+): PageSlice[] {
+  const sidebarSections = allSections.filter(
+    (s) => s !== headerSection && sidebarSectionIds.has(s.id)
+  );
+  const mainSections = allSections.filter(
+    (s) => s !== headerSection && !sidebarSectionIds.has(s.id)
+  );
+
+  const pages: PageSlice[] = [];
+  let currentMain: ResumeSection[] = [];
+  let isFirst = true;
+  let used = 0;
+
+  const flush = () => {
+    if (isFirst) {
+      const base = headerSection ? [headerSection] : [];
+      pages.push({
+        showHeader: true,
+        sections: [...base, ...sidebarSections, ...currentMain],
+      });
+    } else {
+      // Subsequent pages: main content only, no sidebar repeat
+      pages.push({
+        showHeader: false,
+        sections: [...currentMain],
+      });
+    }
+    isFirst = false;
+    currentMain = [];
+    used = 0;
+  };
+
+  for (const section of mainSections) {
+    const h = mainSectionHeights.get(section.id) ?? 0;
+    if (used + h > usableHeight && currentMain.length > 0) {
+      flush();
+    }
+    currentMain.push(section);
+    used += h;
+  }
+  flush();
+
+  return pages;
+}
+
 export default function LivePreview({
   rawContent,
   templateId,
@@ -123,13 +178,61 @@ export default function LivePreview({
       const headerSection =
         parsedResume.sections.find((s) => !bodySectionIds.has(s.id)) ?? null;
 
-      const slices = buildPageSlices(
-        parsedResume.sections,
-        headerSection,
-        headerHeight,
-        sectionHeights,
-        usableHeight
-      );
+      // Detect two-column layout (e.g. Modern): main sections are marked with data-main-section
+      const mainSectionEls = Array.from(
+        el.querySelectorAll('[data-main-section]')
+      ) as HTMLElement[];
+
+      let slices: PageSlice[];
+      if (mainSectionEls.length > 0) {
+        // Use scrollHeight of the main column to get true content height,
+        // unaffected by flex-stretch from a taller sidebar column.
+        const mainColEl = el.querySelector(
+          '[data-main-col]'
+        ) as HTMLElement | null;
+        const mainColScrollHeight = mainColEl?.scrollHeight ?? 0;
+
+        const mainIds = new Set(
+          mainSectionEls.map((node) => node.dataset.mainSection!)
+        );
+        const sidebarIds = new Set(
+          [...bodySectionIds].filter((id) => !mainIds.has(id))
+        );
+
+        if (mainColScrollHeight <= A4_HEIGHT) {
+          // All main content fits on one page — avoid splitting.
+          slices = [
+            {
+              showHeader: true,
+              sections: parsedResume.sections,
+            },
+          ];
+        } else {
+          // Multi-page: paginate only by main-section heights.
+          // scrollHeight on individual sections is also unaffected by flex-stretch.
+          const mainSectionHeights = new Map(
+            mainSectionEls.map((node) => [
+              node.dataset.mainSection!,
+              node.scrollHeight,
+            ])
+          );
+          slices = buildTwoColumnPageSlices(
+            parsedResume.sections,
+            headerSection,
+            sidebarIds,
+            mainSectionHeights,
+            usableHeight
+          );
+        }
+      } else {
+        slices = buildPageSlices(
+          parsedResume.sections,
+          headerSection,
+          headerHeight,
+          sectionHeights,
+          usableHeight
+        );
+      }
       setPages(slices);
     };
 
