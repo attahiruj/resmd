@@ -129,7 +129,7 @@ export default function EditorPage() {
                 />
               )}
             </div>
-            <AIChat resumeContent={rawContent} />
+            <AIChat resumeContent={rawContent} isGuest />
           </div>
         ) : (
           <PreviewPane
@@ -158,7 +158,7 @@ export default function EditorPage() {
                 />
               )}
             </div>
-            <AIChat resumeContent={rawContent} />
+            <AIChat resumeContent={rawContent} isGuest />
           </div>
 
           {/* Drag divider */}
