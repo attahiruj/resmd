@@ -80,9 +80,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    if (typeof rawContent !== 'string' || rawContent.length > 5000) {
+    if (typeof rawContent !== 'string' || rawContent.length > 10000) {
       return NextResponse.json(
-        { error: 'Content must be a string with max 5000 characters' },
+        { error: 'Content must be a string with max 10000 characters' },
         { status: 400 }
       );
     }
