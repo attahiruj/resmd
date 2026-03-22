@@ -71,21 +71,21 @@ export default function PreviewPane({
   return (
     <div className="flex flex-col h-full bg-surface-2">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-2.5 h-[37px] flex-shrink-0 border-b border-border bg-surface z-10">
+      <div className="flex items-center justify-between px-3 h-14 sm:h-11 flex-shrink-0 border-b border-border bg-surface z-10">
         {/* Left: template selector chip */}
         <button
           onClick={() => setShowGallery(true)}
-          className="flex items-center gap-1.5 pl-2 pr-2.5 py-1 rounded-md border border-border bg-surface-2 hover:border-accent/60 hover:bg-surface-3 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent group"
+          className="flex items-center gap-2 pl-2.5 pr-3 py-2.5 sm:py-1.5 rounded-lg border border-border bg-surface-2 hover:border-accent/60 hover:bg-surface-3 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent group"
         >
           <SquaresFourIcon
-            size={12}
+            size={14}
             className="text-muted flex-shrink-0 group-hover:text-accent transition-colors duration-150"
           />
           <span className="text-xs font-medium text-text truncate max-w-[140px]">
             {current?.name ?? templateId}
           </span>
           <CaretDownIcon
-            size={10}
+            size={11}
             weight="bold"
             className="text-muted flex-shrink-0 group-hover:text-accent transition-colors duration-150"
           />
@@ -108,13 +108,13 @@ export default function PreviewPane({
             ref={settingsTriggerRef}
             onClick={() => setShowSettings((v) => !v)}
             title="Layout settings"
-            className={`flex items-center justify-center w-7 h-7 rounded-lg border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+            className={`flex items-center justify-center w-11 h-11 sm:w-8 sm:h-8 rounded-lg border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               showSettings
                 ? 'bg-accent-muted border-accent text-accent'
                 : 'bg-surface border-border text-muted hover:text-text hover:bg-surface-2'
             }`}
           >
-            <SlidersHorizontalIcon size={13} />
+            <SlidersHorizontalIcon size={15} />
           </button>
         </div>
       </div>
@@ -125,8 +125,10 @@ export default function PreviewPane({
           <TemplateGallery
             resume={parsedResume}
             templateId={templateId}
-            onSelect={onTemplateChange}
-            onClose={() => setShowGallery(false)}
+            onSelect={(id) => {
+              onTemplateChange(id);
+              setShowGallery(false);
+            }}
           />
         ) : (
           <LivePreview

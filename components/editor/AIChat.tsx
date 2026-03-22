@@ -41,6 +41,8 @@ interface AIChatProps {
   resumeContent: string;
   onApplyEdit?: (search: string, replace: string) => void;
   isGuest?: boolean;
+  expanded?: boolean;
+  minimizeSignal?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -51,12 +53,18 @@ export default function AIChat({
   resumeContent,
   onApplyEdit,
   isGuest = false,
+  expanded = false,
+  minimizeSignal,
 }: AIChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [minimized, setMinimized] = useState(false);
+
+  useEffect(() => {
+    if (minimizeSignal) setMinimized(true);
+  }, [minimizeSignal]);
   const [models, setModels] = useState<ModelOption[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [showModelPicker, setShowModelPicker] = useState(false);
@@ -290,9 +298,11 @@ export default function AIChat({
   }
 
   return (
-    <div className="flex flex-col border-t border-border bg-editor-bg flex-shrink-0">
+    <div
+      className={`flex flex-col border-t border-border bg-editor-bg ${expanded ? 'flex-1 min-h-0' : 'flex-shrink-0'}`}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border">
+      <div className="flex items-center justify-between px-3 py-2.5 sm:py-1.5 border-b border-border">
         <span className="flex items-center gap-1.5 text-xs text-faint select-none">
           <span className="text-accent" aria-hidden>
             ✦
@@ -306,7 +316,7 @@ export default function AIChat({
               {showModelPicker && (
                 <div
                   ref={pickerRef}
-                  className="absolute bottom-full right-0 mb-1.5 w-56 bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-50"
+                  className={`absolute ${expanded ? 'top-full mt-1.5' : 'bottom-full mb-1.5'} right-0 w-56 bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-50`}
                 >
                   <div
                     className="overflow-y-auto"
@@ -318,7 +328,7 @@ export default function AIChat({
                         <button
                           key={m.id}
                           onClick={() => handleModelChange(m.id)}
-                          className={`w-full text-left px-3 py-2 text-xs transition-colors duration-100 ${
+                          className={`w-full text-left px-3 py-3 sm:py-2 text-xs transition-colors duration-100 ${
                             isActive
                               ? 'bg-accent-muted text-accent'
                               : 'text-text hover:bg-surface-2'
@@ -336,7 +346,7 @@ export default function AIChat({
               <button
                 ref={pickerTriggerRef}
                 onClick={() => setShowModelPicker((v) => !v)}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-muted hover:text-text hover:bg-surface-2 border border-border transition-colors duration-150"
+                className="flex items-center gap-1.5 px-3 py-2.5 sm:py-1 rounded-md text-xs text-muted hover:text-text hover:bg-surface-2 border border-border transition-colors duration-150"
                 title="Select AI model"
               >
                 <span className="max-w-[120px] truncate">
@@ -358,25 +368,27 @@ export default function AIChat({
               </button>
             </div>
           )}
-          <button
-            onClick={() => setMinimized((m) => !m)}
-            className="p-1 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150"
-            title={minimized ? 'Expand' : 'Collapse'}
-          >
-            {minimized ? (
-              <CaretUpIcon size={14} />
-            ) : (
-              <CaretDownIcon size={14} />
-            )}
-          </button>
+          {!expanded && (
+            <button
+              onClick={() => setMinimized((m) => !m)}
+              className="p-2.5 sm:p-1 rounded text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150"
+              title={minimized ? 'Expand' : 'Collapse'}
+            >
+              {minimized ? (
+                <CaretUpIcon size={14} />
+              ) : (
+                <CaretDownIcon size={14} />
+              )}
+            </button>
+          )}
         </div>
       </div>
 
       {!minimized && messages.length > 0 && (
         <div
           ref={historyRef}
-          className="overflow-y-auto px-4 py-3 flex flex-col gap-3"
-          style={{ maxHeight: '300px' }}
+          className={`overflow-y-auto px-4 py-3 flex flex-col gap-3 ${expanded ? 'flex-1' : ''}`}
+          style={expanded ? undefined : { maxHeight: '300px' }}
         >
           {messages.map((msg, mi) => (
             <div
@@ -502,7 +514,7 @@ export default function AIChat({
 
       {/* Input row */}
       {!minimized && (
-        <div className="flex items-end gap-2 px-3 py-2">
+        <div className="flex items-end gap-2 px-3 py-3 sm:py-2">
           <span
             className="text-accent select-none text-sm flex-shrink-0 pb-1.5"
             aria-hidden
@@ -523,7 +535,7 @@ export default function AIChat({
           <button
             onClick={() => send()}
             disabled={!input.trim() || loading}
-            className="flex-shrink-0 p-1.5 rounded-lg text-accent hover:bg-accent-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="flex-shrink-0 p-2.5 sm:p-1.5 rounded-lg text-accent hover:bg-accent-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             title="Send (Enter)"
           >
             <PaperPlaneTiltIcon size={16} weight="fill" />

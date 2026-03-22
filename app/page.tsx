@@ -536,7 +536,7 @@ function Footer() {
           </span>
           <p className="text-xs text-faint mt-1">Plain text resume builder</p>
         </div>
-        <div className="flex items-center gap-8 text-sm text-muted">
+        <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-6 gap-y-3 text-sm text-muted">
           <Link href="/auth" className="hover:text-text transition-colors">
             Sign in
           </Link>
