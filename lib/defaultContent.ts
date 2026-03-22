@@ -1,17 +1,40 @@
-export const DEFAULT_RESUME_CONTENT = `# Bio
+export const DEFAULT_RESUME_CONTENT = `// Welcome to resmd! Lines starting with // are comments — they won't appear in your resume.
+// Edit the content below and watch the preview update live on the right.
+
+// ── SECTIONS ──────────────────────────────────────────────────────────────────
+// Use  #  to create a section. You can name them anything you like:
+//   # Experience   # Education   # Projects   # About Me   # Volunteering
+
+# Bio
+// Key: Value pairs are great for contact info and metadata.
+// The "Name", "Email", and "Title" keys are special — they populate the resume header.
+//
+// ── LINKS ─────────────────────────────────────────────────────────────────────
+// Two ways to make a clickable link:
+//   1. Key: Value  where value starts with https:// — auto-linked in the header
+//        GitHub: https://github.com/amaraosei
+//   2. [Label](https://url)  inline syntax — works anywhere (bullets, text, bio)
+//        - Check out [my portfolio](https://amara.design)
+// Bare domains like "github.com/foo" are plain text and won't be clickable.
 Name: Amara Osei
 Title: Full Stack Engineer
 Email: amara@example.com
 Location: Lagos, Nigeria
-GitHub: github.com/amaraosei
-LinkedIn: linkedin.com/in/amaraosei
+GitHub: https://github.com/amaraosei
+LinkedIn: https://linkedin.com/in/amaraosei
 
 # Summary
+// Plain text lines become paragraphs. Great for a summary or personal statement.
 Full stack engineer with 4 years building products across fintech and edtech.
 Strong backend focus with React on the frontend. Passionate about developer tooling.
 
 # Experience
+// ── ENTRIES ───────────────────────────────────────────────────────────────────
+// Use  ##  to create an entry (job, degree, project, etc.)
+// Format:  ## Role @ Organization | Date | Optional extra fields
+// The  @  splits role from organization. Fields after  |  are metadata (date, location, URL…).
 ## Senior Engineer @ Paystack | 2022 – Present
+// Bullet points (- ) belong to the entry above them.
 - Architected a transaction reconciliation service processing ₦2B daily
 - Reduced API response time by 60% through query optimization and caching
 - Mentored 3 junior engineers through a structured onboarding program
@@ -26,19 +49,32 @@ Strong backend focus with React on the frontend. Passionate about developer tool
 - Final year project: real-time collaborative code editor.
 
 # Skills
+// Key: Value pairs in a section are rendered as a definition list — perfect for skills.
 Languages: TypeScript, Python, Go
 Frontend: React, Next.js, Tailwind CSS
 Backend: Node.js, FastAPI, PostgreSQL, Redis
 Infrastructure: Docker, AWS, GitHub Actions
 
 # Projects
+// Entries without  @  are treated as standalone headings (no role/org split).
+// Extra  |  fields after the title become metadata — handy for URLs and dates.
 ## resmd | github.com/amara/resmd | 2024
+// Plain text under an entry becomes a short description line.
 Plain-text resume builder with live preview and AI enhancement.
 - Built parser in TypeScript with zero dependencies
 - 300+ GitHub stars in 6 weeks after launch
 
 # Certifications
-AWS Solutions Architect Associate | Amazon | 2023`;
+// A lone text line with no  ##  prefix is rendered as a simple text item.
+AWS Solutions Architect Associate | Amazon | 2023
+
+// ── DIRECTIVES ────────────────────────────────────────────────────────────────
+// Fine-tune layout with  !key: value  directives (remove the leading // to activate):
+// !font.size: 11
+// !line.height: 1.4
+// !margin.h: 48
+// !margin.v: 40
+// !entry.spacing: 6`;
 
 export const TEMPLATE_CONTENT: Record<string, string> = {
   minimal: DEFAULT_RESUME_CONTENT,
