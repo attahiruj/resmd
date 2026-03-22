@@ -7,6 +7,7 @@ import {
   MoonIcon,
   UserCircleIcon,
   Warning,
+  DownloadSimpleIcon,
 } from '@phosphor-icons/react';
 import { applyTheme, getStoredThemePrefs } from '@/lib/themes';
 import { useProfile } from '@/hooks/useProfile';
@@ -148,7 +149,7 @@ export default function Toolbar({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') e.currentTarget.blur();
               }}
-              className="text-base font-medium text-text bg-transparent px-1.5 py-0.5 rounded-md border border-transparent hover:border-border focus:border-accent focus:bg-surface-2 outline-none transition-colors duration-150 max-w-[260px]"
+              className="text-base font-medium text-text bg-transparent px-1.5 py-0.5 rounded-md border border-transparent hover:border-border focus:border-accent focus:bg-surface-2 outline-none transition-colors duration-150 max-w-[110px] sm:max-w-[260px]"
               placeholder="Untitled"
               title="Click to rename"
             />
@@ -164,7 +165,7 @@ export default function Toolbar({
 
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-full text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="p-3 sm:p-2.5 rounded-full text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
@@ -182,13 +183,20 @@ export default function Toolbar({
                     ? 'Generating…'
                     : 'Export PDF'
               }
-              className={`text-sm px-3 py-1.5 rounded-lg border border-border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+              className={`text-sm px-3 py-3 sm:py-1.5 rounded-lg border border-border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                 !resumeId || isExporting
                   ? 'text-faint cursor-not-allowed opacity-50'
                   : 'text-text hover:bg-surface-2'
               }`}
             >
-              {isExporting ? 'Exporting…' : 'Export PDF'}
+              <DownloadSimpleIcon
+                size={17}
+                weight="bold"
+                className="sm:hidden"
+              />
+              <span className="hidden sm:inline">
+                {isExporting ? 'Exporting…' : 'Export PDF'}
+              </span>
             </button>
 
             <Link
@@ -197,11 +205,11 @@ export default function Toolbar({
               className="ml-0.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               {userInitial ? (
-                <div className="w-8 h-8 rounded-full bg-accent-muted text-accent flex items-center justify-center text-sm font-semibold hover:bg-accent-muted-hover transition-colors duration-150">
+                <div className="w-11 h-11 sm:w-8 sm:h-8 rounded-full bg-accent-muted text-accent flex items-center justify-center text-sm font-semibold hover:bg-accent-muted-hover transition-colors duration-150">
                   {userInitial}
                 </div>
               ) : (
-                <div className="p-1.5 text-muted hover:text-text hover:bg-surface-2 rounded-full transition-colors duration-150">
+                <div className="p-3 sm:p-1.5 text-muted hover:text-text hover:bg-surface-2 rounded-full transition-colors duration-150">
                   <UserCircleIcon size={22} />
                 </div>
               )}

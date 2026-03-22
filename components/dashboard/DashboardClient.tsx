@@ -31,6 +31,7 @@ import CloneModal from '@/components/variants/CloneModal';
 import OnboardingModal from '@/components/ui/OnboardingModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
 import Navbar from '@/components/ui/Navbar';
+import { createSupabaseBrowserClient } from '@/lib/supabase';
 
 interface DashboardClientProps {
   initialResumes: Resume[];
@@ -269,12 +270,16 @@ export default function DashboardClient({
             <span className="text-xs text-muted hidden sm:block">
               {userEmail}
             </span>
-            <Link
-              href="/auth"
+            <button
+              onClick={async () => {
+                const supabase = createSupabaseBrowserClient();
+                await supabase.auth.signOut();
+                router.push('/auth');
+              }}
               className="text-xs text-muted hover:text-text transition-colors duration-150"
             >
               Sign out
-            </Link>
+            </button>
           </div>
         }
       />
@@ -728,21 +733,13 @@ function ResumeCard({
       style={{ animationDelay: `${index * 30}ms` }}
     >
       {/* Thumbnail */}
-      <div
-        className="w-12 h-14 rounded-md flex-shrink-0 flex items-center justify-center text-lg font-bold"
-        style={{
-          backgroundColor: 'var(--color-surface-2)',
-          color: templateInfo.color,
-        }}
-      >
-        {resume.title.charAt(0).toUpperCase() || 'R'}
+      <div className="w-12 h-16 rounded-md flex-shrink-0 overflow-hidden bg-white">
+        <ResumeThumbnail resume={resume} templateInfo={templateInfo} />
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-medium text-text truncate">
-            {resume.title}
-          </p>
+        <p className="text-sm font-medium text-text truncate">{resume.title}</p>
+        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
           <span
             className="text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0"
             style={{
@@ -752,22 +749,24 @@ function ResumeCard({
           >
             {templateInfo.name}
           </span>
+          <span className="text-xs text-muted">· {relativeDate}</span>
         </div>
-        <p className="text-xs text-muted mt-0.5">Updated {relativeDate}</p>
         {clonedFromTitle && (
           <p className="text-xs text-muted mt-0.5 flex items-center gap-1">
             <CopySimpleIcon size={11} />
-            Cloned from{' '}
-            <span className="text-text font-medium">{clonedFromTitle}</span>
+            <span className="truncate">
+              Cloned from{' '}
+              <span className="text-text font-medium">{clonedFromTitle}</span>
+            </span>
           </p>
         )}
       </div>
 
-      <div className="flex items-center gap-1 flex-shrink-0">
+      <div className="flex items-center gap-0.5 flex-shrink-0">
         <Link
           href={`/editor/${resume.id}`}
           onClick={(e) => e.stopPropagation()}
-          className="p-2 text-muted hover:text-text hover:bg-surface-2 rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="p-3 text-muted hover:text-text hover:bg-surface-2 rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           title="Edit"
         >
           <PencilSimpleIcon size={16} />
@@ -777,7 +776,7 @@ function ResumeCard({
             e.stopPropagation();
             onClone();
           }}
-          className="p-2 text-muted hover:text-text hover:bg-surface-2 rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="p-3 text-muted hover:text-text hover:bg-surface-2 rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           title="Clone variant"
         >
           <CopySimpleIcon size={16} />
@@ -788,7 +787,7 @@ function ResumeCard({
             onDelete();
           }}
           disabled={isDeleting}
-          className="p-2 text-muted hover:text-danger hover:bg-danger-bg rounded-lg transition-colors duration-150 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="p-3 text-muted hover:text-danger hover:bg-danger-bg rounded-lg transition-colors duration-150 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           title="Delete"
         >
           {isDeleting ? (

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react';
 import Toolbar from '@/components/editor/Toolbar';
 import PreviewPane from '@/components/preview/PreviewPane';
 import AIChat from '@/components/editor/AIChat';
@@ -38,11 +39,42 @@ export default function EditorClient({
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const [aiMinimizeSignal, setAiMinimizeSignal] = useState(0);
 
   const [jumpTarget, setJumpTarget] = useState<{
     word: string;
     context: string;
   } | null>(null);
+
+  // Touch swipe for mobile tab switching
+  const swipeTouchRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const t = e.touches[0];
+    swipeTouchRef.current = { x: t.clientX, y: t.clientY };
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (!swipeTouchRef.current) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - swipeTouchRef.current.x;
+      const dy = t.clientY - swipeTouchRef.current.y;
+      swipeTouchRef.current = null;
+      // Ignore if more vertical than horizontal, or too short
+      if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
+      if (dx < 0)
+        setMobileTab('preview'); // swipe left → preview
+      else setMobileTab('write'); // swipe right → write
+      // Dismiss hint on first successful swipe
+      if (showSwipeHint) {
+        setShowSwipeHint(false);
+        localStorage.setItem('resmd_swipe_hint_seen', '1');
+      }
+    },
+    [showSwipeHint]
+  );
 
   // Refs for 60fps split drag
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -70,6 +102,19 @@ export default function EditorClient({
       }
     }
     setIsMounted(true);
+
+    // Show swipe hint once on mobile
+    if (
+      window.innerWidth < 768 &&
+      !localStorage.getItem('resmd_swipe_hint_seen')
+    ) {
+      setShowSwipeHint(true);
+      const timer = setTimeout(() => {
+        setShowSwipeHint(false);
+        localStorage.setItem('resmd_swipe_hint_seen', '1');
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const autosave = useCallback(async () => {
@@ -187,7 +232,7 @@ export default function EditorClient({
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-col h-screen overflow-hidden bg-bg">
+      <div className="flex flex-col h-dvh overflow-hidden bg-bg">
         <Toolbar
           lastSaved={lastSaved}
           resumeTitle={resumeTitle}
@@ -198,7 +243,7 @@ export default function EditorClient({
         {isGuest && <GuestBanner />}
 
         {/* Mobile tab bar (<md) */}
-        <div className="md:hidden flex h-10 border-b border-border bg-surface flex-shrink-0 px-2 gap-1 items-center">
+        <div className="md:hidden flex h-12 border-b border-border bg-surface flex-shrink-0 px-2 gap-1 items-center">
           <button
             onClick={() => setMobileTab('write')}
             className={`flex-1 py-1.5 text-sm font-medium rounded-full transition-colors duration-150 ${
@@ -222,10 +267,26 @@ export default function EditorClient({
         </div>
 
         {/* Mobile single-pane body */}
-        <div className="md:hidden flex-1 overflow-hidden min-h-0">
+        <div
+          className="md:hidden relative flex-1 overflow-hidden min-h-0"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          {showSwipeHint && (
+            <div className="absolute inset-x-0 bottom-32 flex justify-center z-20 pointer-events-none">
+              <div className="flex items-center gap-2.5 bg-bg/90 backdrop-blur-sm border border-border text-text text-xs px-4 py-2.5 rounded-full shadow-lg animate-pulse">
+                <ArrowLeftIcon size={13} className="text-accent" />
+                <span>Swipe to switch view</span>
+                <ArrowRightIcon size={13} className="text-accent" />
+              </div>
+            </div>
+          )}
           {mobileTab === 'write' ? (
             <div className="h-full flex flex-col bg-editor-bg">
-              <div className="flex-1 min-h-0 overflow-hidden">
+              <div
+                className="flex-1 min-h-0 overflow-hidden"
+                onClick={() => setAiMinimizeSignal((s) => s + 1)}
+              >
                 {isMounted && (
                   <Editor
                     value={rawContent}
@@ -241,6 +302,7 @@ export default function EditorClient({
                 resumeContent={rawContent}
                 onApplyEdit={handleApplyEdit}
                 isGuest={isGuest}
+                minimizeSignal={aiMinimizeSignal}
               />
             </div>
           ) : (

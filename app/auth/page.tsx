@@ -163,7 +163,7 @@ function AuthPageContent() {
           <div className="flex bg-surface-2 rounded-lg p-1 gap-1 mb-5">
             <button
               onClick={() => switchTab('signin')}
-              className={`flex-1 py-1.5 text-sm rounded-md font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+              className={`flex-1 py-3 text-sm rounded-md font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                 tab === 'signin'
                   ? 'bg-surface text-text shadow-sm'
                   : 'text-muted hover:text-text'
@@ -173,7 +173,7 @@ function AuthPageContent() {
             </button>
             <button
               onClick={() => switchTab('signup')}
-              className={`flex-1 py-1.5 text-sm rounded-md font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+              className={`flex-1 py-3 text-sm rounded-md font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                 tab === 'signup'
                   ? 'bg-surface text-text shadow-sm'
                   : 'text-muted hover:text-text'
@@ -186,7 +186,7 @@ function AuthPageContent() {
           {/* Google OAuth */}
           <button
             onClick={handleGoogle}
-            className="w-full flex items-center justify-center gap-2 border border-border rounded-lg py-2.5 text-sm text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent mb-4"
+            className="w-full flex items-center justify-center gap-2 border border-border rounded-lg py-3.5 text-sm text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent mb-4"
           >
             <GoogleIcon />
             Continue with Google
@@ -208,7 +208,7 @@ function AuthPageContent() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="you@example.com"
-                className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm text-text placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-accent transition-colors duration-150"
+                className="w-full bg-surface-2 border border-border rounded-lg px-3 py-3 text-sm text-text placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-accent transition-colors duration-150"
               />
             </div>
             <div>
@@ -222,7 +222,7 @@ function AuthPageContent() {
                 required
                 placeholder="••••••••"
                 minLength={8}
-                className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm text-text placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-accent transition-colors duration-150"
+                className="w-full bg-surface-2 border border-border rounded-lg px-3 py-3 text-sm text-text placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-accent transition-colors duration-150"
               />
             </div>
 
@@ -240,7 +240,7 @@ function AuthPageContent() {
             <button
               type="submit"
               disabled={formLoading}
-              className="w-full bg-accent hover:bg-accent-hover text-accent-text rounded-lg py-2.5 text-sm font-medium transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent mt-1"
+              className="w-full bg-accent hover:bg-accent-hover text-accent-text rounded-lg py-3.5 text-sm font-medium transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent mt-1"
             >
               {formLoading
                 ? 'Please wait…'

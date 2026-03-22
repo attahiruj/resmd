@@ -28,7 +28,6 @@ export default function FeedbackModal({ onClose }: FeedbackModalProps) {
     } finally {
       setSubmitting(false);
       setDone(true);
-      setTimeout(onClose, 1400);
     }
   };
 
@@ -54,7 +53,7 @@ export default function FeedbackModal({ onClose }: FeedbackModalProps) {
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-faint hover:text-text hover:bg-surface-2 transition-colors duration-150 -mt-0.5 -mr-0.5"
+            className="p-2.5 rounded-md text-faint hover:text-text hover:bg-surface-2 transition-colors duration-150 -mt-1 -mr-1"
           >
             <X size={16} />
           </button>
@@ -67,7 +66,7 @@ export default function FeedbackModal({ onClose }: FeedbackModalProps) {
               href="https://github.com/attahiruj/resmd"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-text border border-border hover:border-text/30 px-3 py-1.5 rounded-lg transition-colors duration-150"
+              className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-text border border-border hover:border-text/30 px-4 py-3 rounded-lg transition-colors duration-150"
             >
               <Star size={13} weight="fill" className="text-accent" />
               Star us on GitHub
@@ -83,7 +82,7 @@ export default function FeedbackModal({ onClose }: FeedbackModalProps) {
                   onClick={() => setRating(star)}
                   onMouseEnter={() => setHovered(star)}
                   onMouseLeave={() => setHovered(0)}
-                  className="p-0.5 transition-transform duration-100 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
+                  className="p-2 transition-transform duration-100 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
                 >
                   <Star
                     size={26}
@@ -111,14 +110,14 @@ export default function FeedbackModal({ onClose }: FeedbackModalProps) {
             <div className="flex items-center justify-between mt-3">
               <button
                 onClick={onClose}
-                className="text-xs text-muted hover:text-text transition-colors duration-150"
+                className="text-xs text-muted hover:text-text transition-colors duration-150 px-3 py-3"
               >
                 Maybe later
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={!rating || submitting}
-                className={`text-xs px-3 py-1.5 rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                className={`text-xs px-4 py-3 rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                   !rating || submitting
                     ? 'bg-accent/40 text-accent-text/60 cursor-not-allowed'
                     : 'bg-accent text-accent-text hover:bg-accent-hover'

@@ -78,14 +78,14 @@ export default function OnboardingModal({ onClose }: OnboardingModalProps) {
             {step > 0 && (
               <button
                 onClick={() => setStep((s) => s - 1)}
-                className="px-3 py-1.5 text-xs border border-border rounded-lg text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="px-4 py-3 text-xs border border-border rounded-lg text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 Back
               </button>
             )}
             <button
               onClick={handleNext}
-              className="px-3 py-1.5 text-xs bg-accent text-accent-text rounded-lg hover:bg-accent-hover transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+              className="px-4 py-3 text-xs bg-accent text-accent-text rounded-lg hover:bg-accent-hover transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             >
               {isLast ? 'Get started' : 'Next'}
             </button>
