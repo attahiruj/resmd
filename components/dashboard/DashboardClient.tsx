@@ -477,6 +477,7 @@ export default function DashboardClient({
                     onDelete={() => handleDelete(resume.id)}
                     onClone={() => setCloneSource(resume)}
                     onOpen={() => router.push(`/editor/${resume.id}`)}
+                    atLimit={atLimit}
                   />
                 ))}
               </div>
@@ -498,6 +499,7 @@ export default function DashboardClient({
                     onDelete={() => handleDelete(resume.id)}
                     onClone={() => setCloneSource(resume)}
                     onOpen={() => router.push(`/editor/${resume.id}`)}
+                    atLimit={atLimit}
                   />
                 ))}
               </div>
@@ -511,6 +513,7 @@ export default function DashboardClient({
         <CloneModal
           sourceResume={cloneSource}
           loading={cloning}
+          atLimit={atLimit}
           onConfirm={handleCloneConfirm}
           onClose={() => {
             if (!cloning) setCloneSource(null);
@@ -622,6 +625,7 @@ function ResumeCard({
   onDelete,
   onClone,
   onOpen,
+  atLimit,
 }: {
   resume: Resume;
   index: number;
@@ -631,6 +635,7 @@ function ResumeCard({
   onDelete: () => void;
   onClone: () => void;
   onOpen: () => void;
+  atLimit?: boolean;
 }) {
   const updatedAt = new Date(resume.updatedAt);
   const relativeDate = formatRelative(updatedAt);
@@ -693,8 +698,9 @@ function ResumeCard({
                 e.stopPropagation();
                 onClone();
               }}
-              className="flex-1 flex items-center justify-center gap-1 p-1.5 text-xs text-muted hover:text-text hover:bg-surface-2 rounded-lg transition-colors"
-              title="Clone variant"
+              disabled={atLimit}
+              className="flex-1 flex items-center justify-center gap-1 p-1.5 text-xs text-muted hover:text-text hover:bg-surface-2 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              title={atLimit ? 'Resume limit reached' : 'Clone resume'}
             >
               <CopySimpleIcon size={14} />
               Clone
@@ -776,8 +782,9 @@ function ResumeCard({
             e.stopPropagation();
             onClone();
           }}
-          className="p-3 text-muted hover:text-text hover:bg-surface-2 rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          title="Clone variant"
+          disabled={atLimit}
+          className="p-3 text-muted hover:text-text hover:bg-surface-2 rounded-lg transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          title={atLimit ? 'Resume limit reached' : 'Clone resume'}
         >
           <CopySimpleIcon size={16} />
         </button>

@@ -320,7 +320,7 @@ function HowItWorks() {
     {
       n: '03',
       title: 'Branch & tailor',
-      body: 'Clone variants for each application. Keep your "master" clean while customizing for specific roles.',
+      body: 'Clone Resumes for each application. Keep your "master" clean while customizing for specific roles.',
       icon: <GitBranchIcon className="w-5 h-5" />,
     },
   ];
