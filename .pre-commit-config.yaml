@@ -1,4 +1,4 @@
-# Pre-commit hooks for local validation before committing
+﻿# Pre-commit hooks for local validation before committing
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -18,7 +18,11 @@ repos:
     hooks:
       - id: prettier
 
-  - repo: https://github.com/eslint/eslint
-    rev: v10.1.0
+  - repo: local
     hooks:
       - id: eslint
+        name: eslint
+        entry: npx eslint
+        language: system
+        files: \.(js|jsx|ts|tsx)$
+        pass_filenames: true
