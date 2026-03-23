@@ -11,7 +11,7 @@ interface NavbarProps {
 
 export default function Navbar({ left, right }: NavbarProps) {
   return (
-    <div className="h-[60px] border-b border-border bg-surface flex items-center px-5 gap-2 flex-shrink-0">
+    <div className="h-[60px] border-b border-border bg-surface flex items-center px-5 gap-2 flex-shrink-0 sticky top-0 z-50">
       <Link
         href="/dashboard"
         className="text-xl font-bold text-text select-none tracking-tight hover:opacity-80 transition-opacity"

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { SpinnerGapIcon } from '@phosphor-icons/react';
 import type { Resume } from '@/types/resume';
+import { LIMITS } from '@/lib/limits';
 
 const SUGGESTED_NAMES = [
   'Software Engineering CV',
@@ -16,6 +17,7 @@ interface CloneModalProps {
   onConfirm: (title: string) => void;
   onClose: () => void;
   loading?: boolean;
+  atLimit?: boolean;
 }
 
 export default function CloneModal({
@@ -23,6 +25,7 @@ export default function CloneModal({
   onConfirm,
   onClose,
   loading = false,
+  atLimit = false,
 }: CloneModalProps) {
   const [title, setTitle] = useState('');
 
@@ -41,11 +44,19 @@ export default function CloneModal({
         onClick={(e) => e.stopPropagation()}
         style={{ animation: 'modal-in 150ms ease-out' }}
       >
-        <h2 className="text-sm font-semibold text-text mb-1">Clone variant</h2>
-        <p className="text-xs text-muted mb-4">
-          Cloning from:{' '}
-          <span className="text-text font-medium">{sourceResume.title}</span>
-        </p>
+        <h2 className="text-sm font-semibold text-text mb-1">Clone resume</h2>
+        {atLimit && (
+          <p className="text-xs text-danger mb-4">
+            You've reached the maximum of {LIMITS.MAX_VARIANTS} resumes. Delete
+            one to clone this variant.
+          </p>
+        )}
+        {!atLimit && (
+          <p className="text-xs text-muted mb-4">
+            Cloning from:{' '}
+            <span className="text-text font-medium">{sourceResume.title}</span>
+          </p>
+        )}
 
         <label className="text-xs text-muted block mb-1">
           Name your new variant
@@ -93,7 +104,7 @@ export default function CloneModal({
                 className="animate-spin"
               />
             )}
-            {loading ? 'Cloning…' : 'Clone variant'}
+            {loading ? 'Cloning…' : 'Clone resume'}
           </button>
         </div>
       </div>
