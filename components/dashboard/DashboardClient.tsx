@@ -28,6 +28,7 @@ import { LIMITS } from '@/lib/limits';
 import { TEMPLATE_CONTENT } from '@/lib/defaultContent';
 import { applyTheme, getStoredThemePrefs } from '@/lib/themes';
 import CloneModal from '@/components/variants/CloneModal';
+import { Button } from '@/components/ui/Button';
 import OnboardingModal from '@/components/ui/OnboardingModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
 import Navbar from '@/components/ui/Navbar';
@@ -295,10 +296,10 @@ export default function DashboardClient({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
               onClick={handleNewResume}
               disabled={creating || atLimit}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-accent-hover text-accent-text text-sm rounded-lg transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="flex items-center gap-1.5"
             >
               {creating ? (
                 <>
@@ -315,7 +316,7 @@ export default function DashboardClient({
                   New Resume
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -371,13 +372,9 @@ export default function DashboardClient({
               ))}
             </div>
 
-            <button
-              onClick={handleNewResume}
-              disabled={creating || atLimit}
-              className="px-6 py-2.5 bg-accent hover:bg-accent-hover text-accent-text text-sm font-medium rounded-lg transition-colors duration-150 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            >
+            <Button onClick={handleNewResume} disabled={creating || atLimit}>
               {creating ? 'Creating…' : 'Start with Blank Resume'}
-            </button>
+            </Button>
           </div>
         ) : (
           <>

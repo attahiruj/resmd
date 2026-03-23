@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { SpinnerGapIcon } from '@phosphor-icons/react';
+import { Button } from '@/components/ui/Button';
 import type { Resume } from '@/types/resume';
 import { LIMITS } from '@/lib/limits';
 
@@ -47,8 +48,8 @@ export default function CloneModal({
         <h2 className="text-sm font-semibold text-text mb-1">Clone resume</h2>
         {atLimit && (
           <p className="text-xs text-danger mb-4">
-            You've reached the maximum of {LIMITS.MAX_VARIANTS} resumes. Delete
-            one to clone this variant.
+            You&aposve reached the maximum of {LIMITS.MAX_VARIANTS} resumes.
+            Delete one to clone this variant.
           </p>
         )}
         {!atLimit && (
@@ -86,17 +87,10 @@ export default function CloneModal({
         </div>
 
         <div className="flex gap-2 justify-end">
-          <button
-            onClick={onClose}
-            className="px-3 py-1.5 text-sm border border-border rounded-lg text-muted hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          >
+          <Button variant="ghost" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            onClick={handleConfirm}
-            disabled={!title.trim() || loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-accent text-accent-text rounded-lg hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          >
+          </Button>
+          <Button onClick={handleConfirm} disabled={!title.trim() || loading}>
             {loading && (
               <SpinnerGapIcon
                 size={14}
@@ -105,7 +99,7 @@ export default function CloneModal({
               />
             )}
             {loading ? 'Cloning…' : 'Clone resume'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

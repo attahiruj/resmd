@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@/components/ui/Button';
 
 const STEPS = [
   {
@@ -76,19 +77,17 @@ export default function OnboardingModal({ onClose }: OnboardingModalProps) {
           </span>
           <div className="flex gap-2">
             {step > 0 && (
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setStep((s) => s - 1)}
-                className="px-4 py-3 text-xs border border-border rounded-lg text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 Back
-              </button>
+              </Button>
             )}
-            <button
-              onClick={handleNext}
-              className="px-4 py-3 text-xs bg-accent text-accent-text rounded-lg hover:bg-accent-hover transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-            >
+            <Button size="sm" onClick={handleNext}>
               {isLast ? 'Get started' : 'Next'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

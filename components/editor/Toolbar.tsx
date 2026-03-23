@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import {
   SunIcon,
@@ -121,21 +122,20 @@ export default function Toolbar({
               </div>
             </div>
             <div className="flex gap-2 justify-end">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setShowPlaceholderWarning(false)}
-                className="text-sm px-3 py-1.5 rounded-lg border border-border text-text hover:bg-surface-2 transition-colors duration-150"
               >
                 Fix first
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   setShowPlaceholderWarning(false);
                   doExport();
                 }}
-                className="text-sm px-3 py-1.5 rounded-lg bg-accent text-white hover:opacity-90 transition-opacity duration-150"
               >
                 Export anyway
-              </button>
+              </Button>
             </div>
           </div>
         </div>
