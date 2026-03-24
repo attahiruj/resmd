@@ -76,7 +76,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 OPENROUTER_API_KEY=your_openrouter_api_key
-# OPENROUTER_MODEL=google/gemma-3n-e4b-it:free  # optional override
 
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```

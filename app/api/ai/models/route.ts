@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getActiveProviders } from '@/lib/ai-providers';
+import type { AIModel } from '@/lib/ai-providers';
 
-const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models';
+export const dynamic = 'force-dynamic';
 
-export interface OpenRouterModel {
-  id: string;
-  name: string;
-}
+export type { AIModel };
 
 export async function GET() {
   const supabase = createSupabaseServerClient();
@@ -16,41 +15,50 @@ export async function GET() {
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey)
+  const providers = getActiveProviders();
+  if (providers.length === 0)
     return NextResponse.json(
       { error: 'AI service not configured' },
       { status: 503 }
     );
 
   try {
-    const res = await fetch(OPENROUTER_MODELS_URL, {
-      headers: { Authorization: `Bearer ${apiKey}` },
-      next: { revalidate: 3600 },
-    });
+    // Aggregate models from all active providers
+    const perProvider = await Promise.all(
+      providers.map((p) =>
+        p.listModels
+          ? p.listModels()
+          : Promise.resolve([
+              { id: p.defaultModel, name: p.defaultModel, provider: p.name },
+            ])
+      )
+    );
+    const models: AIModel[] = perProvider.flat();
 
-    if (!res.ok) {
-      console.error('[AI Models] OpenRouter error:', res.status);
-      return NextResponse.json(
-        { error: 'Failed to fetch models' },
-        { status: 502 }
+    // Enrich with global usage counts (best-effort — failures don't block model list)
+    const { data: stats } = await supabase
+      .from('ai_model_stats')
+      .select('model_id, use_count')
+      .in(
+        'model_id',
+        models.map((m) => m.id)
       );
-    }
 
-    const data = await res.json();
-    const freeModels: OpenRouterModel[] = (
-      data.data as Array<{ id: string; name: string }>
-    )
-      .filter((m) => m.id.endsWith(':free'))
-      .map((m) => ({ id: m.id, name: m.name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+    const countMap: Record<string, number> = Object.fromEntries(
+      (stats ?? []).map((s) => [s.model_id, s.use_count])
+    );
 
-    return NextResponse.json({ models: freeModels });
+    const enriched = models.map((m) => ({
+      ...m,
+      use_count: countMap[m.id] ?? 0,
+    }));
+
+    return NextResponse.json({ models: enriched });
   } catch (err) {
-    console.error('[AI Models] Error:', err);
+    console.error('[AI Models] error:', err);
     return NextResponse.json(
       { error: 'Failed to fetch models' },
-      { status: 500 }
+      { status: 502 }
     );
   }
 }
