@@ -160,6 +160,14 @@ export default function EditorClient({
     [scheduleAutosave]
   );
 
+  const handleReplaceResume = useCallback(
+    (content: string) => {
+      setRawContent(content);
+      scheduleAutosave();
+    },
+    [scheduleAutosave]
+  );
+
   const handlePreviewDoubleClick = useCallback(
     (word: string, context: string) => {
       setMobileTab('write');
@@ -301,6 +309,7 @@ export default function EditorClient({
               <AIChat
                 resumeContent={rawContent}
                 onApplyEdit={handleApplyEdit}
+                onReplaceResume={handleReplaceResume}
                 isGuest={isGuest}
                 minimizeSignal={aiMinimizeSignal}
               />
@@ -343,6 +352,7 @@ export default function EditorClient({
               <AIChat
                 resumeContent={rawContent}
                 onApplyEdit={handleApplyEdit}
+                onReplaceResume={handleReplaceResume}
                 isGuest={isGuest}
               />
             </div>

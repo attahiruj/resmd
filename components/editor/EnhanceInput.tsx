@@ -61,9 +61,9 @@ export default function EnhanceInput({
     );
   };
 
-  // Backdrop mousedown: close if empty, shake if text/loading
+  // Backdrop mousedown: close if idle and empty, shake if loading
   const handleBackdropMouseDown = (e: React.MouseEvent) => {
-    if (loadingRef.current || instructionRef.current.trim()) {
+    if (loadingRef.current) {
       e.preventDefault(); // keep focus in textarea, don't dismiss
       shake();
     } else {
@@ -71,14 +71,17 @@ export default function EnhanceInput({
     }
   };
 
+  const DEFAULT_INSTRUCTION =
+    'Improve this section to be more impactful and professional.';
+
   const handleSubmit = async () => {
-    if (!instruction.trim() || loading) return;
+    if (loading) return;
 
     setLoading(true);
     setError(null);
 
     abortRef.current = streamEnhance({
-      instruction: instruction.trim(),
+      instruction: instruction.trim() || DEFAULT_INSTRUCTION,
       selectedText,
       resumeContext,
       onChunk: () => {},
@@ -181,7 +184,7 @@ export default function EnhanceInput({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!instruction.trim() || loading}
+            disabled={loading}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-secondary text-bg rounded-md hover:bg-secondary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
@@ -192,7 +195,7 @@ export default function EnhanceInput({
             ) : (
               <>
                 <PaperPlaneTiltIcon size={12} weight="fill" />
-                Send
+                {instruction.trim() ? 'Send' : 'Enhance'}
               </>
             )}
           </button>

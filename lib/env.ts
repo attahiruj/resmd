@@ -13,5 +13,6 @@ function requireEnv(key: string): string {
 export const env = {
   NEXT_PUBLIC_SUPABASE_URL: requireEnv('NEXT_PUBLIC_SUPABASE_URL'),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
-  OPENROUTER_API_KEY: requireEnv('OPENROUTER_API_KEY'),
+  // AI provider keys are validated per-request in lib/ai-providers/index.ts
+  // to allow graceful 503 responses rather than crashing at startup.
 } as const;

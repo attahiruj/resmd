@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { checkRateLimit } from '@/lib/rateLimit';
-
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+import { getProviderForModel, createSSEStream } from '@/lib/ai-providers';
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -36,84 +35,81 @@ export async function POST(req: NextRequest) {
     .eq('id', user.id)
     .single();
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: 'AI service not configured' },
-      { status: 503 }
-    );
-  }
-
   try {
     const { selectedText, instruction, resumeContext, model } =
       await req.json();
 
-    if (!selectedText || !instruction) {
+    if (!selectedText) {
       return NextResponse.json(
-        { error: 'Missing required fields: selectedText and instruction' },
+        { error: 'Missing required field: selectedText' },
         { status: 400 }
       );
     }
 
+    let provider;
+    try {
+      provider = getProviderForModel(model ?? '');
+    } catch {
+      return NextResponse.json(
+        { error: 'AI service not configured' },
+        { status: 503 }
+      );
+    }
+
     // Build the prompt for enhancement
-    const systemPrompt = `You are an expert resume coach helping improve resume text.
+    const effectiveInstruction =
+      instruction?.trim() || 'Make this more impactful and professional.';
+    const systemPrompt = `You are **resAI**, an expert resume coach. Your job is to rewrite the selected resume text based on the user's instruction — grounded in the resume's own context.
 
-The user's selected text is part of their resume. They want you to: "${instruction}"
+## Instruction
+${effectiveInstruction}
 
-## Guidelines
-- Only output the improved text - no explanations needed
-- Keep the same formatting style (bullets, sections, etc.)
-- Make the text more impactful, concise, and professional
-- If the instruction is unclear, make reasonable improvements
-
-## Selected text to improve:
-"""
+## Selected text
+\`\`\`
 ${selectedText}
-"""
+\`\`\`
 
-## Surrounding resume context:
-"""
-${resumeContext || '(no additional context)'}
-"""
+## Surrounding resume context
+\`\`\`
+${resumeContext?.trim() || '(not provided)'}
+\`\`\`
+
+## Rules
+- Output ONLY the rewritten text — no explanation, no preamble, no sign-off.
+- Preserve the original format: if it's a bullet list, return bullet lines; if prose, return prose.
+- Keep voice consistent with the rest of the resume (use context above).
+- Strengthen impact: prefer active verbs, concrete outcomes, and specifics already present in the text.
+- Never invent facts, metrics, or credentials not in the selected text or context.
+- If the instruction asks for a metric you can't infer, write the line without it rather than guessing.
 
 ## Output format
-Return ONLY the improved text. If you want to suggest multiple alternatives, use this format:
+Wrap the result like this — nothing outside the tags:
 <<<SUGGESTION>>>
-improved text here
-<<<END>>>
+rewritten text here
+<<<END>>>`;
 
-Do not include any preamble or explanation.`;
-
-    const messages = [{ role: 'user', content: systemPrompt }];
+    const messages = [{ role: 'user' as const, content: systemPrompt }];
 
     console.log('[AI Enhance] →', {
       selectedTextLength: selectedText.length,
       resumeContextLength: resumeContext?.length || 0,
     });
 
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer':
-          process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
-        'X-Title': 'resmd resAI',
-      },
-      body: JSON.stringify({
-        model:
-          model ??
-          process.env.OPENROUTER_MODEL ??
-          'google/gemma-3n-e4b-it:free',
-        max_tokens: 1024,
-        messages,
-        stream: true,
-      }),
+    const modelUsed = model ?? provider.defaultModel;
+    const response = await provider.chat({
+      messages,
+      model: modelUsed,
+      maxTokens: 1024,
+      stream: true,
     });
 
     if (!response.ok) {
       const err = await response.text();
-      console.error('[AI Enhance] OpenRouter error:', response.status, err);
+      console.error(
+        `[AI Enhance] ${provider.name} error:`,
+        response.status,
+        err
+      );
       return NextResponse.json({ error: 'AI request failed' }, { status: 502 });
     }
 
@@ -144,48 +140,16 @@ Do not include any preamble or explanation.`;
       }
     }
 
-    // Parse SSE from OpenRouter and stream plain text chunks to client
-    const stream = new ReadableStream({
-      async start(controller) {
-        const reader = response.body?.getReader();
-        if (!reader) {
-          controller.close();
-          return;
-        }
+    // Track model usage — fire and forget, never block the response
+    supabase
+      .rpc('increment_model_use', {
+        p_model: modelUsed,
+        p_provider: provider.name,
+      })
+      .then()
+      .catch((e: unknown) => console.error('[AI Stats]', e));
 
-        const decoder = new TextDecoder();
-        const encoder = new TextEncoder();
-        let buffer = '';
-
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() ?? '';
-
-            for (const line of lines) {
-              if (!line.startsWith('data: ')) continue;
-              const data = line.slice(6).trim();
-              if (data === '[DONE]') continue;
-              try {
-                const parsed = JSON.parse(data);
-                const text: string = parsed.choices?.[0]?.delta?.content ?? '';
-                if (text) controller.enqueue(encoder.encode(text));
-              } catch {
-                // skip malformed SSE lines
-              }
-            }
-          }
-        } catch (err) {
-          console.error('[AI Enhance] Stream error:', err);
-        } finally {
-          controller.close();
-        }
-      },
-    });
+    const stream = createSSEStream(response.body!);
 
     return new Response(stream, {
       headers: {

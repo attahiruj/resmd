@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { checkRateLimit } from '@/lib/rateLimit';
-import { buildSystemPrompt, AI_MODEL, AI_MAX_TOKENS } from '@/lib/prompts';
-
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+import { buildSystemPrompt, AI_MAX_TOKENS } from '@/lib/prompts';
+import { getProviderForModel } from '@/lib/ai-providers';
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -28,16 +27,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: 'AI service not configured' },
-      { status: 503 }
-    );
-  }
-
   try {
     const { message, resumeContent, history, model } = await req.json();
+
+    let provider;
+    try {
+      provider = getProviderForModel(model ?? '');
+    } catch {
+      return NextResponse.json(
+        { error: 'AI service not configured' },
+        { status: 503 }
+      );
+    }
 
     if (!resumeContent || !resumeContent.trim()) {
       return NextResponse.json({
@@ -49,45 +50,48 @@ export async function POST(req: NextRequest) {
     // Gemma doesn't support the 'system' role — inject context as a user/assistant
     // preamble so the model understands its role before the real conversation.
     const messages = [
-      { role: 'user', content: buildSystemPrompt(resumeContent ?? '') },
       {
-        role: 'assistant',
+        role: 'user' as const,
+        content: buildSystemPrompt(resumeContent ?? ''),
+      },
+      {
+        role: 'assistant' as const,
         content:
           "Got it — I've read through your resume. What are we working on?",
       },
       ...(history ?? []).map(
         ({ role, content }: { role: string; content: string }) => ({
-          role,
+          role: role as 'user' | 'assistant' | 'system',
           content,
         })
       ),
-      { role: 'user', content: message },
+      { role: 'user' as const, content: message },
     ];
 
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer':
-          process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
-        'X-Title': 'resmd resAI',
-      },
-      body: JSON.stringify({
-        model: model ?? AI_MODEL,
-        max_tokens: AI_MAX_TOKENS,
-        messages,
-      }),
+    const modelUsed = model ?? provider.defaultModel;
+    const response = await provider.chat({
+      messages,
+      model: modelUsed,
+      maxTokens: AI_MAX_TOKENS,
     });
 
     if (!response.ok) {
       const err = await response.text();
-      console.error('[AI] OpenRouter error:', response.status, err);
+      console.error(`[AI] ${provider.name} error:`, response.status, err);
       return NextResponse.json({ error: 'AI request failed' }, { status: 502 });
     }
 
     const data = await response.json();
     const reply: string = data.choices?.[0]?.message?.content ?? '';
+
+    // Track model usage — fire and forget, never block the response
+    supabase
+      .rpc('increment_model_use', {
+        p_model: modelUsed,
+        p_provider: provider.name,
+      })
+      .then()
+      .catch((e: unknown) => console.error('[AI Stats]', e));
 
     return NextResponse.json({ reply });
   } catch (err) {
