@@ -9,7 +9,7 @@ function mapResume(row: Record<string, unknown>): Resume {
     title: row.title as string,
     rawContent: row.raw_content as string,
     templateId: row.template_id as string,
-    clonedFromId: (row.forked_from_id as string | null) ?? null,
+    clonedFromId: (row.cloned_from_id as string | null) ?? null,
     isPublic: row.is_public as boolean,
     publicSlug: (row.public_slug as string | null) ?? null,
     createdAt: row.created_at as string,
@@ -115,7 +115,7 @@ export const cloneResume = async (
       title: newTitle,
       raw_content: source.rawContent,
       template_id: source.templateId,
-      forked_from_id: sourceResumeId,
+      cloned_from_id: sourceResumeId,
     })
     .select()
     .single();
