@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Noto_Sans, Noto_Sans_Mono } from 'next/font/google';
 import localFont from 'next/font/local';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 
 const notoSans = Noto_Sans({
@@ -106,7 +107,10 @@ export default function RootLayout({
         {/* Theme init must run before body renders to prevent FOWT */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="bg-bg text-text antialiased">{children}</body>
+      <body className="bg-bg text-text antialiased">
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
