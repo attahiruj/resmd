@@ -141,13 +141,10 @@ rewritten text here
     }
 
     // Track model usage — fire and forget, never block the response
-    supabase
-      .rpc('increment_model_use', {
-        p_model: modelUsed,
-        p_provider: provider.name,
-      })
-      .then()
-      .catch((e: unknown) => console.error('[AI Stats]', e));
+    supabase.rpc('increment_model_use', {
+      p_model: modelUsed,
+      p_provider: provider.name,
+    });
 
     const stream = createSSEStream(response.body!);
 

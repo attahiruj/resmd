@@ -85,13 +85,10 @@ export async function POST(req: NextRequest) {
     const reply: string = data.choices?.[0]?.message?.content ?? '';
 
     // Track model usage — fire and forget, never block the response
-    supabase
-      .rpc('increment_model_use', {
-        p_model: modelUsed,
-        p_provider: provider.name,
-      })
-      .then()
-      .catch((e: unknown) => console.error('[AI Stats]', e));
+    supabase.rpc('increment_model_use', {
+      p_model: modelUsed,
+      p_provider: provider.name,
+    });
 
     return NextResponse.json({ reply });
   } catch (err) {
