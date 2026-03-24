@@ -55,7 +55,6 @@ interface AIChatProps {
   onReplaceResume?: (content: string) => void;
   isGuest?: boolean;
   expanded?: boolean;
-  minimizeSignal?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -68,17 +67,11 @@ export default function AIChat({
   onReplaceResume,
   isGuest = false,
   expanded = false,
-  minimizeSignal,
 }: AIChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
-  const [minimized, setMinimized] = useState(false);
-
-  useEffect(() => {
-    if (minimizeSignal) setMinimized(true);
-  }, [minimizeSignal]);
   const [models, setModels] = useState<ModelOption[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [showModelPicker, setShowModelPicker] = useState(false);
@@ -377,7 +370,7 @@ export default function AIChat({
       className={`flex flex-col border-t border-border bg-editor-bg ${expanded ? 'flex-1 min-h-0' : 'flex-shrink-0'}`}
       onClick={handleContainerClick}
     >
-      {!minimized && messages.length > 0 && (
+      {messages.length > 0 && (
         <div
           ref={historyRef}
           className={`overflow-y-auto overflow-x-hidden px-4 py-3 flex flex-col gap-3 ${expanded ? 'flex-1' : ''}`}
@@ -522,136 +515,125 @@ export default function AIChat({
       )}
 
       {/* Input row */}
-      {!minimized && (
-        <div className="flex items-end gap-2 px-3 py-2.5 sm:py-2">
-          <span
-            className="text-accent select-none text-sm flex-shrink-0 pb-1"
-            aria-hidden
-          >
-            ✦
-          </span>
+      <div className="flex items-end gap-2 px-3 py-2.5 sm:py-2">
+        <span
+          className="text-accent select-none text-sm flex-shrink-0 pb-1"
+          aria-hidden
+        >
+          ✦
+        </span>
 
-          <textarea
-            ref={inputRef}
-            rows={1}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onInput={handleInput}
-            placeholder={
-              messages.length === 0 ? 'Ask AI to improve your resume…' : ''
-            }
-            disabled={loading}
-            className="flex-1 bg-transparent text-sm text-text placeholder:text-faint outline-none disabled:opacity-50 resize-none overflow-y-auto max-h-36 leading-5 pb-1"
-          />
+        <textarea
+          ref={inputRef}
+          rows={1}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onInput={handleInput}
+          placeholder={
+            messages.length === 0 ? 'Ask AI to improve your resume…' : ''
+          }
+          disabled={loading}
+          className="flex-1 bg-transparent text-sm text-text placeholder:text-faint outline-none disabled:opacity-50 resize-none overflow-y-auto max-h-36 leading-5 pb-1"
+        />
 
-          {/* Bubbles + send — right side */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {/* Model picker bubble */}
-            <div className="relative">
-              {showModelPicker && (
-                <div
-                  ref={pickerRef}
-                  className="absolute bottom-full mb-1.5 right-0 w-56 bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-50"
-                >
-                  <div
-                    className="overflow-y-auto"
-                    style={{ maxHeight: '240px' }}
-                  >
-                    {models.map((m) => {
-                      const isActive = m.id === selectedModel;
-                      const badgeClass =
-                        PROVIDER_COLORS[m.provider] ??
-                        'text-muted bg-surface-2';
-                      return (
-                        <button
-                          key={m.id}
-                          onClick={() => handleModelChange(m.id)}
-                          className={`w-full text-left px-3 py-3 sm:py-2 text-xs transition-colors duration-100 ${
-                            isActive
-                              ? 'bg-accent-muted text-accent'
-                              : 'text-text hover:bg-surface-2'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="truncate">{m.name}</span>
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                              {!!m.use_count && m.use_count > 0 && (
-                                <span className="text-[10px] text-faint tabular-nums">
-                                  {m.use_count.toLocaleString()}
-                                </span>
-                              )}
-                              <span
-                                className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full uppercase tracking-wide ${badgeClass}`}
-                              >
-                                {m.provider}
-                              </span>
-                            </div>
+        {/* Bubbles + send — right side */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Model picker bubble */}
+          <div className="relative">
+            {showModelPicker && (
+              <div
+                ref={pickerRef}
+                className="absolute bottom-full mb-1.5 right-0 w-56 bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-50"
+              >
+                <div className="overflow-y-auto" style={{ maxHeight: '240px' }}>
+                  {models.map((m) => {
+                    const isActive = m.id === selectedModel;
+                    const badgeClass =
+                      PROVIDER_COLORS[m.provider] ?? 'text-muted bg-surface-2';
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => handleModelChange(m.id)}
+                        className={`w-full text-left px-3 py-3 sm:py-2 text-xs transition-colors duration-100 ${
+                          isActive
+                            ? 'bg-accent-muted text-accent'
+                            : 'text-text hover:bg-surface-2'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate">{m.name}</span>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <span
+                              className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full uppercase tracking-wide ${badgeClass}`}
+                            >
+                              {m.provider}
+                            </span>
                           </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
-              <button
-                ref={pickerTriggerRef}
-                onClick={() => setShowModelPicker((v) => !v)}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs text-muted hover:text-text bg-surface hover:bg-surface-2 border border-border transition-colors duration-150"
-                title="Select AI model"
-              >
-                <BrainIcon size={12} className="text-accent flex-shrink-0" />
-                <span className="max-w-[80px] truncate">
-                  {activeModel?.name ?? '…'}
-                </span>
-                {activeModel && (
-                  <span
-                    className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full uppercase tracking-wide ${PROVIDER_COLORS[activeModel.provider] ?? 'text-muted bg-surface-2'}`}
-                  >
-                    {activeModel.provider}
-                  </span>
-                )}
-                {showModelPicker ? (
-                  <CaretUpIcon
-                    size={9}
-                    weight="bold"
-                    className="flex-shrink-0 text-faint"
-                  />
-                ) : (
-                  <CaretDownIcon
-                    size={9}
-                    weight="bold"
-                    className="flex-shrink-0 text-faint"
-                  />
-                )}
-              </button>
-            </div>
-
-            {/* Clear bubble */}
-            {messages.length > 0 && (
-              <button
-                onClick={handleClearChat}
-                disabled={loading}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs text-muted hover:text-text bg-surface hover:bg-surface-2 border border-border disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
-                title="Clear chat"
-              >
-                <EraserIcon size={12} />
-                Clear
-              </button>
+              </div>
             )}
-
-            {/* Send */}
             <button
-              onClick={() => send()}
-              disabled={!input.trim() || loading}
-              className="p-1.5 rounded-full text-accent hover:bg-accent-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              title="Send (Enter)"
+              ref={pickerTriggerRef}
+              onClick={() => setShowModelPicker((v) => !v)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs text-muted hover:text-text bg-surface hover:bg-surface-2 border border-border transition-colors duration-150"
+              title="Select AI model"
             >
-              <PaperPlaneTiltIcon size={15} weight="fill" />
+              <BrainIcon size={12} className="text-accent flex-shrink-0" />
+              <span className="hidden sm:inline max-w-[80px] truncate">
+                {activeModel?.name ?? '…'}
+              </span>
+              {activeModel && (
+                <span
+                  className={`hidden sm:inline text-[9px] font-medium px-1.5 py-0.5 rounded-full uppercase tracking-wide ${PROVIDER_COLORS[activeModel.provider] ?? 'text-muted bg-surface-2'}`}
+                >
+                  {activeModel.provider}
+                </span>
+              )}
+              {showModelPicker ? (
+                <CaretUpIcon
+                  size={9}
+                  weight="bold"
+                  className="hidden sm:inline flex-shrink-0 text-faint"
+                />
+              ) : (
+                <CaretDownIcon
+                  size={9}
+                  weight="bold"
+                  className="hidden sm:inline flex-shrink-0 text-faint"
+                />
+              )}
             </button>
           </div>
+
+          {/* Clear bubble */}
+          {messages.length > 0 && (
+            <button
+              onClick={handleClearChat}
+              disabled={loading}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs text-muted hover:text-text bg-surface hover:bg-surface-2 border border-border disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
+              title="Clear chat"
+            >
+              <EraserIcon size={12} />
+              Clear
+            </button>
+          )}
+
+          {/* Send */}
+          <button
+            onClick={() => send()}
+            disabled={!input.trim() || loading}
+            className="p-1.5 rounded-full text-accent hover:bg-accent-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            title="Send (Enter)"
+          >
+            <PaperPlaneTiltIcon size={15} weight="fill" />
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }

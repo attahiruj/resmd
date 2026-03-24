@@ -40,7 +40,6 @@ export default function EditorClient({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
-  const [aiMinimizeSignal, setAiMinimizeSignal] = useState(0);
 
   const [jumpTarget, setJumpTarget] = useState<{
     word: string;
@@ -291,10 +290,7 @@ export default function EditorClient({
           )}
           {mobileTab === 'write' ? (
             <div className="h-full flex flex-col bg-editor-bg">
-              <div
-                className="flex-1 min-h-0 overflow-hidden"
-                onClick={() => setAiMinimizeSignal((s) => s + 1)}
-              >
+              <div className="flex-1 min-h-0 overflow-hidden">
                 {isMounted && (
                   <Editor
                     value={rawContent}
@@ -311,7 +307,6 @@ export default function EditorClient({
                 onApplyEdit={handleApplyEdit}
                 onReplaceResume={handleReplaceResume}
                 isGuest={isGuest}
-                minimizeSignal={aiMinimizeSignal}
               />
             </div>
           ) : (
