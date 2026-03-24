@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Noto_Sans, Noto_Sans_Mono } from 'next/font/google';
 import localFont from 'next/font/local';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 
 const notoSans = Noto_Sans({
@@ -110,6 +111,7 @@ export default function RootLayout({
       <body className="bg-bg text-text antialiased">
         {children}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
