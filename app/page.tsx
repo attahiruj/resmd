@@ -17,6 +17,7 @@ import {
   CoffeeIcon,
   SunIcon,
   MoonIcon,
+  GitHubIcon,
 } from '@phosphor-icons/react';
 import { applyTheme, getStoredThemePrefs } from '@/lib/themes';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
@@ -95,13 +96,13 @@ function Nav() {
             {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
           </button>
           <a
-            href="https://buymeacoffee.com/hattahiroo"
+            href="https://github.com/attahiruj/resmd"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:flex items-center gap-2 text-sm text-muted hover:text-text transition-colors duration-200"
           >
-            <HeartIcon className="w-4 h-4" />
-            Support
+            <GitHubIcon className="w-4 h-4" />
+            GitHub
           </a>
           <Link
             href="/auth"
@@ -125,7 +126,7 @@ function Nav() {
 
 function Hero() {
   return (
-    <section className="relative pt-32 pb-24 px-6 min-h-[90vh] flex items-center">
+    <section className="relative pt-28 pb-16 sm:pt-32 sm:pb-24 px-6 min-h-[80vh] sm:min-h-[90vh] flex items-center">
       {/* Decorative floating shapes */}
       <div className="absolute top-40 left-10 w-32 h-32 border border-accent/20 rounded-full animate-float hidden lg:block" />
       <div className="absolute top-60 right-20 w-20 h-20 bg-secondary/10 rounded-lg rotate-12 animate-float-reverse hidden lg:block" />
@@ -150,17 +151,17 @@ function Hero() {
               truth.
             </p>
 
-            <div className="reveal-up reveal-delay-3 flex flex-wrap gap-4 mb-8">
+            <div className="reveal-up reveal-delay-3 flex flex-col sm:flex-row flex-wrap gap-4 mb-8">
               <Link
                 href="/editor/new"
-                className="group inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-accent-text font-medium px-7 py-3.5 rounded-xl transition-all duration-300 hover:shadow-accent hover:shadow-xl hover:-translate-y-1"
+                className="group inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-accent-text font-medium px-7 py-3.5 rounded-xl transition-all duration-300 hover:shadow-accent hover:shadow-xl hover:-translate-y-1 w-full sm:w-auto"
               >
                 <TerminalIcon className="w-4 h-4 group-hover:rotate-12 transition-transform" />
                 Try it free
               </Link>
               <a
                 href="#how-it-works"
-                className="inline-flex items-center gap-2 border border-border hover:border-accent/50 text-muted hover:text-text px-7 py-3.5 rounded-xl transition-all duration-200 hover:bg-surface"
+                className="inline-flex items-center justify-center gap-2 border border-border hover:border-accent/50 text-muted hover:text-text px-7 py-3.5 rounded-xl transition-all duration-200 hover:bg-surface w-full sm:w-auto"
               >
                 <ArrowDownIcon className="w-4 h-4" />
                 See how it works
@@ -179,9 +180,11 @@ function Hero() {
               {/* Floating accent behind */}
               <div className="absolute -inset-4 bg-gradient-to-br from-accent/20 via-secondary/10 to-transparent rounded-3xl blur-2xl" />
 
-              <div className="relative grid grid-cols-2 gap-3">
+              <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <EditorMockup />
-                <PreviewMockup />
+                <div className="hidden sm:block">
+                  <PreviewMockup />
+                </div>
               </div>
 
               {/* Floating stats card */}
@@ -199,6 +202,10 @@ function Hero() {
             </div>
           </div>
         </div>
+      </div>
+      <div className="absolute top-4 right-4 hidden sm:flex bg-surface border border-border rounded-lg p-2 items-center gap-2 text-xs text-muted">
+        <GitHubIcon className="w-3 h-3" />
+        <span className="font-medium">GitHub</span>
       </div>
     </section>
   );
@@ -431,7 +438,7 @@ function Features() {
               tool with publication-quality output.
             </p>
           </div>
-          <div className="reveal-up reveal-delay-2 flex gap-3">
+          <div className="reveal-up reveal-delay-2 hidden sm:flex gap-3">
             <div className="px-4 py-2 bg-surface border border-border rounded-lg text-sm text-muted">
               ← Scroll to explore
             </div>
