@@ -17,7 +17,6 @@ import {
   CoffeeIcon,
   SunIcon,
   MoonIcon,
-  GitHubIcon,
 } from '@phosphor-icons/react';
 import { applyTheme, getStoredThemePrefs } from '@/lib/themes';
 import { createSupabaseBrowserClient } from '@/lib/supabase';

@@ -9,6 +9,7 @@ import {
   UserCircleIcon,
   Warning,
   DownloadSimpleIcon,
+  CopyIcon,
 } from '@phosphor-icons/react';
 import { applyTheme, getStoredThemePrefs } from '@/lib/themes';
 import { useProfile } from '@/hooks/useProfile';
@@ -23,6 +24,7 @@ interface ToolbarProps {
   onTitleChange?: (title: string) => void;
   resumeId?: string;
   rawContent?: string;
+  onCloneAndTailor?: () => void;
 }
 
 export default function Toolbar({
@@ -32,6 +34,7 @@ export default function Toolbar({
   onTitleChange,
   resumeId,
   rawContent,
+  onCloneAndTailor,
 }: ToolbarProps) {
   const [isDark, setIsDark] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
@@ -198,6 +201,22 @@ export default function Toolbar({
                 {isExporting ? 'Exporting…' : 'Export PDF'}
               </span>
             </button>
+
+            {onCloneAndTailor && (
+              <button
+                onClick={onCloneAndTailor}
+                disabled={!resumeId}
+                title={!resumeId ? 'Sign in to clone' : 'Clone & Tailor'}
+                className={`text-sm px-3 py-3 sm:py-1.5 rounded-lg border border-border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                  !resumeId
+                    ? 'text-faint cursor-not-allowed opacity-50'
+                    : 'text-text hover:bg-surface-2'
+                }`}
+              >
+                <CopyIcon size={17} weight="bold" className="sm:hidden" />
+                <span className="hidden sm:inline">Clone & Tailor</span>
+              </button>
+            )}
 
             <Link
               href="/dashboard"

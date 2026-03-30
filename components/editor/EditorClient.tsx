@@ -8,6 +8,7 @@ import PreviewPane from '@/components/preview/PreviewPane';
 import AIChat from '@/components/editor/AIChat';
 import ErrorBoundary from '@/components/editor/ErrorBoundary';
 import GuestBanner from '@/components/editor/GuestBanner';
+import CloneModal from '@/components/variants/CloneModal';
 import type { Resume } from '@/types/resume';
 
 // CodeMirror is browser-only
@@ -40,6 +41,8 @@ export default function EditorClient({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const [showCloneModal, setShowCloneModal] = useState(false);
+  const [isCloning, setIsCloning] = useState(false);
 
   const [jumpTarget, setJumpTarget] = useState<{
     word: string;
@@ -237,6 +240,39 @@ export default function EditorClient({
     window.addEventListener('mouseup', onMouseUp);
   }, []);
 
+  const handleCloneAndTailor = useCallback(() => {
+    setShowCloneModal(true);
+  }, []);
+
+  const handleCloneConfirm = useCallback(
+    async (title: string, targetRoleDescription?: string) => {
+      setIsCloning(true);
+      try {
+        const response = await fetch(`/api/resumes/${resume.id}/clone`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, targetRoleDescription }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to clone resume');
+        }
+
+        const { data: newResume } = await response.json();
+        // Redirect to the new resume
+        window.location.href = `/editor/${newResume.id}`;
+      } catch (error) {
+        console.error('Clone failed:', error);
+        // TODO: Show error toast to user
+      } finally {
+        setIsCloning(false);
+        setShowCloneModal(false);
+      }
+    },
+    [resume.id]
+  );
+
   return (
     <ErrorBoundary>
       <div className="flex flex-col h-dvh overflow-hidden bg-bg">
@@ -246,6 +282,7 @@ export default function EditorClient({
           onTitleChange={handleTitleChange}
           resumeId={resume.id}
           rawContent={rawContent}
+          onCloneAndTailor={handleCloneAndTailor}
         />
         {isGuest && <GuestBanner />}
 
@@ -376,6 +413,16 @@ export default function EditorClient({
           </div>
         </div>
       </div>
+
+      {/* Clone Modal */}
+      {showCloneModal && (
+        <CloneModal
+          sourceResume={resume}
+          onConfirm={handleCloneConfirm}
+          onClose={() => setShowCloneModal(false)}
+          loading={isCloning}
+        />
+      )}
     </ErrorBoundary>
   );
 }

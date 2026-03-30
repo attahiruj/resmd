@@ -15,7 +15,7 @@ const SUGGESTED_NAMES = [
 
 interface CloneModalProps {
   sourceResume: Resume;
-  onConfirm: (title: string) => void;
+  onConfirm: (title: string, targetRoleDescription?: string) => void;
   onClose: () => void;
   loading?: boolean;
   atLimit?: boolean;
@@ -29,10 +29,15 @@ export default function CloneModal({
   atLimit = false,
 }: CloneModalProps) {
   const [title, setTitle] = useState('');
+  const [showTailorSection, setShowTailorSection] = useState(false);
+  const [targetRoleDescription, setTargetRoleDescription] = useState('');
 
   const handleConfirm = () => {
     if (!title.trim() || loading) return;
-    onConfirm(title.trim());
+    onConfirm(
+      title.trim(),
+      showTailorSection ? targetRoleDescription.trim() : undefined
+    );
   };
 
   return (
@@ -86,6 +91,56 @@ export default function CloneModal({
           ))}
         </div>
 
+        {/* Tailor for Role Section */}
+        <div className="mb-4">
+          <button
+            onClick={() => setShowTailorSection(!showTailorSection)}
+            className="flex items-center gap-2 text-xs text-muted hover:text-text transition-colors duration-150"
+          >
+            <span
+              className={`w-4 h-4 border border-border rounded flex items-center justify-center ${showTailorSection ? 'bg-accent border-accent' : ''}`}
+            >
+              {showTailorSection && (
+                <svg
+                  className="w-3 h-3 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              )}
+            </span>
+            Tailor for Role
+          </button>
+
+          {showTailorSection && (
+            <div className="mt-3">
+              <label className="text-xs text-muted block mb-1">
+                Target role description
+              </label>
+              <textarea
+                value={targetRoleDescription}
+                onChange={(e) =>
+                  setTargetRoleDescription(e.target.value.slice(0, 2000))
+                }
+                placeholder="Paste the job description or describe the role you're applying for..."
+                rows={4}
+                maxLength={2000}
+                className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm text-text placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-accent transition-colors duration-150 resize-none"
+              />
+              <p className="text-xs text-muted mt-1">
+                AI will rewrite your resume to align with this role
+              </p>
+            </div>
+          )}
+        </div>
+
         <div className="flex gap-2 justify-end">
           <Button variant="ghost" onClick={onClose}>
             Cancel
@@ -98,7 +153,13 @@ export default function CloneModal({
                 className="animate-spin"
               />
             )}
-            {loading ? 'Cloning…' : 'Clone resume'}
+            {loading
+              ? showTailorSection && targetRoleDescription.trim()
+                ? 'Tailoring…'
+                : 'Cloning…'
+              : showTailorSection && targetRoleDescription.trim()
+                ? 'Clone & Tailor'
+                : 'Clone resume'}
           </Button>
         </div>
       </div>
