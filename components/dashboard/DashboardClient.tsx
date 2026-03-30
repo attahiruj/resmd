@@ -163,14 +163,17 @@ export default function DashboardClient({
     }
   };
 
-  const handleCloneConfirm = async (title: string) => {
+  const handleCloneConfirm = async (
+    title: string,
+    targetRoleDescription?: string
+  ) => {
     if (!cloneSource) return;
     setCloning(true);
     try {
       const res = await fetch(`/api/resumes/${cloneSource.id}/clone`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ title, targetRoleDescription }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Failed to clone');
