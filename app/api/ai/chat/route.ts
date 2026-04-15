@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { buildSystemPrompt, AI_MAX_TOKENS } from '@/lib/prompts';
 import { getProviderForModel } from '@/lib/ai-providers';
+import { debug } from '@/lib/env';
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -69,6 +70,7 @@ export async function POST(req: NextRequest) {
     ];
 
     const modelUsed = model ?? provider.defaultModel;
+    debug('AI Chat', { model: modelUsed, messageLength: message.length });
     const response = await provider.chat({
       messages,
       model: modelUsed,

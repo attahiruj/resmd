@@ -4,6 +4,7 @@ import { createResume, getUserResumes } from '@/lib/resumeService';
 import { LIMITS } from '@/lib/limits';
 import { getAllTemplates } from '@/lib/templates';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { debug } from '@/lib/env';
 
 // GET /api/resumes — list authenticated user's resumes
 export async function GET() {
@@ -105,6 +106,7 @@ export async function POST(req: NextRequest) {
     }
 
     const resume = await createResume(user.id, title, rawContent, templateId);
+    debug('Resume created', { id: resume.id, title: resume.title });
     return NextResponse.json({ data: resume });
   } catch (err) {
     console.error('[POST /api/resumes]', err);

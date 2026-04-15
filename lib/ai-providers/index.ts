@@ -1,6 +1,7 @@
 import { OpenAICompatibleProvider } from './openai-compatible';
 import type { AIProvider } from './types';
 import CURATED_MODELS from './models.json';
+import { debug } from '@/lib/env';
 
 export type { AIModel, AIProvider, ChatMessage, ChatRequest } from './types';
 export { createSSEStream } from './stream';
@@ -60,6 +61,10 @@ export function getActiveProviders(): AIProvider[] {
     providers.push(makeGroqProvider(process.env.GROQ_API_KEY));
   if (process.env.OPENROUTER_API_KEY)
     providers.push(makeOpenRouterProvider(process.env.OPENROUTER_API_KEY));
+  debug('AI Providers loaded', {
+    count: providers.length,
+    names: providers.map((p) => p.name),
+  });
   return providers;
 }
 

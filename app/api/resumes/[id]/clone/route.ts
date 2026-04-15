@@ -9,6 +9,7 @@ import { LIMITS } from '@/lib/limits';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { getProviderForModel } from '@/lib/ai-providers';
 import { buildTailoringPrompt, parseSuggestion } from '@/lib/prompts';
+import { debug } from '@/lib/env';
 
 // POST /api/resumes/[id]/clone — clone an existing resume
 export async function POST(
@@ -48,19 +49,15 @@ export async function POST(
     }
 
     const resume = await cloneResume(id, title.trim(), user.id);
-    console.log(
-      `[Clone] Created resume "${resume.title}" (${resume.id}) from ${id}`
-    );
+    debug(`Created resume "${resume.title}" (${resume.id}) from ${id}`);
 
     // If target role description is provided, tailor the resume
     if (targetRoleDescription?.trim()) {
-      console.log(
-        `[Clone/Tailor] Starting AI tailoring for resume ${resume.id}`
-      );
+      debug(`Starting AI tailoring for resume ${resume.id}`);
       try {
         const provider = getProviderForModel('');
-        console.log(
-          `[Clone/Tailor] Using provider: ${provider.name}, model: ${provider.defaultModel}`
+        debug(
+          `Using provider: ${provider.name}, model: ${provider.defaultModel}`
         );
 
         const prompt = buildTailoringPrompt(
@@ -84,8 +81,8 @@ export async function POST(
               resume.templateId
             );
             resume.rawContent = parsed.fullResume;
-            console.log(
-              `[Clone/Tailor] Resume ${resume.id} tailored successfully (${parsed.fullResume.length} chars)`
+            debug(
+              `Resume ${resume.id} tailored successfully (${parsed.fullResume.length} chars)`
             );
           } else {
             console.warn(
