@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { getActiveProviders } from '@/lib/ai-providers';
 import type { AIModel } from '@/lib/ai-providers';
+import { debug } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const providers = getActiveProviders();
+  debug('AI Models', { providerCount: providers.length });
   if (providers.length === 0)
     return NextResponse.json(
       { error: 'AI service not configured' },

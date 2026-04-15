@@ -13,6 +13,13 @@ function requireEnv(key: string): string {
 export const env = {
   NEXT_PUBLIC_SUPABASE_URL: requireEnv('NEXT_PUBLIC_SUPABASE_URL'),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+  DEBUG_MODE: process.env.DEBUG_MODE === 'true',
   // AI provider keys are validated per-request in lib/ai-providers/index.ts
   // to allow graceful 503 responses rather than crashing at startup.
 } as const;
+
+export function debug(...args: Parameters<typeof console.log>) {
+  if (env.DEBUG_MODE) {
+    console.log('[DEBUG]', ...args);
+  }
+}

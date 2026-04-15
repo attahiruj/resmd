@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { getProviderForModel, createSSEStream } from '@/lib/ai-providers';
+import { debug } from '@/lib/env';
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -90,7 +91,7 @@ rewritten text here
 
     const messages = [{ role: 'user' as const, content: systemPrompt }];
 
-    console.log('[AI Enhance] →', {
+    debug('AI Enhance', {
       selectedTextLength: selectedText.length,
       resumeContextLength: resumeContext?.length || 0,
     });
