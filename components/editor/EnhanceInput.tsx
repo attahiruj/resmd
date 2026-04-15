@@ -22,6 +22,8 @@ export default function EnhanceInput({
   const [instruction, setInstruction] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [applying, setApplying] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -89,13 +91,25 @@ export default function EnhanceInput({
         setLoading(false);
         const match = fullText.match(/<<<SUGGESTION>>>([\s\S]*?)<<<END>>>/);
         const replacement = match ? match[1].trim() : fullText.trim();
-        onApply(replacement);
+        setSuggestion(replacement);
       },
       onError: (errMsg) => {
         setLoading(false);
         setError(errMsg);
       },
     });
+  };
+
+  const handleAccept = () => {
+    if (!suggestion) return;
+    setApplying(true);
+    onApply(suggestion);
+  };
+
+  const handleReject = () => {
+    setSuggestion(null);
+    setInstruction('');
+    textareaRef.current?.focus();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -150,55 +164,96 @@ export default function EnhanceInput({
           </div>
         </div>
 
-        {/* Instruction input */}
-        <div className="px-3 py-2">
-          <textarea
-            ref={textareaRef}
-            value={instruction}
-            onChange={(e) => setInstruction(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Improve this section..."
-            rows={2}
-            className="w-full bg-transparent text-sm text-text placeholder:text-faint outline-none resize-none"
-            disabled={loading}
-          />
-        </div>
-
-        {/* Error message */}
-        {error && (
-          <div className="px-3 pb-2">
-            <div className="text-xs text-red-400 bg-red-900/20 px-2 py-1 rounded">
-              {error}
+        {suggestion ? (
+          <div className="px-3 py-2">
+            <div className="text-[10px] uppercase tracking-wide text-faint mb-1">
+              Suggested improvement
+            </div>
+            <div className="text-sm text-text whitespace-pre-wrap">
+              {suggestion}
             </div>
           </div>
+        ) : (
+          <>
+            {/* Instruction input */}
+            <div className="px-3 py-2">
+              <textarea
+                ref={textareaRef}
+                value={instruction}
+                onChange={(e) => setInstruction(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Improve this section..."
+                rows={2}
+                className="w-full bg-transparent text-sm text-text placeholder:text-faint outline-none resize-none"
+                disabled={loading}
+              />
+            </div>
+
+            {/* Error message */}
+            {error && (
+              <div className="px-3 pb-2">
+                <div className="text-xs text-red-400 bg-red-900/20 px-2 py-1 rounded">
+                  {error}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-2 px-3 py-2 border-t border-border bg-surface-2 rounded-b-xl">
-          <button
-            onClick={onClose}
-            disabled={loading}
-            className="px-3 py-1.5 text-xs text-muted hover:text-text rounded-md hover:bg-surface transition-colors disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-secondary text-bg rounded-md hover:bg-secondary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <>
-                <span className="w-3 h-3 border-2 border-bg/30 border-t-bg rounded-full animate-spin" />
-                Enhancing...
-              </>
-            ) : (
-              <>
-                <PaperPlaneTiltIcon size={12} weight="fill" />
-                {instruction.trim() ? 'Send' : 'Enhance'}
-              </>
-            )}
-          </button>
+          {suggestion ? (
+            <>
+              <button
+                onClick={handleReject}
+                disabled={applying}
+                className="px-3 py-1.5 text-xs text-muted hover:text-text rounded-md hover:bg-surface transition-colors disabled:opacity-50"
+              >
+                Reject
+              </button>
+              <button
+                onClick={handleAccept}
+                disabled={applying}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-secondary text-bg rounded-md hover:bg-secondary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {applying ? (
+                  <>
+                    <span className="w-3 h-3 border-2 border-bg/30 border-t-bg rounded-full animate-spin" />
+                    Applying...
+                  </>
+                ) : (
+                  'Accept'
+                )}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={onClose}
+                disabled={loading}
+                className="px-3 py-1.5 text-xs text-muted hover:text-text rounded-md hover:bg-surface transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-secondary text-bg rounded-md hover:bg-secondary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <span className="w-3 h-3 border-2 border-bg/30 border-t-bg rounded-full animate-spin" />
+                    Enhancing...
+                  </>
+                ) : (
+                  <>
+                    <PaperPlaneTiltIcon size={12} weight="fill" />
+                    {instruction.trim() ? 'Send' : 'Enhance'}
+                  </>
+                )}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </>

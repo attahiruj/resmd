@@ -4,7 +4,7 @@ import CURATED_MODELS from './models.json';
 import { debug } from '@/lib/env';
 
 export type { AIModel, AIProvider, ChatMessage, ChatRequest } from './types';
-export { createSSEStream } from './stream';
+export { createSSEStream, createSuggestionFilter } from './stream';
 export { OpenAICompatibleProvider } from './openai-compatible';
 
 // ---------------------------------------------------------------------------
