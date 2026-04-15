@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { checkRateLimit } from '@/lib/rateLimit';
-import { getProviderForModel, createSSEStream } from '@/lib/ai-providers';
-import { debug } from '@/lib/env';
+import {
+  getProviderForModel,
+  createSSEStream,
+  createSuggestionFilter,
+} from '@/lib/ai-providers';
+import { debug, env } from '@/lib/env';
 
 export async function POST(req: NextRequest) {
   // Auth check
@@ -90,13 +94,16 @@ rewritten text here
 <<<END>>>`;
 
     const messages = [{ role: 'user' as const, content: systemPrompt }];
+    const modelUsed = model ?? provider.defaultModel;
 
-    debug('AI Enhance', {
+    debug('AI Enhance >>>', {
+      model: modelUsed,
+      instruction: effectiveInstruction,
       selectedTextLength: selectedText.length,
       resumeContextLength: resumeContext?.length || 0,
+      prompt: systemPrompt,
     });
 
-    const modelUsed = model ?? provider.defaultModel;
     const response = await provider.chat({
       messages,
       model: modelUsed,
@@ -147,14 +154,45 @@ rewritten text here
       p_provider: provider.name,
     });
 
-    const stream = createSSEStream(response.body!);
+    let fullResponse = '';
+    const handleChunk = (text: string): string | null => {
+      fullResponse += text;
+      return createSuggestionFilter()(text);
+    };
 
-    return new Response(stream, {
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Transfer-Encoding': 'chunked',
-      },
+    const stream = createSSEStream(response.body!, {
+      onChunk: handleChunk,
     });
+
+    return new Response(
+      new ReadableStream({
+        start(controller) {
+          const reader = stream.getReader();
+          const decoder = new TextDecoder();
+
+          (async () => {
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                controller.enqueue(value);
+              }
+            } finally {
+              if (env.DEBUG_MODE) {
+                debug('AI Enhance <<<', { response: fullResponse });
+              }
+              controller.close();
+            }
+          })();
+        },
+      }),
+      {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Transfer-Encoding': 'chunked',
+        },
+      }
+    );
   } catch (err) {
     console.error('[AI Enhance] Error:', err);
     return NextResponse.json({ error: 'AI request failed' }, { status: 500 });
