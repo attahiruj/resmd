@@ -6,6 +6,7 @@ import { getResume } from '@/lib/resumeService';
 import { parseResume } from '@/lib/parser';
 import { getTemplate, getPdfComponent } from '@/lib/templates';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { debug } from '@/lib/env';
 
 export async function POST(req: NextRequest) {
   try {
@@ -53,6 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     const PdfComponent = await getPdfComponent(resume.templateId);
+    debug('PDF export', { resumeId, templateId: resume.templateId });
     const doc = React.createElement(PdfComponent, { resume: parsed });
     const buffer = await renderToBuffer(
       doc as React.ReactElement<DocumentProps>
