@@ -42,6 +42,9 @@ export class OpenAICompatibleProvider implements AIProvider {
         model: request.model ?? this.config.defaultModel,
         [maxTokensKey]: request.maxTokens,
         messages: request.messages,
+        ...(request.temperature !== undefined
+          ? { temperature: request.temperature }
+          : {}),
         ...(request.stream ? { stream: true } : {}),
       }),
     });
