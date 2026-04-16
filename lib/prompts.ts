@@ -152,6 +152,68 @@ export function parseSuggestion(reply: string): ParsedReply {
 }
 
 /**
+ * Builds a prompt to convert raw extracted text (from PDF/DOCX) into resmarkup.
+ */
+export function buildImportPrompt(rawText: string): string {
+  return `You are a resume parser. Convert the raw extracted text below into **resmarkup** format exactly as specified. Do not add, invent, or infer any content not present in the source.
+
+## resmarkup format
+
+\`\`\`
+# Bio
+Name: Full Name
+Phone: ...
+Location: ...
+Email: ...
+GitHub: ...
+LinkedIn: ...
+
+# Section Name
+## Entry Title @ Organization | Date Range
+- Bullet point
+- Bullet point
+
+# Technical Skills
+Category: item1, item2, item3
+\`\`\`
+
+## Rules
+
+**Bio section (REQUIRED — always output this first):**
+- Always start with \`# Bio\`
+- \`Name:\` is **required** — use the person's name from the top of the document
+- Only include fields that are present in the source: \`Phone\`, \`Location\`, \`Email\`, \`GitHub\`, \`LinkedIn\`, \`Website\`
+- If GitHub/LinkedIn appear as placeholder text like \`*Github*\` or \`*LinkedIn*\` with no URL, omit those lines
+
+**Section headings:**
+- Normalize letter-spaced headings: \`E D U C A T I O N\` → \`# Education\`, \`R E S E A R C H   E X P E R I E N C E\` → \`# Research Experience\`
+- ALL CAPS words like \`EDUCATION\`, \`EXPERIENCE\` become \`# Education\`, \`# Experience\`
+
+**Entries:**
+- Format: \`## Title @ Organization | Date\`
+- Separator between title and org may be \`·\`, \`—\`, \`at\`, or a tab — always convert to \`@\`
+- Date ranges like \`Sep 2025 – Jan 2026\` stay as-is after the \`|\`
+- If no organization, use: \`## Title | Date\`
+
+**Bullets:**
+- Lines starting with \`–\`, \`-\`, or \`•\` become \`- text\` (don't forget space after the dash)
+
+**Key:value lines** (e.g. \`Programming: Python, C/C++\`) — preserve as-is outside Bio
+
+**Critical — no fabrication:**
+- Output ONLY content from the source text
+- If a list has 3 items, output exactly 3. Do not extend it.
+- Do not wrap output in code fences or add any commentary
+
+## Source text
+=== START ===
+${rawText}
+=== END ===
+
+Output the resmarkup below:`;
+}
+
+/**
  * Builds a prompt to tailor a resume for a specific target role.
  * The AI will rewrite the entire resume to align with the target role description.
  */
