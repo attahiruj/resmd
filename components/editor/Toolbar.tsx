@@ -1,35 +1,40 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import {
   SunIcon,
   MoonIcon,
-  UserCircleIcon,
   Warning,
   DownloadSimpleIcon,
-  CopyIcon,
+  ChatTeardropTextIcon,
+  QuestionIcon,
+  CoffeeIcon,
+  SignOutIcon,
+  CopySimpleIcon,
 } from '@phosphor-icons/react';
 import { applyTheme, getStoredThemePrefs } from '@/lib/themes';
 import { useProfile } from '@/hooks/useProfile';
 import Navbar from '@/components/ui/Navbar';
 import { hasPlaceholders } from '@/lib/inline';
 import FeedbackModal from '@/components/ui/FeedbackModal';
+import { createSupabaseBrowserClient } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 
 interface ToolbarProps {
   lastSaved: Date | null;
-
   resumeTitle?: string;
   onTitleChange?: (title: string) => void;
   resumeId?: string;
   rawContent?: string;
   onCloneAndTailor?: () => void;
+  templateId?: string;
+  onTemplateChange?: (id: string) => void;
 }
 
 export default function Toolbar({
   lastSaved,
-
   resumeTitle,
   onTitleChange,
   resumeId,
@@ -41,6 +46,7 @@ export default function Toolbar({
   const [showPlaceholderWarning, setShowPlaceholderWarning] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const { user, profile } = useProfile();
+  const router = useRouter();
 
   useEffect(() => {
     const { themeId, mode } = getStoredThemePrefs();
@@ -74,13 +80,12 @@ export default function Toolbar({
       a.download = match?.[1] ?? 'resume.pdf';
       a.click();
       URL.revokeObjectURL(url);
-      // Show feedback prompt once, after the user's first successful export
       if (!localStorage.getItem('resmd_exported_once')) {
         localStorage.setItem('resmd_exported_once', '1');
         setTimeout(() => setShowFeedback(true), 800);
       }
     } catch {
-      // Silently fail — user sees nothing changed
+      // Silently fail
     } finally {
       setIsExporting(false);
     }
@@ -95,9 +100,14 @@ export default function Toolbar({
     }
   };
 
+  const handleSignOut = async () => {
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    router.push('/auth');
+  };
+
   const lastSavedLabel = lastSaved ? formatRelative(lastSaved) : null;
-  const userInitial =
-    (profile?.email?.[0] ?? user?.email?.[0] ?? '').toUpperCase() || null;
+  const email = profile?.email ?? user?.email ?? '';
 
   return (
     <>
@@ -146,35 +156,55 @@ export default function Toolbar({
       <Navbar
         left={
           resumeTitle !== undefined && onTitleChange ? (
-            <input
-              value={resumeTitle}
-              onChange={(e) => onTitleChange(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') e.currentTarget.blur();
-              }}
-              className="text-base font-medium text-text bg-transparent px-1.5 py-0.5 rounded-md border border-transparent hover:border-border focus:border-accent focus:bg-surface-2 outline-none transition-colors duration-150 max-w-[110px] sm:max-w-[260px]"
-              placeholder="Untitled"
-              title="Click to rename"
-            />
+            <div className="flex items-center gap-2 min-w-0">
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 bg-surface border border-border rounded-lg cursor-text hover:border-accent/40 transition-colors duration-150 min-w-0"
+                onClick={(e) => {
+                  const input = (e.currentTarget as HTMLElement).querySelector(
+                    'input'
+                  );
+                  input?.focus();
+                }}
+              >
+                <div className="relative inline-flex items-center min-w-[3rem] max-w-[200px]">
+                  <span
+                    aria-hidden
+                    className="invisible whitespace-pre text-sm font-semibold pointer-events-none select-none"
+                  >
+                    {resumeTitle || 'Untitled'}
+                  </span>
+                  <input
+                    value={resumeTitle}
+                    onChange={(e) => onTitleChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') e.currentTarget.blur();
+                    }}
+                    className="absolute inset-0 w-full bg-transparent text-sm font-semibold text-text outline-none placeholder:text-faint"
+                    placeholder="Untitled"
+                    title="Click to rename"
+                  />
+                </div>
+              </div>
+
+              {onCloneAndTailor && resumeId && (
+                <button
+                  onClick={onCloneAndTailor}
+                  title="Clone this variant"
+                  className="p-1.5 rounded-lg text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150 flex-shrink-0"
+                >
+                  <CopySimpleIcon size={15} />
+                </button>
+              )}
+            </div>
           ) : undefined
         }
         right={
-          <div className="flex items-center gap-1.5 ml-auto">
+          <div className="flex items-center gap-2">
             {lastSavedLabel && (
-              <span className="text-xs text-muted mr-1 hidden sm:block">
+              <span className="text-xs text-muted hidden sm:block">
                 {lastSavedLabel}
               </span>
             )}
-
-            <button
-              onClick={toggleTheme}
-              className="p-3 sm:p-2.5 rounded-full text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
-            </button>
-
-            <div className="w-px h-5 bg-border mx-1" />
 
             <button
               onClick={handleExportPDF}
@@ -186,57 +216,136 @@ export default function Toolbar({
                     ? 'Generating…'
                     : 'Export PDF'
               }
-              className={`text-sm px-3 py-3 sm:py-1.5 rounded-lg border border-border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+              className={`text-sm px-3 py-1.5 rounded-lg border border-border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent flex items-center gap-1.5 ${
                 !resumeId || isExporting
                   ? 'text-faint cursor-not-allowed opacity-50'
                   : 'text-text hover:bg-surface-2'
               }`}
             >
-              <DownloadSimpleIcon
-                size={17}
-                weight="bold"
-                className="sm:hidden"
-              />
+              <DownloadSimpleIcon size={15} weight="bold" />
               <span className="hidden sm:inline">
                 {isExporting ? 'Exporting…' : 'Export PDF'}
               </span>
             </button>
 
-            {onCloneAndTailor && (
-              <button
-                onClick={onCloneAndTailor}
-                disabled={!resumeId}
-                title={!resumeId ? 'Sign in to clone' : 'Clone & Tailor'}
-                className={`text-sm px-3 py-3 sm:py-1.5 rounded-lg border border-border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-                  !resumeId
-                    ? 'text-faint cursor-not-allowed opacity-50'
-                    : 'text-text hover:bg-surface-2'
-                }`}
-              >
-                <CopyIcon size={17} weight="bold" className="sm:hidden" />
-                <span className="hidden sm:inline">Clone & Tailor</span>
-              </button>
-            )}
-
-            <Link
-              href="/dashboard"
-              title="Dashboard"
-              className="ml-0.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            >
-              {userInitial ? (
-                <div className="w-11 h-11 sm:w-8 sm:h-8 rounded-full bg-accent-muted text-accent flex items-center justify-center text-sm font-semibold hover:bg-accent-muted-hover transition-colors duration-150">
-                  {userInitial}
-                </div>
-              ) : (
-                <div className="p-3 sm:p-1.5 text-muted hover:text-text hover:bg-surface-2 rounded-full transition-colors duration-150">
-                  <UserCircleIcon size={22} />
-                </div>
-              )}
-            </Link>
+            <AvatarDropdown
+              email={email}
+              isDark={isDark}
+              onToggleTheme={toggleTheme}
+              onShowFeedback={() => setShowFeedback(true)}
+              onSignOut={handleSignOut}
+            />
           </div>
         }
       />
     </>
+  );
+}
+
+function AvatarDropdown({
+  email,
+  isDark,
+  onToggleTheme,
+  onShowFeedback,
+  onSignOut,
+}: {
+  email: string;
+  isDark: boolean;
+  onToggleTheme: () => void;
+  onShowFeedback: () => void;
+  onSignOut: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const initial = email?.[0]?.toUpperCase() || '?';
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center text-sm font-semibold hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        title="Account"
+      >
+        {initial}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-56 bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-30">
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-[11px] text-muted truncate">
+              {email || 'Guest'}
+            </p>
+          </div>
+
+          {/* Preferences */}
+          <div className="py-1">
+            <button
+              onClick={onToggleTheme}
+              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors"
+            >
+              {isDark ? <SunIcon size={15} /> : <MoonIcon size={15} />}
+              {isDark ? 'Light mode' : 'Dark mode'}
+            </button>
+            <button
+              onClick={() => {
+                onShowFeedback();
+                setOpen(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors"
+            >
+              <ChatTeardropTextIcon size={15} />
+              Feedback
+            </button>
+          </div>
+
+          {/* Help & Support */}
+          <div className="border-t border-border py-1">
+            <Link
+              href="/help"
+              onClick={() => setOpen(false)}
+              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors"
+            >
+              <QuestionIcon size={15} />
+              Help
+            </Link>
+            <a
+              href="https://buymeacoffee.com/hattahiroo"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors block"
+            >
+              <CoffeeIcon size={15} />
+              Support resmd
+            </a>
+          </div>
+
+          {/* Sign out */}
+          <div className="border-t border-border py-1">
+            <button
+              onClick={() => {
+                setOpen(false);
+                onSignOut();
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-danger hover:bg-danger/5 flex items-center gap-2.5 transition-colors"
+            >
+              <SignOutIcon size={15} />
+              Sign out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
