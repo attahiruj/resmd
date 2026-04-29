@@ -21,6 +21,9 @@ import {
   MoonIcon,
   ChatTeardropTextIcon,
   UploadSimpleIcon,
+  QuestionIcon,
+  CoffeeIcon,
+  SignOutIcon,
 } from '@phosphor-icons/react';
 import type { Resume } from '@/types/resume';
 import { parseResume } from '@/lib/parser';
@@ -259,35 +262,17 @@ export default function DashboardClient({
     <div className="min-h-screen bg-bg">
       <Navbar
         right={
-          <div className="flex items-center gap-3 ml-auto">
-            <button
-              onClick={() => setShowFeedback(true)}
-              className="p-2 rounded-full text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              title="Share feedback"
-            >
-              <ChatTeardropTextIcon size={18} />
-            </button>
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-full text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
-            </button>
-            <span className="text-xs text-muted hidden sm:block">
-              {userEmail}
-            </span>
-            <button
-              onClick={async () => {
-                const supabase = createSupabaseBrowserClient();
-                await supabase.auth.signOut();
-                router.push('/auth');
-              }}
-              className="text-xs text-muted hover:text-text transition-colors duration-150"
-            >
-              Sign out
-            </button>
-          </div>
+          <AvatarDropdown
+            email={userEmail}
+            isDark={isDark}
+            onToggleTheme={toggleTheme}
+            onShowFeedback={() => setShowFeedback(true)}
+            onSignOut={async () => {
+              const supabase = createSupabaseBrowserClient();
+              await supabase.auth.signOut();
+              router.push('/auth');
+            }}
+          />
         }
       />
 
@@ -296,9 +281,25 @@ export default function DashboardClient({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-xl font-semibold text-text">My Resumes</h1>
-            <p className="text-sm text-muted mt-0.5">
-              {resumes.length} / {LIMITS.MAX_VARIANTS} resumes
-            </p>
+            <div className="flex items-center gap-2.5 mt-1.5">
+              <div className="w-24 h-1.5 bg-surface-2 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{
+                    width: `${Math.min(100, (resumes.length / LIMITS.MAX_VARIANTS) * 100)}%`,
+                    background: atLimit
+                      ? 'var(--color-danger)'
+                      : 'var(--color-accent)',
+                  }}
+                />
+              </div>
+              <p className="text-xs text-muted">
+                {resumes.length} / {LIMITS.MAX_VARIANTS}
+                {atLimit && (
+                  <span className="text-danger ml-1">— limit reached</span>
+                )}
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -473,6 +474,34 @@ export default function DashboardClient({
             {/* Resumes */}
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* New Resume card — always first */}
+                {!searchQuery && (
+                  <button
+                    onClick={atLimit ? undefined : handleNewResume}
+                    disabled={creating || atLimit}
+                    className="group flex flex-col items-center justify-center gap-2.5 border-2 border-dashed border-border rounded-xl overflow-hidden bg-transparent hover:border-accent hover:bg-surface transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+                    title={
+                      atLimit ? 'Resume limit reached' : 'Create new resume'
+                    }
+                  >
+                    {creating ? (
+                      <SpinnerGapIcon
+                        size={24}
+                        weight="bold"
+                        className="animate-spin text-muted"
+                      />
+                    ) : (
+                      <PlusIcon
+                        size={24}
+                        weight="bold"
+                        className="text-muted group-hover:text-accent transition-colors duration-150"
+                      />
+                    )}
+                    <span className="text-sm font-medium text-muted group-hover:text-accent transition-colors duration-150">
+                      {creating ? 'Creating…' : 'New Resume'}
+                    </span>
+                  </button>
+                )}
                 {filteredResumes.map((resume, index) => (
                   <ResumeCard
                     key={resume.id}
@@ -682,6 +711,58 @@ function ResumeCard({
               {templateInfo.name}
             </span>
           </div>
+          {clonedFromTitle && (
+            <div className="absolute bottom-2 left-2">
+              <span className="text-[9px] text-muted bg-bg/80 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-1 leading-none">
+                <CopySimpleIcon size={9} />
+                cloned
+              </span>
+            </div>
+          )}
+          {/* Actions overlay — revealed on hover */}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center justify-center gap-2">
+            <Link
+              href={`/editor/${resume.id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1 px-3 py-1.5 bg-white/90 hover:bg-white text-gray-800 rounded-lg text-xs font-medium transition-colors"
+              title="Edit"
+            >
+              <PencilSimpleIcon size={13} />
+              Edit
+            </Link>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onClone();
+              }}
+              disabled={atLimit}
+              className="flex items-center gap-1 px-3 py-1.5 bg-white/90 hover:bg-white text-gray-800 rounded-lg text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              title={atLimit ? 'Resume limit reached' : 'Clone resume'}
+            >
+              <CopySimpleIcon size={13} />
+              Clone
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              disabled={isDeleting}
+              className="flex items-center gap-1 px-3 py-1.5 bg-red-500/90 hover:bg-red-500 text-white rounded-lg text-xs font-medium transition-colors disabled:opacity-40"
+              title="Delete"
+            >
+              {isDeleting ? (
+                <SpinnerGapIcon
+                  size={13}
+                  weight="bold"
+                  className="animate-spin"
+                />
+              ) : (
+                <TrashIcon size={13} />
+              )}
+              Delete
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -698,51 +779,6 @@ function ResumeCard({
               <span className="text-text font-medium">{clonedFromTitle}</span>
             </p>
           )}
-
-          {/* Actions */}
-          <div className="flex items-center gap-1 mt-3 pt-3 border-t border-border">
-            <Link
-              href={`/editor/${resume.id}`}
-              onClick={(e) => e.stopPropagation()}
-              className="flex-1 flex items-center justify-center gap-1 p-1.5 text-xs text-muted hover:text-text hover:bg-surface-2 rounded-lg transition-colors"
-              title="Edit"
-            >
-              <PencilSimpleIcon size={14} />
-              Edit
-            </Link>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onClone();
-              }}
-              disabled={atLimit}
-              className="flex-1 flex items-center justify-center gap-1 p-1.5 text-xs text-muted hover:text-text hover:bg-surface-2 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              title={atLimit ? 'Resume limit reached' : 'Clone resume'}
-            >
-              <CopySimpleIcon size={14} />
-              Clone
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              disabled={isDeleting}
-              className="flex-1 flex items-center justify-center gap-1 p-1.5 text-xs text-muted hover:text-danger hover:bg-danger-bg rounded-lg transition-colors disabled:opacity-40"
-              title="Delete"
-            >
-              {isDeleting ? (
-                <SpinnerGapIcon
-                  size={14}
-                  weight="bold"
-                  className="animate-spin"
-                />
-              ) : (
-                <TrashIcon size={14} />
-              )}
-              Delete
-            </button>
-          </div>
         </div>
       </div>
     );
@@ -821,6 +857,114 @@ function ResumeCard({
           )}
         </button>
       </div>
+    </div>
+  );
+}
+
+function AvatarDropdown({
+  email,
+  isDark,
+  onToggleTheme,
+  onShowFeedback,
+  onSignOut,
+}: {
+  email: string;
+  isDark: boolean;
+  onToggleTheme: () => void;
+  onShowFeedback: () => void;
+  onSignOut: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const initial = email?.[0]?.toUpperCase() || '?';
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center text-sm font-semibold hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        title="Account"
+      >
+        {initial}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-56 bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-30">
+          {/* Email header */}
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-[11px] text-muted truncate">{email}</p>
+          </div>
+
+          {/* Quick actions */}
+          <div className="py-1">
+            <button
+              onClick={() => {
+                onToggleTheme();
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors"
+            >
+              {isDark ? <SunIcon size={15} /> : <MoonIcon size={15} />}
+              {isDark ? 'Light mode' : 'Dark mode'}
+            </button>
+            <button
+              onClick={() => {
+                onShowFeedback();
+                setOpen(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors"
+            >
+              <ChatTeardropTextIcon size={15} />
+              Feedback
+            </button>
+          </div>
+
+          {/* Help & Support */}
+          <div className="border-t border-border py-1">
+            <Link
+              href="/help"
+              onClick={() => setOpen(false)}
+              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors"
+            >
+              <QuestionIcon size={15} />
+              Help
+            </Link>
+            <a
+              href="https://buymeacoffee.com/hattahiroo"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors block"
+            >
+              <CoffeeIcon size={15} />
+              Support resmd
+            </a>
+          </div>
+
+          {/* Sign out */}
+          <div className="border-t border-border py-1">
+            <button
+              onClick={() => {
+                setOpen(false);
+                onSignOut();
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-danger hover:bg-danger/5 flex items-center gap-2.5 transition-colors"
+            >
+              <SignOutIcon size={15} />
+              Sign out
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
