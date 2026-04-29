@@ -33,7 +33,6 @@ import { TEMPLATE_CONTENT } from '@/lib/defaultContent';
 import { applyTheme, getStoredThemePrefs } from '@/lib/themes';
 import CloneModal from '@/components/variants/CloneModal';
 import ImportModal from '@/components/dashboard/ImportModal';
-import ImportModal from '@/components/dashboard/ImportModal';
 import { Button } from '@/components/ui/Button';
 import OnboardingModal from '@/components/ui/OnboardingModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
@@ -76,7 +75,6 @@ export default function DashboardClient({
   const [cloning, setCloning] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
-  const [showImport, setShowImport] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('updatedAt');
@@ -305,15 +303,6 @@ export default function DashboardClient({
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              onClick={() => setShowImport(true)}
-              variant="secondary"
-              disabled={atLimit}
-              className="flex items-center gap-1.5"
-            >
-              <UploadSimpleIcon size={16} weight="bold" />
-              Import
-            </Button>
             <Button
               onClick={() => setShowImport(true)}
               variant="secondary"
@@ -571,11 +560,6 @@ export default function DashboardClient({
             if (!cloning) setCloneSource(null);
           }}
         />
-      )}
-
-      {/* Import modal */}
-      {showImport && (
-        <ImportModal atLimit={atLimit} onClose={() => setShowImport(false)} />
       )}
 
       {/* Import modal */}
