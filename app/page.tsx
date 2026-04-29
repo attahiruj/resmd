@@ -1,22 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   HeartIcon,
   TerminalIcon,
-  ArrowDownIcon,
-  StarIcon,
-  CheckIcon,
   EyeIcon,
-  FileTextIcon,
   GitBranchIcon,
   SparkleIcon,
   PaletteIcon,
+  FileTextIcon,
   CoffeeIcon,
-  SunIcon,
-  MoonIcon,
+  CheckIcon,
+  GithubLogoIcon,
+  PencilSimpleIcon,
+  MagicWandIcon,
+  ArrowRightIcon,
 } from '@phosphor-icons/react';
 import { applyTheme, getStoredThemePrefs } from '@/lib/themes';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
@@ -42,6 +42,11 @@ export default function Home() {
     checkAuth();
   }, [router]);
 
+  useEffect(() => {
+    const { themeId, mode } = getStoredThemePrefs();
+    applyTheme(themeId, mode);
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
@@ -49,158 +54,156 @@ export default function Home() {
       </div>
     );
   }
+
   return (
     <div className="min-h-screen bg-bg text-text font-ui overflow-x-hidden">
       <div className="bg-dot-grid fixed inset-0 pointer-events-none" />
       <Nav />
       <Hero />
       <HowItWorks />
+      <DemoWalkthrough />
       <Features />
-      <Support />
-      <Footer />
+      <Testimonials />
+      <FooterCTA />
     </div>
   );
 }
 
-/* ─── Nav ─────────────────────────────────────────────────────────────────── */
+/* ─── Floating Pill Nav ──────────────────────────────────────────────────── */
 
 function Nav() {
-  const [isDark, setIsDark] = useState(true);
-
-  useEffect(() => {
-    const { themeId, mode } = getStoredThemePrefs();
-    applyTheme(themeId, mode);
-    setIsDark(mode === 'dark');
-  }, []);
-
-  const toggleTheme = () => {
-    const newMode = isDark ? 'light' : 'dark';
-    const { themeId } = getStoredThemePrefs();
-    applyTheme(themeId, newMode);
-    setIsDark(!isDark);
-  };
-
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-bg/80 backdrop-blur-xl">
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <span className="font-display text-xl tracking-tight text-text">
+    <header className="fixed top-5 left-0 right-0 z-50 flex justify-center pointer-events-none px-4">
+      <nav className="pointer-events-auto inline-flex items-center gap-5 px-5 py-2.5 bg-bg/90 border border-border rounded-full backdrop-blur-xl shadow-lg">
+        <span className="font-display text-base font-bold text-text tracking-tight select-none">
           res<span className="text-accent">md</span>
         </span>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-full text-muted hover:text-text hover:bg-surface-2 transition-colors duration-150"
-            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        <div className="w-px h-3.5 bg-border flex-shrink-0" />
+        <div className="hidden sm:flex items-center gap-5">
+          <a
+            href="#features"
+            className="text-sm text-muted hover:text-text transition-colors"
           >
-            {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
-          </button>
+            Features
+          </a>
           <a
             href="https://github.com/attahiruj/resmd"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden sm:flex items-center gap-2 text-sm text-muted hover:text-text transition-colors duration-200"
+            className="text-sm text-muted hover:text-text transition-colors"
           >
-            <GitHubIcon className="w-4 h-4" />
             GitHub
           </a>
-          <Link
-            href="/auth"
-            className="text-sm text-muted hover:text-text transition-colors duration-200"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/editor/new"
-            className="text-sm font-medium bg-accent hover:bg-accent-hover text-accent-text px-5 py-2 rounded-lg transition-all duration-200 hover:shadow-accent hover:shadow-lg"
-          >
-            Start free
-          </Link>
         </div>
-      </div>
+        <div className="w-px h-3.5 bg-border flex-shrink-0 hidden sm:block" />
+        <Link
+          href="/auth"
+          className="text-sm text-muted hover:text-text transition-colors"
+        >
+          Sign in
+        </Link>
+        <Link
+          href="/editor/new"
+          className="text-sm font-bold bg-accent hover:bg-accent-hover text-accent-text px-4 py-1.5 rounded-full transition-all duration-200 hover:shadow-accent hover:shadow-md flex items-center gap-1.5"
+        >
+          Start free
+          <ArrowRightIcon className="w-3.5 h-3.5" />
+        </Link>
+      </nav>
     </header>
   );
 }
 
-/* ─── Hero ────────────────────────────────────────────────────────────────── */
+/* ─── Hero ───────────────────────────────────────────────────────────────── */
 
 function Hero() {
   return (
-    <section className="relative pt-28 pb-16 sm:pt-32 sm:pb-24 px-6 min-h-[80vh] sm:min-h-[90vh] flex items-center">
-      {/* Decorative floating shapes */}
-      <div className="absolute top-40 left-10 w-32 h-32 border border-accent/20 rounded-full animate-float hidden lg:block" />
-      <div className="absolute top-60 right-20 w-20 h-20 bg-secondary/10 rounded-lg rotate-12 animate-float-reverse hidden lg:block" />
-      <div className="absolute bottom-40 left-1/4 w-3 h-3 bg-accent rounded-full animate-pulse hidden lg:block" />
+    <section className="relative min-h-screen pt-32 pb-20 px-6 flex flex-col items-center overflow-hidden">
+      {/* Grid background */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            'linear-gradient(var(--color-border) 1px, transparent 1px), linear-gradient(90deg, var(--color-border) 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+          WebkitMaskImage:
+            'radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 100%)',
+          maskImage:
+            'radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 100%)',
+          opacity: 0.35,
+        }}
+      />
+      {/* Glow */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: '-200px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '700px',
+          height: '500px',
+          background:
+            'radial-gradient(ellipse, rgba(var(--accent-rgb, 200 242 48) / 0.07) 0%, transparent 70%)',
+        }}
+      />
 
-      <div className="max-w-6xl mx-auto w-full relative z-10">
-        <div className="grid lg:grid-cols-12 gap-12 items-center">
-          {/* Left content - asymmetric positioning */}
-          <div className="lg:col-span-7 lg:pr-12">
-            <h1 className="reveal-up reveal-delay-1 font-display text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight text-text mb-6">
-              Write resumes{' '}
-              <span className="text-gradient-shimmer">like code.</span>
-              <br />
-              <span className="text-muted text-4xl sm:text-5xl lg:text-6xl">
-                Ship like a pro.
-              </span>
-            </h1>
+      {/* Badge */}
+      <div className="relative z-10 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-accent/25 bg-accent/8 mb-8">
+        <span className="w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0 animate-pulse" />
+        <span className="text-[11px] font-medium text-accent tracking-wide">
+          Plain text → polished resume
+        </span>
+      </div>
 
-            <p className="reveal-up reveal-delay-2 text-lg text-muted leading-relaxed mb-8 max-w-lg">
-              Plain text syntax. Live preview. AI-powered polishing. Create
-              multiple variants for every opportunity — all from one source of
-              truth.
-            </p>
+      {/* Headline */}
+      <h1
+        className="relative z-10 text-center font-display font-bold leading-none tracking-tighter mb-6"
+        style={{ fontSize: 'clamp(52px, 8vw, 88px)', letterSpacing: '-3px' }}
+      >
+        Write resumes
+        <br />
+        <span className="text-accent">like code.</span>
+        <br />
+        <span className="text-muted" style={{ fontSize: '0.85em' }}>
+          Stand out. Get hired.
+        </span>
+      </h1>
 
-            <div className="reveal-up reveal-delay-3 flex flex-col sm:flex-row flex-wrap gap-4 mb-8">
-              <Link
-                href="/editor/new"
-                className="group inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-accent-text font-medium px-7 py-3.5 rounded-xl transition-all duration-300 hover:shadow-accent hover:shadow-xl hover:-translate-y-1 w-full sm:w-auto"
-              >
-                <TerminalIcon className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-                Try it free
-              </Link>
-              <a
-                href="#how-it-works"
-                className="inline-flex items-center justify-center gap-2 border border-border hover:border-accent/50 text-muted hover:text-text px-7 py-3.5 rounded-xl transition-all duration-200 hover:bg-surface w-full sm:w-auto"
-              >
-                <ArrowDownIcon className="w-4 h-4" />
-                See how it works
-              </a>
-            </div>
+      <p className="relative z-10 text-center text-muted text-lg leading-relaxed mb-9 max-w-md">
+        Plain text syntax. Live preview. AI polishing. Multiple variants from
+        one source of truth.
+      </p>
 
-            <p className="reveal-up reveal-delay-4 text-xs text-faint flex items-center gap-2">
-              <CheckIcon className="w-3 h-3 text-accent" />
-              Free · No credit card · No watermarks
-            </p>
-          </div>
+      {/* CTAs */}
+      <div className="relative z-10 flex flex-col sm:flex-row gap-3 mb-4">
+        <Link
+          href="/editor/new"
+          className="inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-accent-text font-bold px-6 py-3 rounded-full transition-all duration-200 hover:shadow-accent hover:shadow-lg hover:-translate-y-0.5 text-[15px]"
+        >
+          <ArrowRightIcon className="w-4 h-4" weight="bold" />
+          Try it free
+        </Link>
+        <a
+          href="#how-it-works"
+          className="inline-flex items-center justify-center gap-2 border border-border hover:border-muted/50 text-muted hover:text-text px-6 py-3 rounded-full transition-all duration-200 hover:bg-surface text-[13.5px]"
+        >
+          See how it works
+          <ArrowRightIcon className="w-3.5 h-3.5 rotate-90" />
+        </a>
+      </div>
 
-          {/* Right side - Editor + preview mockup with asymmetric layout */}
-          <div className="lg:col-span-5 relative">
-            <div className="reveal-up reveal-delay-2 relative">
-              {/* Floating accent behind */}
-              <div className="absolute -inset-4 bg-gradient-to-br from-accent/20 via-secondary/10 to-transparent rounded-3xl blur-2xl" />
+      <p className="relative z-10 flex items-center gap-1.5 text-xs text-faint mb-12">
+        <CheckIcon className="w-3 h-3 text-accent" weight="bold" />
+        Free
+        <span className="mx-1 opacity-40">·</span>
+        No credit card
+        <span className="mx-1 opacity-40">·</span>
+        No watermarks
+      </p>
 
-              <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <EditorMockup />
-                <div className="hidden sm:block">
-                  <PreviewMockup />
-                </div>
-              </div>
-
-              {/* Floating stats card */}
-              <div className="absolute -bottom-6 -left-6 glass-card rounded-xl px-5 py-4 hidden sm:block">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
-                    <StarIcon className="w-5 h-5 text-accent" />
-                  </div>
-                  <div>
-                    <div className="text-lg font-bold text-text">5 min</div>
-                    <div className="text-xs text-faint">to first resume</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Editor Demo */}
+      <div className="relative z-10 w-full max-w-[960px]">
+        <HeroDemo />
       </div>
       <div className="absolute top-4 right-4 hidden sm:flex bg-surface border border-border rounded-lg p-2 items-center gap-2 text-xs text-muted">
         <GitHubIcon className="w-3 h-3" />
@@ -210,100 +213,151 @@ function Hero() {
   );
 }
 
-function EditorMockup() {
+const EDITOR_LINES = [
+  { text: '# Bio', cls: 'text-accent font-bold' },
+  { text: 'Name: Alex Rivera', cls: 'text-muted pl-4' },
+  { text: 'Title: Staff Engineer', cls: 'text-muted pl-4' },
+  { text: 'Email: alex@stripe.com', cls: 'text-secondary pl-4' },
+  { text: '', cls: '' },
+  { text: '## Relevant Experience', cls: 'text-secondary font-semibold' },
+  { text: '### Staff Eng @ Stripe | 2022–Now', cls: 'text-text pl-4' },
+  { text: '- Led 6-person infra team', cls: 'text-muted pl-8' },
+  { text: '- Built payments SDK', cls: 'text-muted pl-8' },
+  { text: '- −38% API latency', cls: 'text-muted pl-8' },
+  { text: '', cls: '' },
+  { text: '## Skills', cls: 'text-secondary font-semibold' },
+  { text: '- TypeScript, Go, Rust, Python', cls: 'text-muted pl-4' },
+  { text: '- Kubernetes, AWS, Terraform', cls: 'text-muted pl-4' },
+];
+
+function HeroDemo() {
+  const [lines, setLines] = useState<typeof EDITOR_LINES>([]);
+  const [showPreview, setShowPreview] = useState(false);
+  const lineIdx = useRef(0);
+  const done = useRef(false);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+
+    function next() {
+      if (done.current) return;
+      const i = lineIdx.current;
+      if (i >= EDITOR_LINES.length) {
+        done.current = true;
+        setTimeout(() => setShowPreview(true), 300);
+        return;
+      }
+      lineIdx.current = i + 1;
+      setLines((prev) => [...prev, EDITOR_LINES[i]]);
+      timer = setTimeout(next, EDITOR_LINES[i].text === '' ? 60 : 120);
+    }
+
+    timer = setTimeout(next, 800);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-500">
-      {/* Title bar */}
-      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border bg-surface-2">
-        <div className="w-2.5 h-2.5 rounded-full bg-danger/60" />
-        <div className="w-2.5 h-2.5 rounded-full bg-warning/60" />
-        <div className="w-2.5 h-2.5 rounded-full bg-success/60" />
-        <span className="ml-2 text-[10px] text-faint font-mono">
-          resume.resmd
+    <div
+      className="rounded-xl overflow-hidden border border-border shadow-2xl"
+      style={{
+        boxShadow:
+          '0 40px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03)',
+      }}
+    >
+      {/* Chrome bar */}
+      <div className="flex items-center gap-1.5 px-3.5 py-2.5 bg-[#070707] border-b border-border">
+        <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+        <span className="ml-3 text-[11px] text-faint font-mono flex-1">
+          resume.md — Alex Rivera
+        </span>
+        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-accent/30 text-[11px] text-accent font-mono">
+          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+          Live
         </span>
       </div>
-      {/* Code */}
-      <pre className="p-4 text-[9px] leading-5 font-mono overflow-hidden">
-        <CodeLine type="section"># Bio</CodeLine>
-        <CodeLine type="kv">Name: Alex Rivera</CodeLine>
-        <CodeLine type="kv">Title: Senior Engineer</CodeLine>
-        <CodeLine type="kv">Email: alex@email.com</CodeLine>
-        <br />
-        <CodeLine type="section"># Experience</CodeLine>
-        <CodeLine type="entry">## Staff @ Stripe</CodeLine>
-        <CodeLine type="bullet">• Led 1B+ txns</CodeLine>
-        <CodeLine type="bullet">• -38% latency</CodeLine>
-      </pre>
-    </div>
-  );
-}
 
-function PreviewMockup() {
-  return (
-    <div className="bg-white rounded-xl overflow-hidden shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500 mt-8">
-      <div className="p-4 text-[#1A1C23]">
-        <div className="border-b border-gray-200 pb-3 mb-3">
-          <h2 className="text-base font-bold font-display text-[#1A1C23]">
-            Alex Rivera
-          </h2>
-          <p className="text-[10px] text-gray-500">Senior Engineer</p>
-        </div>
-        <div className="mb-3">
-          <h3 className="text-[8px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-            Experience
-          </h3>
-          <div className="mb-2">
-            <div className="flex justify-between items-baseline">
-              <span className="text-[11px] font-semibold text-[#1A1C23]">
-                Staff Engineer
-              </span>
-              <span className="text-[8px] text-gray-400">2022–Now</span>
+      {/* Split body */}
+      <div className="flex">
+        {/* Editor */}
+        <div className="flex-[0_0_46%] bg-[#070707] p-5 border-r border-border font-mono text-[12px] leading-[1.75] min-h-[360px]">
+          {lines.map((line, i) =>
+            line.text === '' ? (
+              <div key={i} className="h-3" />
+            ) : (
+              <div key={i} className={line.cls}>
+                {line.text}
+              </div>
+            )
+          )}
+          {!done.current && (
+            <span
+              className="inline-block w-0.5 h-3.5 bg-accent align-middle"
+              style={{ animation: 'blink 1s step-end infinite' }}
+            />
+          )}
+          <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
+          {done.current && (
+            <div className="mt-3 inline-flex items-center gap-1.5 px-2 py-1 rounded border border-accent/20 bg-accent/10 text-accent text-[10px]">
+              <SparkleIcon className="w-3 h-3" />
+              Ask AI · improve bullets
             </div>
-            <span className="text-[9px] text-gray-500">Stripe</span>
-            <ul className="mt-1 space-y-0.5">
-              <li className="text-[9px] text-gray-600 flex gap-1">
-                <span>•</span>Led 1B+ transactions
-              </li>
-            </ul>
-          </div>
+          )}
         </div>
-        <div>
-          <h3 className="text-[8px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+
+        {/* Preview */}
+        <div
+          className="flex-1 bg-[#f7f6f1] p-6 min-h-[360px] transition-opacity duration-500"
+          style={{ opacity: showPreview ? 1 : 0 }}
+        >
+          <div className="font-serif text-[19px] font-bold text-[#111] mb-0.5">
+            Alex Rivera
+          </div>
+          <div className="text-[11px] text-gray-500 mb-3">
+            alex@stripe.com · GitHub · San Francisco, CA
+          </div>
+          <hr className="border-gray-200 mb-2.5" />
+          <div className="text-[9px] font-bold tracking-widest text-gray-400 uppercase mb-2">
+            Relevant Experience
+          </div>
+          <div className="text-[12px] font-bold text-[#222]">
+            Staff Engineer
+          </div>
+          <div className="text-[10px] text-gray-400 mb-1">
+            Stripe · 2022–Now
+          </div>
+          {[
+            'Led 6-person infra team',
+            'Built payments SDK used by 40k+ merchants',
+            'Reduced API latency 38%',
+          ].map((b) => (
+            <div
+              key={b}
+              className="text-[10.5px] text-gray-600 pl-3 relative leading-[1.5]"
+            >
+              <span className="absolute left-1 text-gray-400">·</span>
+              {b}
+            </div>
+          ))}
+          <hr className="border-gray-200 my-2.5" />
+          <div className="text-[9px] font-bold tracking-widest text-gray-400 uppercase mb-2">
             Skills
-          </h3>
-          <div className="flex flex-wrap gap-1">
-            <span className="text-[8px] bg-gray-100 px-1.5 py-0.5 rounded">
-              TypeScript
-            </span>
-            <span className="text-[8px] bg-gray-100 px-1.5 py-0.5 rounded">
-              Go
-            </span>
-            <span className="text-[8px] bg-gray-100 px-1.5 py-0.5 rounded">
-              Rust
-            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {['TypeScript', 'Go', 'Rust', 'Python', 'Kubernetes'].map((s) => (
+              <span
+                key={s}
+                className="text-[10px] px-2 py-0.5 bg-gray-100 rounded text-gray-500"
+              >
+                {s}
+              </span>
+            ))}
           </div>
         </div>
       </div>
     </div>
   );
-}
-
-function CodeLine({
-  type,
-  children,
-}: {
-  type: 'section' | 'entry' | 'kv' | 'bullet';
-  children: React.ReactNode;
-}) {
-  const color =
-    type === 'section'
-      ? 'text-accent font-bold'
-      : type === 'entry'
-        ? 'text-text font-semibold'
-        : type === 'kv'
-          ? 'text-secondary'
-          : 'text-muted';
-  return <div className={color}>{children}</div>;
 }
 
 /* ─── How It Works ───────────────────────────────────────────────────────── */
@@ -312,74 +366,315 @@ function HowItWorks() {
   const steps = [
     {
       n: '01',
-      title: 'Write in plain text',
-      body: 'Use ResMarkup syntax — sections, entries, key-value pairs. No forms, no drag-drop. Just you and your keyboard.',
-      code: '# Experience\n## Engineer @ Stripe\n• Built payment infra',
       icon: <TerminalIcon className="w-5 h-5" />,
+      title: 'Write in plain text',
+      body: 'ResMarkup syntax — sections, entries, key-value pairs. No forms, no drag-drop. Just you and your keyboard.',
     },
     {
       n: '02',
+      icon: <EyeIcon className="w-5 h-5" />,
       title: 'Watch it live',
       body: 'Every keystroke updates the preview instantly. Switch templates in one click — same content, fresh look.',
-      icon: <EyeIcon className="w-5 h-5" />,
     },
     {
       n: '03',
-      title: 'Branch & tailor',
-      body: 'Clone Resumes for each application. Keep your "master" clean while customizing for specific roles.',
       icon: <GitBranchIcon className="w-5 h-5" />,
+      title: 'Branch & tailor',
+      body: 'Clone for each application. Keep your master clean while customizing bullets for specific roles.',
     },
   ];
 
   return (
-    <section id="how-it-works" className="py-28 px-6 relative">
-      {/* Background accent line */}
-      <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-accent/20 to-transparent hidden lg:block" />
-
+    <section id="how-it-works" className="py-24 px-6 border-t border-border">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="reveal-up font-display text-4xl sm:text-5xl text-text mb-4">
+        <div className="mb-16">
+          <h2 className="reveal-up font-display text-4xl sm:text-5xl font-bold tracking-tight text-text mb-3">
             No wizards. <span className="text-accent">No bloat.</span>
           </h2>
-          <p className="reveal-up reveal-delay-1 text-muted text-lg max-w-md mx-auto">
+          <p className="reveal-up reveal-delay-1 text-muted text-base">
             Three steps. Zero onboarding. Just write.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 relative">
+        <div className="grid grid-cols-1 md:grid-cols-3">
           {steps.map((step, i) => (
             <div
               key={step.n}
-              className="reveal-up reveal-delay-2 group relative"
+              className="reveal-up group p-8 border-t-2 border-border hover:border-accent transition-colors cursor-default border-r border-r-border last:border-r-0 max-md:border-r-0 max-md:border-b max-md:last:border-b-0"
+              style={{ transitionDelay: `${i * 80}ms` }}
             >
-              {/* Connecting line for desktop */}
-              {i < steps.length - 1 && (
-                <div className="hidden md:block absolute top-12 left-full w-full h-px bg-gradient-to-r from-accent/30 to-transparent -z-10" />
-              )}
-
-              <div className="glass-card rounded-2xl p-6 h-full card-lift glow-border-accent">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-4xl font-display text-accent/30 font-bold">
-                    {step.n}
-                  </span>
-                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-accent-text transition-colors">
-                    {step.icon}
-                  </div>
-                </div>
-                <h3 className="text-xl font-semibold text-text mb-3">
-                  {step.title}
-                </h3>
-                <p className="text-muted text-sm leading-relaxed mb-4">
-                  {step.body}
-                </p>
-                {step.code && (
-                  <pre className="text-[10px] font-mono text-secondary bg-surface-2 rounded-lg p-3 leading-4 whitespace-pre-wrap border-l-2 border-accent/30">
-                    {step.code}
-                  </pre>
-                )}
-              </div>
+              <span className="block font-mono text-[44px] font-bold text-muted group-hover:text-accent transition-colors leading-none mb-5 tracking-tighter">
+                {step.n}
+              </span>
+              <span className="block text-muted mb-3.5">{step.icon}</span>
+              <h3 className="text-[17px] font-semibold text-text mb-2.5 tracking-tight">
+                {step.title}
+              </h3>
+              <p className="text-sm text-muted leading-relaxed">{step.body}</p>
             </div>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── Demo Walkthrough ───────────────────────────────────────────────────── */
+
+const WALKTHROUGH_STEPS = [
+  {
+    num: '01',
+    title: 'Type your content',
+    desc: 'Start with # Bio and fill in your details. ResMarkup reads like plain English.',
+    icon: <PencilSimpleIcon className="w-4 h-4" />,
+    screenTitle: 'resume.md — editing',
+  },
+  {
+    num: '02',
+    title: 'Live preview updates',
+    desc: 'The right pane renders beautifully as you type. No compile step, no refresh.',
+    icon: <EyeIcon className="w-4 h-4" />,
+    screenTitle: 'resume.md — preview sync',
+  },
+  {
+    num: '03',
+    title: 'Polish with AI',
+    desc: 'Highlight any bullet. Ask AI to improve it. Review the diff and accept or reject.',
+    icon: <MagicWandIcon className="w-4 h-4" />,
+    screenTitle: 'resume.md — AI polish',
+  },
+  {
+    num: '04',
+    title: 'Branch for each role',
+    desc: 'Fork the file, tune bullets for the job description, export clean PDF.',
+    icon: <GitBranchIcon className="w-4 h-4" />,
+    screenTitle: 'resume.md — branching',
+  },
+];
+
+function DemoScreen({ step }: { step: number }) {
+  if (step === 0) {
+    return (
+      <div className="flex min-h-[300px]">
+        <div className="flex-[0_0_52%] bg-[#070707] p-4 font-mono text-[11.5px] leading-[1.7] border-r border-border">
+          <div className="text-accent"># Bio</div>
+          <div className="text-muted pl-3">Name: Alex Rivera</div>
+          <div className="text-muted pl-3">Title: Staff Engineer</div>
+          <div className="text-secondary pl-3">Email: alex@stripe.com</div>
+          <div className="h-3" />
+          <div className="text-secondary">## Experience</div>
+          <div className="text-text pl-3">### Staff @ Stripe | 2022–Now</div>
+          <div className="text-muted pl-6">
+            - Led 6-person team
+            <span
+              className="inline-block w-0.5 h-3 bg-accent align-middle ml-0.5"
+              style={{ animation: 'blink 1s step-end infinite' }}
+            />
+          </div>
+        </div>
+        <div className="flex-1 bg-[#f7f6f1] p-5">
+          <div className="font-serif text-[16px] font-bold text-[#111]">
+            Alex Rivera
+          </div>
+          <div className="text-[10px] text-gray-500 mb-2.5">
+            alex@stripe.com · San Francisco
+          </div>
+          <hr className="border-gray-200 mb-2" />
+          <div className="text-[8px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+            Experience
+          </div>
+          <div className="text-[11px] font-bold text-[#222]">
+            Staff Engineer
+          </div>
+          <div className="text-[10px] text-gray-400 mb-1">
+            Stripe · 2022–Now
+          </div>
+          <div className="text-[10px] text-gray-600 pl-2 relative">
+            <span className="absolute left-0 text-gray-300">·</span>Led 6-person
+            team
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 1) {
+    return (
+      <div className="flex min-h-[300px]">
+        <div className="flex-[0_0_52%] bg-[#070707] p-4 font-mono text-[11.5px] leading-[1.7] border-r border-border">
+          <div className="text-accent"># Bio</div>
+          <div className="text-muted pl-3">Name: Alex Rivera</div>
+          <div className="h-3" />
+          <div className="text-secondary">## Experience</div>
+          <div className="text-text pl-3">### Staff @ Stripe | 2022–Now</div>
+          <div className="text-muted pl-6">- Led 6-person team</div>
+          <div className="text-muted pl-6">- Built payments SDK</div>
+          <div className="text-muted pl-6">- −38% API latency</div>
+        </div>
+        <div className="flex-1 bg-[#f7f6f1] p-5">
+          <div className="font-serif text-[16px] font-bold text-[#111]">
+            Alex Rivera
+          </div>
+          <hr className="border-gray-200 my-2" />
+          <div className="text-[8px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+            Experience
+          </div>
+          <div className="text-[11px] font-bold text-[#222]">
+            Staff Engineer
+          </div>
+          <div className="text-[10px] text-gray-400 mb-1">
+            Stripe · 2022–Now
+          </div>
+          {['Led 6-person team', 'Built payments SDK', '−38% API latency'].map(
+            (b) => (
+              <div key={b} className="text-[10px] text-gray-600 pl-2 relative">
+                <span className="absolute left-0 text-gray-300">·</span>
+                {b}
+              </div>
+            )
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 2) {
+    return (
+      <div className="bg-[#0a0a0a] p-5 min-h-[300px]">
+        <div className="text-xs text-muted font-mono mb-4 flex items-center gap-2">
+          <SparkleIcon className="w-3.5 h-3.5 text-accent" />
+          AI · Bullet optimizer
+        </div>
+        <div className="bg-surface border border-border rounded-lg p-4 mb-3">
+          <div className="text-[11px] text-faint font-mono mb-2">Original</div>
+          <div className="text-[13px] text-muted line-through opacity-50">
+            - Led 6-person team
+          </div>
+        </div>
+        <div className="flex justify-center text-accent text-lg my-2">
+          <ArrowRightIcon className="w-4 h-4 rotate-90" />
+        </div>
+        <div className="bg-accent/6 border border-accent/20 rounded-lg p-4">
+          <div className="text-[11px] text-accent font-mono mb-2">
+            AI Suggestion
+          </div>
+          <div className="text-[13px] text-text leading-relaxed">
+            - Scaled infrastructure for a 6-engineer team, delivering 3 major
+            platform launches on schedule
+          </div>
+          <div className="flex gap-2 mt-3">
+            <button className="px-3.5 py-1.5 bg-accent text-accent-text text-[12px] font-bold rounded cursor-pointer">
+              Accept
+            </button>
+            <button className="px-3.5 py-1.5 border border-border text-muted text-[12px] rounded cursor-pointer">
+              Reject
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-[#070707] p-5 font-mono text-[12px] min-h-[300px]">
+      <div className="text-muted text-[11px] mb-4">Branches</div>
+      <div className="flex flex-col gap-2">
+        <div className="bg-surface border border-accent rounded-lg p-3.5 flex items-center gap-3">
+          <GitBranchIcon className="w-4 h-4 text-accent" />
+          <div>
+            <div className="text-text text-[13px]">master</div>
+            <div className="text-faint text-[11px]">source of truth</div>
+          </div>
+          <span className="ml-auto bg-accent/12 text-accent px-2 py-0.5 rounded text-[10px]">
+            active
+          </span>
+        </div>
+        {[
+          { name: 'stripe-staff-eng', desc: 'tailored for Stripe role' },
+          { name: 'anthropic-ml-eng', desc: 'ML focus, technical depth' },
+        ].map((b) => (
+          <div
+            key={b.name}
+            className="bg-surface-2 border border-border rounded-lg p-3.5 flex items-center gap-3"
+          >
+            <GitBranchIcon className="w-4 h-4 text-muted" />
+            <div>
+              <div className="text-muted text-[13px]">{b.name}</div>
+              <div className="text-faint text-[11px]">{b.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DemoWalkthrough() {
+  const [active, setActive] = useState(0);
+
+  return (
+    <section className="py-24 px-6 border-t border-border bg-gradient-to-b from-bg to-surface/30">
+      <div className="max-w-[1000px] mx-auto">
+        <div className="text-center mb-16 reveal-up">
+          <span className="text-[11px] font-semibold tracking-widest text-accent uppercase mb-3.5 block">
+            Walkthrough
+          </span>
+          <h2 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-text mb-3">
+            See the workflow <span className="text-accent">in action</span>
+          </h2>
+          <p className="text-muted text-base mt-2">
+            From blank file to submission-ready resume in under three minutes.
+          </p>
+        </div>
+
+        <div className="reveal-up grid grid-cols-1 md:grid-cols-[280px_1fr] gap-10 items-start">
+          {/* Steps list */}
+          <div className="flex flex-col gap-1">
+            {WALKTHROUGH_STEPS.map((step, i) => (
+              <button
+                key={step.num}
+                onClick={() => setActive(i)}
+                className={`text-left p-5 rounded-lg border transition-all ${
+                  active === i
+                    ? 'bg-surface-2 border-border relative'
+                    : 'border-transparent hover:bg-surface/50'
+                }`}
+              >
+                {active === i && (
+                  <div className="absolute left-0 top-4 bottom-4 w-0.5 bg-accent rounded-r" />
+                )}
+                <div className="text-[11px] font-mono text-faint mb-1">
+                  {step.num} /
+                </div>
+                <div
+                  className={`text-[14px] font-semibold flex items-center gap-2 ${
+                    active === i ? 'text-text' : 'text-muted'
+                  }`}
+                >
+                  {step.icon}
+                  {step.title}
+                </div>
+                {active === i && (
+                  <div className="text-[12.5px] text-muted leading-relaxed mt-1.5">
+                    {step.desc}
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Demo screen */}
+          <div className="rounded-xl overflow-hidden border border-border shadow-2xl">
+            <div className="flex items-center gap-1.5 px-3 py-2 bg-[#070707] border-b border-border">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+              <span className="ml-2.5 font-mono text-[11px] text-faint">
+                {WALKTHROUGH_STEPS[active].screenTitle}
+              </span>
+            </div>
+            <DemoScreen step={active} />
+          </div>
         </div>
       </div>
     </section>
@@ -391,82 +686,68 @@ function HowItWorks() {
 function Features() {
   const features = [
     {
-      icon: <FileTextIcon />,
-      label: 'ResMarkup',
+      tag: 'ResMarkup',
       title: 'Plain text you own',
       body: 'No proprietary format. ResMarkup is readable text you could write anywhere. The platform makes it beautiful.',
-      accent: 'accent',
+      tagColor: 'text-accent',
+      icon: <FileTextIcon className="w-7 h-7" />,
     },
     {
-      icon: <GitBranchIcon />,
-      label: 'Variants',
+      tag: 'Variants',
       title: 'One base, many doors',
-      body: 'Clone any variant to tailor for roles. Engineering CV, management track, freelance pitch — branched, not duplicated.',
-      accent: 'secondary',
+      body: 'Clone any variant to tailor for roles — Engineering CV, management track, freelance pitch. Branched, not duplicated.',
+      tagColor: 'text-secondary',
+      icon: <GitBranchIcon className="w-7 h-7" />,
     },
     {
-      icon: <SparkleIcon />,
-      label: 'AI',
+      tag: 'AI',
       title: 'Enhance, never replace',
-      body: 'Bullet optimizer, section reviewer, job match scorer. Every AI suggestion shown as diff — you decide what stays.',
-      accent: 'secondary',
+      body: 'Bullet optimizer, section reviewer, job match scorer. Every AI suggestion shown as a diff — you decide what stays.',
+      tagColor: 'text-[#7dd3a8]',
+      icon: <SparkleIcon className="w-7 h-7" />,
     },
     {
-      icon: <PaletteIcon />,
-      label: 'Templates',
+      tag: 'Templates',
       title: 'Swap skin instantly',
-      body: 'Minimal, Modern, Technical, Executive, Creative. Switch templates in one click — content adapts automatically.',
-      accent: 'accent',
+      body: 'Minimal. Modern. Technical. Executive. Creative. Switch templates in one click — content adapts automatically.',
+      tagColor: 'text-[#f5a623]',
+      icon: <PaletteIcon className="w-7 h-7" />,
     },
   ];
 
   return (
-    <section className="py-28 px-6 bg-surface/30 relative overflow-hidden">
-      {/* Decorative circles */}
-      <div className="absolute top-20 -left-20 w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 -right-20 w-80 h-80 bg-secondary/5 rounded-full blur-3xl" />
-
-      <div className="max-w-6xl mx-auto relative z-10">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
-          <div>
-            <h2 className="reveal-up font-display text-4xl sm:text-5xl text-text mb-4">
-              Built <span className="text-gradient-shimmer">different</span>
-            </h2>
-            <p className="reveal-up reveal-delay-1 text-muted text-lg max-w-md">
-              Most resume builders are fancy form editors. resmd is a writing
-              tool with publication-quality output.
-            </p>
-          </div>
-          <div className="reveal-up reveal-delay-2 hidden sm:flex gap-3">
-            <div className="px-4 py-2 bg-surface border border-border rounded-lg text-sm text-muted">
-              ← Scroll to explore
-            </div>
-          </div>
+    <section id="features" className="py-24 px-6 border-t border-border">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-14">
+          <h2 className="reveal-up font-display text-4xl sm:text-5xl font-bold tracking-tight text-text mb-3">
+            Built <span className="text-accent">different.</span>
+          </h2>
+          <p className="reveal-up reveal-delay-1 text-muted text-base max-w-md leading-relaxed">
+            Most resume builders are fancy form editors. resmd is a writing tool
+            with publication-quality output.
+          </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {features.map((f, i) => (
+        <div className="reveal-up grid grid-cols-1 sm:grid-cols-2 gap-px bg-border rounded-xl overflow-hidden border border-border">
+          {features.map((f) => (
             <div
               key={f.title}
-              className={`reveal-up reveal-delay-${i + 1} group relative bg-surface border border-border rounded-2xl p-6 hover:-translate-y-2 transition-all duration-300 ${f.accent === 'accent' ? 'hover:border-accent/50' : 'hover:border-secondary/50'}`}
+              className="bg-bg p-9 relative overflow-hidden group transition-colors hover:bg-surface/40"
             >
-              <div
-                className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity ${f.accent === 'accent' ? 'bg-accent/5' : 'bg-secondary/5'}`}
-              />
-              <div
-                className={`relative w-11 h-11 rounded-xl flex items-center justify-center mb-5 ${f.accent === 'accent' ? 'bg-accent/10 text-accent' : 'bg-secondary/10 text-secondary'}`}
-              >
+              {/* Decorative icon top-right */}
+              <div className="absolute right-8 top-9 opacity-[0.08] text-text">
                 {f.icon}
               </div>
-              <div
-                className={`relative text-xs font-medium mb-2 ${f.accent === 'accent' ? 'text-accent' : 'text-secondary'}`}
+
+              <span
+                className={`text-[11px] font-semibold tracking-wide mb-3.5 block ${f.tagColor}`}
               >
-                {f.label}
-              </div>
-              <h3 className="relative text-lg font-semibold text-text mb-2">
+                {f.tag}
+              </span>
+              <h3 className="text-[20px] font-bold text-text tracking-tight mb-2.5">
                 {f.title}
               </h3>
-              <p className="relative text-sm text-muted leading-relaxed">
+              <p className="text-[14px] text-muted leading-relaxed max-w-[360px]">
                 {f.body}
               </p>
             </div>
@@ -477,119 +758,200 @@ function Features() {
   );
 }
 
-/* ─── Support ────────────────────────────────────────────────────────────── */
+/* ─── Testimonials ───────────────────────────────────────────────────────── */
 
-function Support() {
+function Testimonials() {
+  const cards = [
+    {
+      quote: (
+        <>
+          Finally a resume tool that doesn&apos;t get in the way.{' '}
+          <strong className="text-text font-medium">
+            I write in vscode, paste into resmd, done.
+          </strong>{' '}
+          The preview is instant and the PDF output is stunning.
+        </>
+      ),
+      initials: 'MA',
+      name: 'Mustapha A.',
+      role: 'Data Scientist',
+    },
+    {
+      quote: (
+        <>
+          The branching feature is a game-changer.{' '}
+          <strong className="text-text font-medium">
+            I have one master resume and 12 role-specific variants
+          </strong>
+          , all kept in sync. No more copy-paste hell.
+        </>
+      ),
+      initials: 'JF',
+      name: 'Joseph F.',
+      role: 'Software Engineer',
+    },
+    {
+      quote: (
+        <>
+          The AI bullet optimizer is the only AI resume tool that{' '}
+          <strong className="text-text font-medium">
+            doesn&apos;t make everything sound like it was written by a robot
+          </strong>
+          . It suggests; you decide.
+        </>
+      ),
+      initials: 'MJ',
+      name: 'Attahiru J.',
+      role: 'Robotics Engineer',
+    },
+  ];
+
   return (
-    <section className="py-28 px-6 relative" id="support">
-      <div className="max-w-3xl mx-auto text-center">
-        <div className="reveal-up relative inline-flex">
-          <div className="absolute inset-0 bg-accent/20 blur-3xl" />
-          <div className="relative w-24 h-24 bg-surface border border-accent/30 rounded-3xl flex items-center justify-center mx-auto mb-8 text-accent">
-            <CoffeeIcon size={40} />
-          </div>
+    <section className="py-24 px-6 border-t border-border overflow-hidden">
+      <div className="max-w-[1080px] mx-auto">
+        <div className="text-center mb-15 reveal-up">
+          <h2 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-text mb-0">
+            Built for people who{' '}
+            <span className="text-accent">think in text</span>
+          </h2>
         </div>
 
-        <h2 className="reveal-up reveal-delay-1 font-display text-4xl sm:text-5xl text-text mb-6">
-          Free. <span className="text-muted">Really.</span>
-        </h2>
-
-        <p className="reveal-up reveal-delay-2 text-muted text-lg leading-relaxed mb-10 max-w-lg mx-auto">
-          No credit card. No paywalls. No gotchas — for now. If resmd helped you
-          land something good, a coffee keeps it running.
-        </p>
-
-        <div className="reveal-up reveal-delay-3 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a
-            href="https://buymeacoffee.com/hattahiroo"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group inline-flex items-center gap-3 px-8 py-4 bg-accent hover:bg-accent-hover text-accent-text text-base font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
-          >
-            <CoffeeIcon size={20} />
-            Buy me a coffee
-            <span className="opacity-50">·</span>
-            <span className="text-sm font-normal">$$</span>
-          </a>
-          <a
-            href="https://github.com/attahiruj/resmd"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group inline-flex items-center gap-3 px-8 py-4 bg-surface border border-border hover:border-text/30 text-text text-base font-semibold rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
-          >
-            <GitHubIcon className="w-5 h-5" />
-            Star on GitHub
-          </a>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-14">
+          {cards.map((c, i) => (
+            <div
+              key={c.name}
+              className="reveal-up bg-surface border border-border rounded-xl p-7 hover:-translate-y-0.5 transition-transform"
+              style={{ transitionDelay: `${i * 100}ms` }}
+            >
+              <p className="text-[14.5px] text-muted leading-[1.7] mb-5">
+                {c.quote}
+              </p>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-surface-2 border border-border flex items-center justify-center font-mono text-[12px] font-bold text-faint flex-shrink-0">
+                  {c.initials}
+                </div>
+                <div>
+                  <div className="text-[13px] font-semibold text-text">
+                    {c.name}
+                  </div>
+                  <div className="text-[12px] text-faint">{c.role}</div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-
-        <p className="reveal-up reveal-delay-4 text-xs text-faint mt-6">
-          Every cup helps keep resmd free and actively maintained!
-        </p>
       </div>
     </section>
   );
 }
 
-/* ─── Footer ─────────────────────────────────────────────────────────────── */
+/* ─── Footer CTA + Footer ────────────────────────────────────────────────── */
 
-function Footer() {
+function FooterCTA() {
   return (
-    <footer className="border-t border-border/50 py-12 px-6 bg-surface/50">
-      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-        <div className="flex flex-col items-center sm:items-start">
-          <span className="font-display text-xl text-text">
-            res<span className="text-accent">md</span>
-          </span>
-          <p className="text-xs text-faint mt-1">Plain text resume builder</p>
-        </div>
-        <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-6 gap-y-3 text-sm text-muted">
-          <Link href="/auth" className="hover:text-text transition-colors">
-            Sign in
-          </Link>
-          <Link href="/help" className="hover:text-text transition-colors">
-            Help
-          </Link>
-          <Link href="/privacy" className="hover:text-text transition-colors">
-            Privacy
-          </Link>
-          <Link href="/terms" className="hover:text-text transition-colors">
-            Terms
-          </Link>
-          <a
-            href="https://github.com/attahiruj/resmd"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-text transition-colors flex items-center gap-1"
+    <>
+      {/* CTA */}
+      <section className="py-28 px-6 border-t border-border text-center relative overflow-hidden">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 800px 500px at 50% 40%, rgba(var(--accent-rgb, 200 242 48) / 0.06) 0%, transparent 65%)',
+          }}
+        />
+        <div className="max-w-6xl mx-auto relative z-10">
+          <p className="reveal-up text-[12px] font-semibold tracking-widest text-accent uppercase mb-5">
+            Free. No catches.
+          </p>
+          <h2
+            className="reveal-up font-display font-bold tracking-tighter leading-none mb-7"
+            style={{
+              fontSize: 'clamp(48px, 6vw, 80px)',
+              letterSpacing: '-3px',
+            }}
           >
-            <GitHubIcon className="w-4 h-4" />
-            GitHub
-          </a>
-          <a
-            href="https://buymeacoffee.com/hattahiroo"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-text transition-colors flex items-center gap-1"
-          >
-            <HeartIcon className="w-4 h-4" />
-            Support
-          </a>
+            Free.
+            <br />
+            <span className="text-accent">Really.</span>
+          </h2>
+          <p className="reveal-up text-muted text-base mb-10">
+            No credit card. No paywalls. No gotchas.
+          </p>
+          <div className="reveal-up flex flex-wrap gap-3 justify-center items-center">
+            <Link
+              href="/editor/new"
+              className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-accent-text font-bold px-7 py-3.5 rounded-full text-[15px] transition-all duration-200 hover:shadow-accent hover:shadow-lg hover:-translate-y-0.5"
+            >
+              <ArrowRightIcon className="w-4 h-4" weight="bold" />
+              Start free
+            </Link>
+            <a
+              href="https://github.com/attahiruj/resmd"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 border border-border hover:border-muted/40 text-muted hover:text-text px-6 py-3.5 rounded-full text-[14px] transition-all duration-200 hover:bg-surface"
+            >
+              <GithubLogoIcon className="w-4 h-4" />
+              Star on GitHub
+            </a>
+            <a
+              href="https://buymeacoffee.com/hattahiroo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 border border-border hover:border-muted/40 text-muted hover:text-text px-6 py-3.5 rounded-full text-[14px] transition-all duration-200 hover:bg-surface"
+            >
+              <CoffeeIcon className="w-4 h-4" />
+              Buy me a coffee
+            </a>
+          </div>
         </div>
-      </div>
-    </footer>
-  );
-}
+      </section>
 
-/* ─── GitHub Icon ─────────────────────────────────────────────────────────── */
-
-function GitHubIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
-    </svg>
+      {/* Footer */}
+      <footer className="border-t border-border py-9 px-6">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <div className="font-display text-[15px] font-bold text-text">
+              res<span className="text-accent">md</span>
+            </div>
+            <div className="text-[12px] text-faint mt-0.5">
+              Plain text resume builder
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-5 gap-y-2 text-[13px] text-faint">
+            <Link href="/auth" className="hover:text-text transition-colors">
+              Sign in
+            </Link>
+            <Link href="/help" className="hover:text-text transition-colors">
+              Help
+            </Link>
+            <Link href="/privacy" className="hover:text-text transition-colors">
+              Privacy
+            </Link>
+            <Link href="/terms" className="hover:text-text transition-colors">
+              Terms
+            </Link>
+            <a
+              href="https://github.com/attahiruj/resmd"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-text transition-colors flex items-center gap-1"
+            >
+              <GithubLogoIcon className="w-3.5 h-3.5" />
+              GitHub
+            </a>
+            <a
+              href="https://buymeacoffee.com/hattahiroo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-text transition-colors flex items-center gap-1"
+            >
+              <HeartIcon className="w-3.5 h-3.5" />
+              Support
+            </a>
+          </div>
+        </div>
+      </footer>
+    </>
   );
 }

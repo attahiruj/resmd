@@ -2,9 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { ArrowLeftIcon, ArrowRightIcon } from '@phosphor-icons/react';
+import { useRouter } from 'next/navigation';
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
+  GitBranchIcon,
+} from '@phosphor-icons/react';
 import Toolbar from '@/components/editor/Toolbar';
 import PreviewPane from '@/components/preview/PreviewPane';
+import TemplateCommandPalette from '@/components/preview/TemplateCommandPalette';
+import CmdKPalette from '@/components/editor/CmdKPalette';
 import AIChat from '@/components/editor/AIChat';
 import ErrorBoundary from '@/components/editor/ErrorBoundary';
 import GuestBanner from '@/components/editor/GuestBanner';
@@ -17,7 +26,7 @@ const Editor = dynamic(() => import('@/components/editor/Editor'), {
 });
 
 const MIN_PANE_PX = 300;
-const DEFAULT_SPLIT = 50;
+const DEFAULT_SPLIT = 40;
 const AUTOSAVE_DELAY = 2000;
 
 type MobileTab = 'write' | 'preview';
@@ -31,6 +40,8 @@ export default function EditorClient({
   resume,
   isGuest = false,
 }: EditorClientProps) {
+  const router = useRouter();
+
   const [rawContent, setRawContent] = useState(resume.rawContent);
   const [templateId, setTemplateId] = useState(resume.templateId);
   const [resumeTitle, setResumeTitle] = useState(resume.title);
@@ -43,6 +54,15 @@ export default function EditorClient({
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [showCloneModal, setShowCloneModal] = useState(false);
   const [isCloning, setIsCloning] = useState(false);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [showCmdK, setShowCmdK] = useState(false);
+  const [variantsOpen, setVariantsOpen] = useState(true);
+  // All related resumes (siblings + master) including current
+  const [relatedResumes, setRelatedResumes] = useState<Resume[]>([resume]);
+  const [variantsLoading, setVariantsLoading] = useState(!isGuest);
+  // Track active resume ID independently so autosave targets the right record
+  const activeResumeIdRef = useRef(resume.id);
+  const [activeResumeId, setActiveResumeId] = useState(resume.id);
 
   const [jumpTarget, setJumpTarget] = useState<{
     word: string;
@@ -119,10 +139,51 @@ export default function EditorClient({
     }
   }, []);
 
+  // Fetch all resumes for the side panel
+  useEffect(() => {
+    if (isGuest) return;
+    fetch('/api/resumes')
+      .then((r) => r.json())
+      .then(({ data }) => {
+        if (!Array.isArray(data)) return;
+        const all = data as Resume[];
+        // Ensure current resume appears with latest in-memory content
+        const withCurrent = all.some((r) => r.id === resume.id)
+          ? all
+          : [resume, ...all];
+        setRelatedResumes(withCurrent);
+      })
+      .catch(() => {})
+      .finally(() => setVariantsLoading(false));
+  }, [resume.id, isGuest]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleExportPDF = useCallback(async () => {
+    if (!resume.id) return;
+    try {
+      const res = await fetch('/api/export/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeId: resume.id }),
+      });
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const disposition = res.headers.get('Content-Disposition') ?? '';
+      const match = disposition.match(/filename="([^"]+)"/);
+      a.download = match?.[1] ?? 'resume.pdf';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // Silently fail
+    }
+  }, [resume.id]);
+
   const autosave = useCallback(async () => {
     setIsSaving(true);
     try {
-      await fetch(`/api/resumes/${resume.id}`, {
+      await fetch(`/api/resumes/${activeResumeIdRef.current}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -136,7 +197,7 @@ export default function EditorClient({
     } finally {
       setIsSaving(false);
     }
-  }, [resume.id]);
+  }, []);
 
   const scheduleAutosave = useCallback(() => {
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
@@ -187,29 +248,26 @@ export default function EditorClient({
     [scheduleAutosave]
   );
 
-  const handleTitleChange = useCallback(
-    (title: string) => {
-      setResumeTitle(title);
-      if (titleSaveTimerRef.current) clearTimeout(titleSaveTimerRef.current);
-      titleSaveTimerRef.current = setTimeout(async () => {
-        try {
-          await fetch(`/api/resumes/${resume.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              rawContent: rawContentRef.current,
-              templateId: templateIdRef.current,
-              title,
-            }),
-          });
-          setLastSaved(new Date());
-        } catch {
-          // Silently fail
-        }
-      }, 800);
-    },
-    [resume.id]
-  );
+  const handleTitleChange = useCallback((title: string) => {
+    setResumeTitle(title);
+    if (titleSaveTimerRef.current) clearTimeout(titleSaveTimerRef.current);
+    titleSaveTimerRef.current = setTimeout(async () => {
+      try {
+        await fetch(`/api/resumes/${activeResumeIdRef.current}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            rawContent: rawContentRef.current,
+            templateId: templateIdRef.current,
+            title,
+          }),
+        });
+        setLastSaved(new Date());
+      } catch {
+        // Silently fail
+      }
+    }, 800);
+  }, []);
 
   const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -240,19 +298,98 @@ export default function EditorClient({
     window.addEventListener('mouseup', onMouseUp);
   }, []);
 
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && e.key === 't') {
+        e.preventDefault();
+        setShowTemplatePicker((v) => !v);
+      }
+      if (mod && e.key === 'k') {
+        e.preventDefault();
+        setShowCmdK((v) => !v);
+      }
+      if (mod && e.key === 'e') {
+        e.preventDefault();
+        handleExportPDF();
+      }
+      if (mod && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        setShowCloneModal(true);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [handleExportPDF]);
+
   const handleCloneAndTailor = useCallback(() => {
     setShowCloneModal(true);
   }, []);
+
+  const handleDeleteResume = useCallback(
+    async (id: string) => {
+      const isActive = id === activeResumeIdRef.current;
+      // Optimistically remove from list
+      setRelatedResumes((prev) => prev.filter((r) => r.id !== id));
+      try {
+        await fetch(`/api/resumes/${id}`, { method: 'DELETE' });
+      } catch {
+        // Restore on failure — re-fetch
+        fetch('/api/resumes')
+          .then((r) => r.json())
+          .then(({ data }) => {
+            if (Array.isArray(data)) setRelatedResumes(data as Resume[]);
+          })
+          .catch(() => {});
+        return;
+      }
+      // If the deleted resume was the active one, go to dashboard
+      if (isActive) router.push('/dashboard');
+    },
+    [router]
+  );
+
+  const handleJumpToSection = useCallback((word: string) => {
+    setMobileTab('write');
+    setJumpTarget({ word, context: '' });
+  }, []);
+
+  // In-place variant switch — no page reload
+  const handleSelectVariant = useCallback(
+    (id: string) => {
+      if (id === activeResumeIdRef.current) return;
+      const target = relatedResumes.find((r) => r.id === id);
+      if (!target) return;
+      // Flush any pending autosave for the outgoing resume first
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+        autosave();
+      }
+      activeResumeIdRef.current = id;
+      setActiveResumeId(id);
+      setRawContent(target.rawContent);
+      setTemplateId(target.templateId);
+      setResumeTitle(target.title);
+      setLastSaved(null);
+      router.replace(`/editor/${id}`, { scroll: false });
+    },
+    [relatedResumes, autosave, router]
+  );
 
   const handleCloneConfirm = useCallback(
     async (title: string, targetRoleDescription?: string) => {
       setIsCloning(true);
       try {
-        const response = await fetch(`/api/resumes/${resume.id}/clone`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, targetRoleDescription }),
-        });
+        const response = await fetch(
+          `/api/resumes/${activeResumeIdRef.current}/clone`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, targetRoleDescription }),
+          }
+        );
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
@@ -270,7 +407,7 @@ export default function EditorClient({
         setShowCloneModal(false);
       }
     },
-    [resume.id]
+    [setIsCloning, setShowCloneModal]
   );
 
   return (
@@ -283,6 +420,8 @@ export default function EditorClient({
           resumeId={resume.id}
           rawContent={rawContent}
           onCloneAndTailor={handleCloneAndTailor}
+          templateId={templateId}
+          onTemplateChange={handleTemplateChange}
         />
         {isGuest && <GuestBanner />}
 
@@ -353,12 +492,27 @@ export default function EditorClient({
               onTemplateChange={handleTemplateChange}
               onContentChange={handleContentChange}
               onTextDoubleClick={handlePreviewDoubleClick}
+              onOpenTemplatePicker={() => setShowTemplatePicker(true)}
             />
           )}
         </div>
 
         {/* Desktop split-pane body (≥md) */}
-        <div className="hidden md:flex flex-1 min-h-0 p-8">
+        <div className="hidden md:flex flex-1 min-h-0 p-4 gap-3">
+          {/* Variants rail — always mounted for authenticated users */}
+          {!isGuest && (
+            <VariantsRail
+              open={variantsOpen}
+              onToggle={() => setVariantsOpen((v) => !v)}
+              resumes={relatedResumes}
+              currentId={activeResumeId}
+              loading={variantsLoading}
+              onSelect={handleSelectVariant}
+              onClone={handleCloneAndTailor}
+              onDelete={handleDeleteResume}
+            />
+          )}
+
           <div
             ref={bodyRef}
             className="flex flex-1 overflow-hidden rounded-xl border border-border"
@@ -408,11 +562,48 @@ export default function EditorClient({
                 onTemplateChange={handleTemplateChange}
                 onContentChange={handleContentChange}
                 onTextDoubleClick={handlePreviewDoubleClick}
+                onOpenTemplatePicker={() => setShowTemplatePicker(true)}
               />
             </div>
           </div>
         </div>
       </div>
+
+      {/* ⌘K command palette */}
+      {showCmdK && (
+        <CmdKPalette
+          rawContent={rawContent}
+          templateId={templateId}
+          resumeId={resume.id}
+          onExportPDF={() => {
+            setShowCmdK(false);
+            handleExportPDF();
+          }}
+          onCloneAndTailor={() => {
+            setShowCmdK(false);
+            handleCloneAndTailor();
+          }}
+          onSelectTemplate={(id) => {
+            handleTemplateChange(id);
+            setShowCmdK(false);
+          }}
+          onJumpToSection={handleJumpToSection}
+          onClose={() => setShowCmdK(false)}
+        />
+      )}
+
+      {/* Template command palette */}
+      {showTemplatePicker && (
+        <TemplateCommandPalette
+          rawContent={rawContent}
+          templateId={templateId}
+          onSelect={(id) => {
+            handleTemplateChange(id);
+            setShowTemplatePicker(false);
+          }}
+          onClose={() => setShowTemplatePicker(false)}
+        />
+      )}
 
       {/* Clone Modal */}
       {showCloneModal && (
@@ -424,5 +615,195 @@ export default function EditorClient({
         />
       )}
     </ErrorBoundary>
+  );
+}
+
+function VariantRow({
+  title,
+  active,
+  onClick,
+  onDelete,
+}: {
+  title: string;
+  active?: boolean;
+  onClick?: () => void;
+  onDelete?: () => void;
+}) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  return (
+    <div
+      className={`w-full px-3 py-2 rounded-lg flex items-center gap-2 transition-colors duration-150 group ${
+        active ? 'bg-accent/10' : 'hover:bg-surface-2'
+      }`}
+    >
+      {/* Active indicator dot */}
+      <span
+        className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${
+          active ? 'bg-accent' : 'bg-border group-hover:bg-muted'
+        }`}
+      />
+
+      {/* Title — click to switch */}
+      <button
+        onClick={onClick}
+        disabled={active}
+        title={title}
+        className={`min-w-0 flex-1 text-left text-xs leading-snug truncate transition-colors ${
+          active
+            ? 'text-accent font-semibold cursor-default'
+            : 'text-muted hover:text-text cursor-pointer'
+        }`}
+      >
+        {title}
+      </button>
+
+      {/* Delete control — appears on hover */}
+      {onDelete &&
+        !active &&
+        (confirmDelete ? (
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="text-[10px] text-red-400 hover:text-red-300 font-medium transition-colors leading-none"
+            >
+              Delete
+            </button>
+            <button
+              onClick={() => setConfirmDelete(false)}
+              className="text-[10px] text-faint hover:text-muted transition-colors leading-none"
+            >
+              ✕
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setConfirmDelete(true);
+            }}
+            className="opacity-0 group-hover:opacity-100 text-faint hover:text-red-400 transition-all text-[11px] leading-none flex-shrink-0"
+            title="Delete"
+          >
+            ✕
+          </button>
+        ))}
+    </div>
+  );
+}
+
+function VariantsRail({
+  open,
+  onToggle,
+  resumes,
+  currentId,
+  loading,
+  onSelect,
+  onClone,
+  onDelete,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  resumes: Resume[];
+  currentId: string;
+  loading: boolean;
+  onSelect: (id: string) => void;
+  onClone: () => void;
+  onDelete: (id: string) => void;
+}) {
+  const SKELETON_COUNT = 3;
+
+  if (!open) {
+    return (
+      <div className="flex flex-col items-center bg-surface border border-border rounded-xl flex-shrink-0 w-8 py-2 gap-1.5 overflow-hidden">
+        <button
+          onClick={onToggle}
+          className="w-5 h-5 flex items-center justify-center text-muted hover:text-text transition-colors"
+          title="Show resumes"
+        >
+          <CaretRightIcon size={12} />
+        </button>
+        <div className="w-4 h-px bg-border my-0.5" />
+        {loading
+          ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+              <div
+                key={i}
+                className="w-5 h-3 rounded-full bg-border animate-pulse"
+              />
+            ))
+          : resumes
+              .slice(0, 8)
+              .map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => onSelect(r.id)}
+                  title={r.title}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    r.id === currentId
+                      ? 'bg-accent'
+                      : 'bg-border hover:bg-muted'
+                  }`}
+                />
+              ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col bg-surface border border-border rounded-xl flex-shrink-0 w-[168px] overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center px-3 py-2.5 border-b border-border flex-shrink-0">
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <GitBranchIcon size={11} className="text-muted flex-shrink-0" />
+          <span className="text-[10px] font-semibold text-muted uppercase tracking-wider">
+            Resumes
+          </span>
+        </div>
+        <button
+          onClick={onToggle}
+          className="w-4 h-4 flex items-center justify-center text-muted hover:text-text transition-colors"
+          title="Collapse"
+        >
+          <CaretLeftIcon size={11} />
+        </button>
+      </div>
+
+      {/* List */}
+      <div className="flex-1 overflow-y-auto px-1.5 py-2 flex flex-col gap-0.5">
+        {loading
+          ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+              <div
+                key={i}
+                className="px-3 py-2 flex items-center gap-2.5 animate-pulse"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-border flex-shrink-0" />
+                <div className="h-2.5 w-3/4 rounded-full bg-border" />
+              </div>
+            ))
+          : resumes.map((r) => (
+              <VariantRow
+                key={r.id}
+                title={r.title}
+                active={r.id === currentId}
+                onClick={r.id === currentId ? undefined : () => onSelect(r.id)}
+                onDelete={() => onDelete(r.id)}
+              />
+            ))}
+
+        {!loading && (
+          <button
+            onClick={onClone}
+            className="mt-1 mx-1.5 rounded-lg border border-dashed border-border py-2 text-center hover:border-accent/50 hover:bg-accent/5 transition-colors duration-150 group"
+          >
+            <span className="text-[10px] text-faint group-hover:text-accent transition-colors">
+              + clone
+            </span>
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
