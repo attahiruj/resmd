@@ -206,7 +206,7 @@ function Hero() {
         <HeroDemo />
       </div>
       <div className="absolute top-4 right-4 hidden sm:flex bg-surface border border-border rounded-lg p-2 items-center gap-2 text-xs text-muted">
-        <GitHubIcon className="w-3 h-3" />
+        <GithubLogoIcon className="w-3 h-3" />
         <span className="font-medium">GitHub</span>
       </div>
     </section>
