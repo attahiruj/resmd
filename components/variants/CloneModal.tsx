@@ -46,11 +46,11 @@ export default function CloneModal({
       onClick={onClose}
     >
       <div
-        className="bg-surface border border-border rounded-xl shadow-xl p-6 w-full max-w-sm"
+        className="bg-surface border border-border rounded-xl shadow-xl p-6 w-full max-w-lg"
         onClick={(e) => e.stopPropagation()}
         style={{ animation: 'modal-in 150ms ease-out' }}
       >
-        <h2 className="text-sm font-semibold text-text mb-1">Clone resume</h2>
+        <h2 className="text-base font-semibold text-text mb-1">Clone resume</h2>
         {atLimit && (
           <p className="text-xs text-danger mb-4">
             You&aposve reached the maximum of {LIMITS.MAX_VARIANTS} resumes.

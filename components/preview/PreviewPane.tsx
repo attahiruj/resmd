@@ -18,6 +18,7 @@ interface PreviewPaneProps {
   onTemplateChange: (id: string) => void;
   onContentChange?: (value: string) => void;
   onTextDoubleClick?: (word: string, context: string) => void;
+  onOpenTemplatePicker?: () => void;
 }
 
 function upsertDirective(raw: string, key: string, value: number): string {
@@ -36,6 +37,7 @@ export default function PreviewPane({
   onTemplateChange,
   onContentChange,
   onTextDoubleClick,
+  onOpenTemplatePicker,
 }: PreviewPaneProps) {
   const [showGallery, setShowGallery] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -74,7 +76,9 @@ export default function PreviewPane({
       <div className="flex items-center justify-between px-3 h-14 sm:h-11 flex-shrink-0 border-b border-border bg-surface z-10">
         {/* Left: template selector chip */}
         <button
-          onClick={() => setShowGallery(true)}
+          onClick={() =>
+            onOpenTemplatePicker ? onOpenTemplatePicker() : setShowGallery(true)
+          }
           className="flex items-center gap-2 pl-2.5 pr-3 py-2.5 sm:py-1.5 rounded-lg border border-border bg-surface-2 hover:border-accent/60 hover:bg-surface-3 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent group"
         >
           <SquaresFourIcon
