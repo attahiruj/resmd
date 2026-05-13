@@ -1,165 +1,40 @@
-import { Resume, UserProfile } from '@/types/resume';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import type { Resume, UserProfile } from '@/types/resume';
+import { getDbProvider } from '@/lib/db/server';
 
-// DB row → TypeScript type mappers (snake_case → camelCase)
-function mapResume(row: Record<string, unknown>): Resume {
-  return {
-    id: row.id as string,
-    userId: row.user_id as string,
-    title: row.title as string,
-    rawContent: row.raw_content as string,
-    templateId: row.template_id as string,
-    clonedFromId: (row.cloned_from_id as string | null) ?? null,
-    isPublic: row.is_public as boolean,
-    publicSlug: (row.public_slug as string | null) ?? null,
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
-  };
-}
-
-function mapProfile(row: Record<string, unknown>): UserProfile {
-  return {
-    id: row.id as string,
-    email: row.email as string,
-    createdAt: row.created_at as string,
-  };
-}
-
-export const createResume = async (
+export const createResume = (
   userId: string,
   title: string,
   rawContent: string,
   templateId: string
-): Promise<Resume> => {
-  const supabase = createSupabaseServerClient();
+): Promise<Resume> =>
+  getDbProvider().createResume(userId, title, rawContent, templateId);
 
-  const { data, error } = await supabase
-    .from('resumes')
-    .insert({
-      user_id: userId,
-      title,
-      raw_content: rawContent,
-      template_id: templateId,
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-
-  return mapResume(data);
-};
-
-export const updateResumeContent = async (
+export const updateResumeContent = (
   resumeId: string,
   rawContent: string,
   templateId: string,
   title?: string
-): Promise<void> => {
-  const supabase = createSupabaseServerClient();
+): Promise<void> =>
+  getDbProvider().updateResumeContent(resumeId, rawContent, templateId, title);
 
-  const { error } = await supabase
-    .from('resumes')
-    .update({
-      raw_content: rawContent,
-      template_id: templateId,
-      updated_at: new Date().toISOString(),
-      ...(title !== undefined ? { title } : {}),
-    })
-    .eq('id', resumeId);
+export const getUserResumes = (userId: string): Promise<Resume[]> =>
+  getDbProvider().getUserResumes(userId);
 
-  if (error) throw error;
-};
+export const getResume = (resumeId: string): Promise<Resume | null> =>
+  getDbProvider().getResume(resumeId);
 
-export const getUserResumes = async (userId: string): Promise<Resume[]> => {
-  const supabase = createSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from('resumes')
-    .select('*')
-    .eq('user_id', userId)
-    .order('updated_at', { ascending: false });
-
-  if (error) throw error;
-
-  return (data ?? []).map(mapResume);
-};
-
-export const getResume = async (resumeId: string): Promise<Resume | null> => {
-  const supabase = createSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from('resumes')
-    .select('*')
-    .eq('id', resumeId)
-    .single();
-
-  if (error) return null;
-
-  return mapResume(data);
-};
-
-export const cloneResume = async (
+export const cloneResume = (
   sourceResumeId: string,
   newTitle: string,
   userId: string
-): Promise<Resume> => {
-  const supabase = createSupabaseServerClient();
+): Promise<Resume> =>
+  getDbProvider().cloneResume(sourceResumeId, newTitle, userId);
 
-  const source = await getResume(sourceResumeId);
-  if (!source) throw new Error('Source resume not found');
+export const deleteResume = (resumeId: string): Promise<void> =>
+  getDbProvider().deleteResume(resumeId);
 
-  const { data, error } = await supabase
-    .from('resumes')
-    .insert({
-      user_id: userId,
-      title: newTitle,
-      raw_content: source.rawContent,
-      template_id: source.templateId,
-      cloned_from_id: sourceResumeId,
-    })
-    .select()
-    .single();
+export const getResumeBySlug = (slug: string): Promise<Resume | null> =>
+  getDbProvider().getResumeBySlug(slug);
 
-  if (error) throw error;
-
-  return mapResume(data);
-};
-
-export const deleteResume = async (resumeId: string): Promise<void> => {
-  const supabase = createSupabaseServerClient();
-
-  const { error } = await supabase.from('resumes').delete().eq('id', resumeId);
-
-  if (error) throw error;
-};
-
-export const getResumeBySlug = async (slug: string): Promise<Resume | null> => {
-  const supabase = createSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from('resumes')
-    .select('*')
-    .eq('public_slug', slug)
-    .eq('is_public', true)
-    .single();
-
-  if (error) return null;
-
-  return mapResume(data);
-};
-
-export const getUserProfile = async (
-  userId: string
-): Promise<UserProfile | null> => {
-  const supabase = createSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-
-  if (error) return null;
-
-  return mapProfile(data);
-};
+export const getUserProfile = (userId: string): Promise<UserProfile | null> =>
+  getDbProvider().getUserProfile(userId);

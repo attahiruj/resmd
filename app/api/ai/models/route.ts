@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getServerAuthProvider, getDbProvider } from '@/lib/db/server';
 import { getActiveProviders } from '@/lib/ai-providers';
 import type { AIModel } from '@/lib/ai-providers';
 import { debug } from '@/lib/env';
@@ -9,10 +9,7 @@ export const dynamic = 'force-dynamic';
 export type { AIModel };
 
 export async function GET() {
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getServerAuthProvider().getUser();
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -25,7 +22,6 @@ export async function GET() {
     );
 
   try {
-    // Aggregate models from all active providers
     const perProvider = await Promise.all(
       providers.map((p) =>
         p.listModels
@@ -37,17 +33,12 @@ export async function GET() {
     );
     const models: AIModel[] = perProvider.flat();
 
-    // Enrich with global usage counts (best-effort — failures don't block model list)
-    const { data: stats } = await supabase
-      .from('ai_model_stats')
-      .select('model_id, use_count')
-      .in(
-        'model_id',
-        models.map((m) => m.id)
-      );
-
+    // Enrich with global usage counts (best-effort)
+    const stats = await getDbProvider().getAiModelStats(
+      models.map((m) => m.id)
+    );
     const countMap: Record<string, number> = Object.fromEntries(
-      (stats ?? []).map((s) => [s.model_id, s.use_count])
+      stats.map((s) => [s.model_id, s.use_count])
     );
 
     const enriched = models.map((m) => ({

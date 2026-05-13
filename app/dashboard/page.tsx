@@ -1,13 +1,10 @@
 import { redirect } from 'next/navigation';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getServerAuthProvider } from '@/lib/db/server';
 import { getUserResumes, getUserProfile } from '@/lib/resumeService';
 import DashboardClient from '@/components/dashboard/DashboardClient';
 
 export default async function DashboardPage() {
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getServerAuthProvider().getUser();
 
   if (!user || user.is_anonymous) {
     redirect('/auth');

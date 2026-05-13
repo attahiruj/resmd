@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createSupabaseBrowserClient } from '@/lib/supabase';
+import { getClientAuthProvider } from '@/lib/db/client';
 import { DEFAULT_RESUME_CONTENT } from '@/lib/defaultContent';
 
 export default function EditorNewPage() {
@@ -10,10 +10,8 @@ export default function EditorNewPage() {
 
   useEffect(() => {
     const init = async () => {
-      const supabase = createSupabaseBrowserClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const auth = getClientAuthProvider();
+      const user = await auth.getUser();
 
       // Real (non-anonymous) users go to dashboard
       if (user && !user.is_anonymous) {
@@ -23,9 +21,10 @@ export default function EditorNewPage() {
 
       // Sign in anonymously if no session at all
       if (!user) {
-        const { error } = await supabase.auth.signInAnonymously();
+        const { error } = await auth.signInAnonymously();
         if (error) {
-          console.error('Anonymous sign-in failed:', error.message);
+          // In local mode, anonymous sign-in is not supported — redirect to auth
+          router.replace('/auth');
           return;
         }
       }

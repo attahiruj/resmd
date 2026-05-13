@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getServerAuthProvider, getDbProvider } from '@/lib/db/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getServerAuthProvider().getUser();
 
     const body = await req.json();
     const { rating, message } = body as { rating: number; message?: string };
@@ -15,11 +12,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid rating' }, { status: 400 });
     }
 
-    await supabase.from('feedback').insert({
-      user_id: user?.id ?? null,
+    await getDbProvider().insertFeedback(
+      user?.id ?? null,
       rating,
-      message: message ?? null,
-    });
+      message ?? null
+    );
 
     return NextResponse.json({ ok: true });
   } catch {

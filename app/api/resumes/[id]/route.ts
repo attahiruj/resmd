@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getServerAuthProvider } from '@/lib/db/server';
 import {
   getResume,
   updateResumeContent,
@@ -15,10 +15,7 @@ interface Params {
 // GET /api/resumes/[id] — fetch single resume
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params;
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getServerAuthProvider().getUser();
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -39,10 +36,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 // PATCH /api/resumes/[id] — autosave update
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getServerAuthProvider().getUser();
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -105,10 +99,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 // DELETE /api/resumes/[id] — delete a resume
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { id } = await params;
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getServerAuthProvider().getUser();
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

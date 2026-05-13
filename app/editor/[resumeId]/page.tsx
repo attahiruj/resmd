@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getServerAuthProvider } from '@/lib/db/server';
 import { getResume } from '@/lib/resumeService';
 import EditorClient from '@/components/editor/EditorClient';
 
@@ -9,10 +9,7 @@ interface Props {
 
 export default async function EditorPage({ params }: Props) {
   const { resumeId } = await params;
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getServerAuthProvider().getUser();
 
   if (!user) {
     redirect('/auth');

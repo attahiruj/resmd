@@ -19,7 +19,7 @@ import { useProfile } from '@/hooks/useProfile';
 import Navbar from '@/components/ui/Navbar';
 import { hasPlaceholders } from '@/lib/inline';
 import FeedbackModal from '@/components/ui/FeedbackModal';
-import { createSupabaseBrowserClient } from '@/lib/supabase';
+import { getClientAuthProvider } from '@/lib/db/client';
 import { useRouter } from 'next/navigation';
 
 interface ToolbarProps {
@@ -101,8 +101,7 @@ export default function Toolbar({
   };
 
   const handleSignOut = async () => {
-    const supabase = createSupabaseBrowserClient();
-    await supabase.auth.signOut();
+    await getClientAuthProvider().signOut();
     router.push('/auth');
   };
 

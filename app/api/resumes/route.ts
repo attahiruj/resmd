@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getServerAuthProvider, getDbProvider } from '@/lib/db/server';
 import { createResume, getUserResumes } from '@/lib/resumeService';
 import { LIMITS } from '@/lib/limits';
 import { getAllTemplates } from '@/lib/templates';
@@ -8,10 +8,7 @@ import { debug } from '@/lib/env';
 
 // GET /api/resumes — list authenticated user's resumes
 export async function GET() {
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getServerAuthProvider().getUser();
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -28,10 +25,7 @@ export async function GET() {
 
 // POST /api/resumes — create a new resume
 export async function POST(req: NextRequest) {
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getServerAuthProvider().getUser();
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -72,9 +66,7 @@ export async function POST(req: NextRequest) {
 
     // Ensure a profile row exists (anonymous users may not have one if the trigger missed them)
     if (user.is_anonymous) {
-      await supabase
-        .from('profiles')
-        .upsert({ id: user.id }, { onConflict: 'id', ignoreDuplicates: true });
+      await getDbProvider().upsertProfile(user.id, user.email ?? null);
     }
 
     const body = await req.json();

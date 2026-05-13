@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getServerAuthProvider, getDbProvider } from '@/lib/db/server';
 import { getProviderForModel } from '@/lib/ai-providers';
 
 export async function POST(req: NextRequest) {
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getServerAuthProvider().getUser();
 
   // Only track for authenticated non-guest users
   if (!user || user.is_anonymous) {
@@ -25,13 +22,12 @@ export async function POST(req: NextRequest) {
       providerName = getProviderForModel(model ?? '').name;
     } catch {}
 
-    const { error } = await supabase.rpc('track_suggestion', {
-      p_model: model || 'unknown',
-      p_provider: providerName,
-      p_action: action,
-      p_count: count,
-    });
-    if (error) console.error('[AI Track]', error);
+    await getDbProvider().trackSuggestion(
+      model || 'unknown',
+      providerName,
+      action,
+      count
+    );
 
     return NextResponse.json({ ok: true });
   } catch (err) {
