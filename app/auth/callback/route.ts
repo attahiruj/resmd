@@ -3,6 +3,11 @@ import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
+
+  if (process.env.DB_PROVIDER === 'local') {
+    return NextResponse.redirect(`${origin}/auth?error=oauth_not_supported`);
+  }
+
   const code = searchParams.get('code');
 
   if (code) {

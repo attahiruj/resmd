@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { createSupabaseBrowserClient } from '@/lib/supabase';
+import { getClientAuthProvider } from '@/lib/db/client';
 import type { UserProfile } from '@/types/resume';
-import type { User } from '@supabase/supabase-js';
+import type { AuthUser } from '@/lib/db/interfaces';
 
 interface ProfileState {
-  user: User | null;
+  user: AuthUser | null;
   profile: UserProfile | null;
   loading: boolean;
   error: Error | null;
@@ -20,49 +20,22 @@ export function useProfile() {
     error: null,
   });
 
-  // Keep supabase client stable across renders
-  const supabaseRef = useRef(createSupabaseBrowserClient());
+  const authRef = useRef(getClientAuthProvider());
 
   const fetchProfile = async () => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabaseRef.current.auth.getUser();
-      if (userError) throw userError;
+      const user = await authRef.current.getUser();
 
       if (!user) {
-        setState({
-          user: null,
-          profile: null,
-          loading: false,
-          error: null,
-        });
+        setState({ user: null, profile: null, loading: false, error: null });
         return;
       }
 
-      const { data: row, error: profileError } = await supabaseRef.current
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      const profile = await authRef.current.getProfile(user.id);
 
-      if (profileError) throw profileError;
-
-      const profile: UserProfile = {
-        id: row.id,
-        email: row.email,
-        createdAt: row.created_at,
-      };
-
-      setState({
-        user,
-        profile,
-        loading: false,
-        error: null,
-      });
+      setState({ user, profile, loading: false, error: null });
     } catch (err) {
       setState((prev) => ({ ...prev, loading: false, error: err as Error }));
     }

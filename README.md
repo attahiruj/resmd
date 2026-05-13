@@ -53,10 +53,11 @@ Resmd replaces rigid form-based editors with **ResMarkup** — a lightweight pla
 ### Prerequisites
 
 - Node.js 18+
-- A [Supabase](https://supabase.com) project (free tier works)
-- An [OpenRouter](https://openrouter.ai) API key (free tier works)
+- An [OpenRouter](https://openrouter.ai) API key (optional — required for AI features)
 
-### Setup
+### Quick Start (No Supabase Required)
+
+You can run resmd locally without a Supabase account using the built-in SQLite provider:
 
 ```bash
 git clone https://github.com/attahiruj/resmd.git
@@ -65,21 +66,36 @@ npm install
 cp .env.local.example .env.local
 ```
 
-Configure `.env.local` with your credentials:
+Edit `.env.local`:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-OPENROUTER_API_KEY=your_openrouter_api_key
+DB_PROVIDER=local
+NEXT_PUBLIC_DB_PROVIDER=local
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+# Optional — for AI features:
+OPENROUTER_API_KEY=your_openrouter_api_key
 ```
-
-Run the SQL schema from [`ai.md`](ai.md) in your Supabase SQL editor to create the required tables and RLS policies.
 
 ```bash
 npm run dev
 ```
+
+The SQLite database is auto-created at `./data/local.db`. Register with email + password at `/auth`. Note: OAuth (Google) is not available in local mode.
+
+### Setup with Supabase
+
+For full production features (OAuth, anonymous sessions, cloud sync):
+
+```env
+DB_PROVIDER=supabase
+NEXT_PUBLIC_DB_PROVIDER=supabase
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+OPENROUTER_API_KEY=your_openrouter_api_key
+```
+
+Run the SQL schema from [`ai.md`](ai.md) in your Supabase SQL editor to create the required tables and RLS policies.
 
 Open [http://localhost:3000](http://localhost:3000).
 

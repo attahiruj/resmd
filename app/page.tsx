@@ -19,7 +19,7 @@ import {
   ArrowRightIcon,
 } from '@phosphor-icons/react';
 import { applyTheme, getStoredThemePrefs } from '@/lib/themes';
-import { createSupabaseBrowserClient } from '@/lib/supabase';
+import { getClientAuthProvider } from '@/lib/db/client';
 
 export default function Home() {
   const router = useRouter();
@@ -27,10 +27,7 @@ export default function Home() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const supabase = createSupabaseBrowserClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getClientAuthProvider().getUser();
 
       if (user && !user.is_anonymous) {
         router.push('/dashboard');

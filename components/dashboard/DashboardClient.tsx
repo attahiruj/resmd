@@ -37,7 +37,7 @@ import { Button } from '@/components/ui/Button';
 import OnboardingModal from '@/components/ui/OnboardingModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
 import Navbar from '@/components/ui/Navbar';
-import { createSupabaseBrowserClient } from '@/lib/supabase';
+import { getClientAuthProvider } from '@/lib/db/client';
 
 interface DashboardClientProps {
   initialResumes: Resume[];
@@ -268,8 +268,7 @@ export default function DashboardClient({
             onToggleTheme={toggleTheme}
             onShowFeedback={() => setShowFeedback(true)}
             onSignOut={async () => {
-              const supabase = createSupabaseBrowserClient();
-              await supabase.auth.signOut();
+              await getClientAuthProvider().signOut();
               router.push('/auth');
             }}
           />

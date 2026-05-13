@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getServerAuthProvider, getDbProvider } from '@/lib/db/server';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { buildSystemPrompt, AI_MAX_TOKENS } from '@/lib/prompts';
 import { getProviderForModel } from '@/lib/ai-providers';
@@ -7,10 +7,7 @@ import { debug } from '@/lib/env';
 
 export async function POST(req: NextRequest) {
   // Auth check
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getServerAuthProvider().getUser();
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (user.is_anonymous)
@@ -87,10 +84,7 @@ export async function POST(req: NextRequest) {
     const reply: string = data.choices?.[0]?.message?.content ?? '';
 
     // Track model usage — fire and forget, never block the response
-    supabase.rpc('increment_model_use', {
-      p_model: modelUsed,
-      p_provider: provider.name,
-    });
+    getDbProvider().incrementModelUse(modelUsed, provider.name);
 
     return NextResponse.json({ reply });
   } catch (err) {

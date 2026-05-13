@@ -4,7 +4,9 @@ export const dynamic = 'force-dynamic';
 
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createSupabaseBrowserClient } from '@/lib/supabase';
+import { getClientAuthProvider } from '@/lib/db/client';
+
+const isLocalMode = process.env.NEXT_PUBLIC_DB_PROVIDER === 'local';
 
 type Tab = 'signin' | 'signup';
 
@@ -33,12 +35,11 @@ function AuthPageContent() {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createSupabaseBrowserClient();
+  const auth = getClientAuthProvider();
 
   const returnResume = searchParams.get('returnResume');
 
   useEffect(() => {
-    // Default to sign-up tab when coming from guest flow
     if (searchParams.get('signup') === '1') {
       setTab('signup');
     }
@@ -46,21 +47,17 @@ function AuthPageContent() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
+      const user = await auth.getUser();
       if (user && !user.is_anonymous) {
-        // Already a real user — send them away
         router.push(returnResume ? `/editor/${returnResume}` : '/dashboard');
       } else {
         setIsAnonymous(user?.is_anonymous ?? false);
         setLoading(false);
       }
     };
-
     checkAuth();
-  }, [router, supabase, returnResume]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router, returnResume]);
 
   const afterAuth = () => {
     router.push(returnResume ? `/editor/${returnResume}` : '/dashboard');
@@ -74,28 +71,26 @@ function AuthPageContent() {
 
     try {
       if (tab === 'signin') {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { error } = await auth.signInWithPassword(email, password);
         if (error) throw error;
         afterAuth();
       } else {
-        if (isAnonymous) {
-          // Convert anonymous session to a real account
-          const { error } = await supabase.auth.updateUser({ email, password });
+        if (isAnonymous && !isLocalMode) {
+          // Convert anonymous session to a real account (Supabase only)
+          const { error } = await auth.updateUser({ email, password });
           if (error) throw error;
           afterAuth();
         } else {
-          const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
-            },
-          });
+          const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`;
+          const { error } = await auth.signUp(email, password, redirectTo);
           if (error) throw error;
-          setMessage('Check your email to confirm your account, then sign in.');
+          if (isLocalMode) {
+            afterAuth();
+          } else {
+            setMessage(
+              'Check your email to confirm your account, then sign in.'
+            );
+          }
         }
       }
     } catch (err: unknown) {
@@ -112,17 +107,10 @@ function AuthPageContent() {
       : `${window.location.origin}/auth/callback`;
 
     if (isAnonymous) {
-      // Link Google identity to the existing anonymous account
-      const { error } = await supabase.auth.linkIdentity({
-        provider: 'google',
-        options: { redirectTo },
-      });
+      const { error } = await auth.linkIdentity('google', redirectTo);
       if (error) setError(error.message);
     } else {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo },
-      });
+      const { error } = await auth.signInWithOAuth('google', redirectTo);
       if (error) setError(error.message);
     }
   };
@@ -183,20 +171,24 @@ function AuthPageContent() {
             </button>
           </div>
 
-          {/* Google OAuth */}
-          <button
-            onClick={handleGoogle}
-            className="w-full flex items-center justify-center gap-2 border border-border rounded-lg py-3.5 text-sm text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent mb-4"
-          >
-            <GoogleIcon />
-            Continue with Google
-          </button>
+          {/* Google OAuth — hidden in local mode */}
+          {!isLocalMode && (
+            <>
+              <button
+                onClick={handleGoogle}
+                className="w-full flex items-center justify-center gap-2 border border-border rounded-lg py-3.5 text-sm text-text hover:bg-surface-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent mb-4"
+              >
+                <GoogleIcon />
+                Continue with Google
+              </button>
 
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-faint">or</span>
-            <div className="flex-1 h-px bg-border" />
-          </div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-faint">or</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+            </>
+          )}
 
           {/* Email/password form */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
