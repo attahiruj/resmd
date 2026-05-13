@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getServerAuthProvider } from '@/lib/db/server';
 import { extractText } from '@/lib/import/extractor';
 import { mapToResMarkup } from '@/lib/import/mapper';
 import { getProviderForModel } from '@/lib/ai-providers';
@@ -24,10 +24,7 @@ function getExtension(filename: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getServerAuthProvider().getUser();
     if (!user)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

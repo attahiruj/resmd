@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { renderToBuffer, type DocumentProps } from '@react-pdf/renderer';
 import React from 'react';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getServerAuthProvider } from '@/lib/db/server';
 import { getResume } from '@/lib/resumeService';
 import { parseResume } from '@/lib/parser';
 import { getTemplate, getPdfComponent } from '@/lib/templates';
@@ -10,10 +10,7 @@ import { debug } from '@/lib/env';
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getServerAuthProvider().getUser();
     if (!user)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

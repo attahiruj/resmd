@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getServerAuthProvider, getDbProvider } from '@/lib/db/server';
 import { checkRateLimit } from '@/lib/rateLimit';
 import {
   getProviderForModel,
@@ -10,10 +10,7 @@ import { debug, env } from '@/lib/env';
 
 export async function POST(req: NextRequest) {
   // Auth check
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getServerAuthProvider().getUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -34,11 +31,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Fetch profile for usage tracking
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('ai_usage_this_month, ai_usage_reset_at')
-    .eq('id', user.id)
-    .single();
+  const profile = await getDbProvider().getAiProfileUsage(user.id);
 
   try {
     const { selectedText, instruction, resumeContext, model } =
@@ -132,27 +125,19 @@ rewritten text here
         newUsage = 1;
         const nextMonth = new Date(now);
         nextMonth.setMonth(nextMonth.getMonth() + 1);
-        await supabase
-          .from('profiles')
-          .update({
-            ai_usage_this_month: newUsage,
-            ai_usage_reset_at: nextMonth.toISOString(),
-          })
-          .eq('id', user.id);
+        await getDbProvider().updateAiProfileUsage(
+          user.id,
+          newUsage,
+          nextMonth.toISOString()
+        );
       } else {
         // Increment existing count
-        await supabase
-          .from('profiles')
-          .update({ ai_usage_this_month: newUsage + 1 })
-          .eq('id', user.id);
+        await getDbProvider().updateAiProfileUsage(user.id, newUsage + 1);
       }
     }
 
     // Track model usage — fire and forget, never block the response
-    supabase.rpc('increment_model_use', {
-      p_model: modelUsed,
-      p_provider: provider.name,
-    });
+    getDbProvider().incrementModelUse(modelUsed, provider.name);
 
     let fullResponse = '';
     const handleChunk = (text: string): string | null => {
