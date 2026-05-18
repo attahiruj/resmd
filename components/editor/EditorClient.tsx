@@ -412,7 +412,7 @@ export default function EditorClient({
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-col h-dvh overflow-hidden bg-bg">
+      <main className="flex flex-col h-dvh overflow-hidden bg-bg">
         <Toolbar
           lastSaved={lastSaved}
           resumeTitle={resumeTitle}
@@ -567,7 +567,7 @@ export default function EditorClient({
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* ⌘K command palette */}
       {showCmdK && (
@@ -674,7 +674,7 @@ function VariantRow({
             </button>
             <button
               onClick={() => setConfirmDelete(false)}
-              className="text-[10px] text-faint hover:text-muted transition-colors leading-none"
+              className="text-[10px] text-muted hover:text-text transition-colors leading-none"
             >
               ✕
             </button>
@@ -685,7 +685,7 @@ function VariantRow({
               e.stopPropagation();
               setConfirmDelete(true);
             }}
-            className="opacity-0 group-hover:opacity-100 text-faint hover:text-red-400 transition-all text-[11px] leading-none flex-shrink-0"
+            className="opacity-0 group-hover:opacity-100 text-muted hover:text-red-400 transition-all text-[11px] leading-none flex-shrink-0"
             title="Delete"
           >
             ✕
@@ -798,7 +798,7 @@ function VariantsRail({
             onClick={onClone}
             className="mt-1 mx-1.5 rounded-lg border border-dashed border-border py-2 text-center hover:border-accent/50 hover:bg-accent/5 transition-colors duration-150 group"
           >
-            <span className="text-[10px] text-faint group-hover:text-accent transition-colors">
+            <span className="text-[10px] text-muted group-hover:text-accent transition-colors">
               + clone
             </span>
           </button>

@@ -307,6 +307,7 @@ export default function LivePreview({
         <div
           ref={measureRef}
           aria-hidden
+          inert
           style={{
             position: 'absolute',
             top: 0,

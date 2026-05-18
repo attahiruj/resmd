@@ -58,6 +58,8 @@ export default function TemplateMiniPreview({
           }
         >
           <div
+            aria-hidden
+            inert
             style={{
               position: 'absolute',
               top: 0,

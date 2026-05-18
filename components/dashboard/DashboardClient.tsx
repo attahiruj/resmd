@@ -279,7 +279,7 @@ export default function DashboardClient({
         }
       />
 
-      <div className="max-w-6xl mx-auto px-6 py-10">
+      <main className="max-w-6xl mx-auto px-6 py-10">
         {/* Header section */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
@@ -550,7 +550,7 @@ export default function DashboardClient({
             )}
           </>
         )}
-      </div>
+      </main>
 
       {/* Clone modal */}
       {cloneSource && (
@@ -649,6 +649,8 @@ function ResumeThumbnail({
       {scale > 0 && parsedResume && TemplateComponent ? (
         <Suspense fallback={fallback}>
           <div
+            aria-hidden
+            inert
             style={{
               width: RESUME_NATURAL_WIDTH,
               transformOrigin: 'top left',
