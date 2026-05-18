@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerAuthProvider, getDbProvider } from '@/lib/db/server';
+import { getDbProvider } from '@/lib/db/server';
+import { getAuthUser } from '@/lib/getAuthUser';
 import { createResume, getUserResumes } from '@/lib/resumeService';
 import { LIMITS } from '@/lib/limits';
 import { getAllTemplates } from '@/lib/templates';
@@ -7,8 +8,8 @@ import { checkRateLimit } from '@/lib/rateLimit';
 import { debug } from '@/lib/env';
 
 // GET /api/resumes — list authenticated user's resumes
-export async function GET() {
-  const user = await getServerAuthProvider().getUser();
+export async function GET(req: NextRequest) {
+  const user = await getAuthUser(req);
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -25,7 +26,7 @@ export async function GET() {
 
 // POST /api/resumes — create a new resume
 export async function POST(req: NextRequest) {
-  const user = await getServerAuthProvider().getUser();
+  const user = await getAuthUser(req);
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

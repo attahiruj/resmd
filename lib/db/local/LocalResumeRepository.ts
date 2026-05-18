@@ -220,6 +220,63 @@ export class LocalResumeRepository implements IResumeRepository {
     }
   }
 
+  async createMcpKey(
+    userId: string,
+    name: string,
+    keyHash: string,
+    keyId: string
+  ): Promise<void> {
+    const now = new Date().toISOString();
+    await this.db.execute({
+      sql: `INSERT INTO mcp_keys (id, user_id, key_hash, name, created_at) VALUES (?, ?, ?, ?, ?)`,
+      args: [keyId, userId, keyHash, name, now],
+    });
+  }
+
+  async getMcpKeyByHash(
+    keyHash: string
+  ): Promise<{ id: string; userId: string } | null> {
+    const result = await this.db.execute({
+      sql: `SELECT id, user_id FROM mcp_keys WHERE key_hash = ?`,
+      args: [keyHash],
+    });
+    if (result.rows.length === 0) return null;
+    const row = result.rows[0];
+    return { id: row.id as string, userId: row.user_id as string };
+  }
+
+  async listMcpKeys(
+    userId: string
+  ): Promise<
+    { id: string; name: string; createdAt: string; lastUsedAt: string | null }[]
+  > {
+    const result = await this.db.execute({
+      sql: `SELECT id, name, created_at, last_used_at FROM mcp_keys WHERE user_id = ? ORDER BY created_at DESC`,
+      args: [userId],
+    });
+    return result.rows.map((r) => ({
+      id: r.id as string,
+      name: r.name as string,
+      createdAt: r.created_at as string,
+      lastUsedAt: (r.last_used_at as string | null) ?? null,
+    }));
+  }
+
+  async deleteMcpKey(keyId: string, userId: string): Promise<void> {
+    await this.db.execute({
+      sql: `DELETE FROM mcp_keys WHERE id = ? AND user_id = ?`,
+      args: [keyId, userId],
+    });
+  }
+
+  async updateMcpKeyLastUsed(keyId: string): Promise<void> {
+    const now = new Date().toISOString();
+    await this.db.execute({
+      sql: `UPDATE mcp_keys SET last_used_at = ? WHERE id = ?`,
+      args: [now, keyId],
+    });
+  }
+
   async trackSuggestion(
     model: string,
     provider: string,

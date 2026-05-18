@@ -1,6 +1,7 @@
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { createSupabaseAdminClient } from '@/lib/supabase-server';
 import type { IResumeRepository, AiModelStat } from '@/lib/db/interfaces';
 import type { Resume, UserProfile } from '@/types/resume';
+import { debug } from '@/lib/env';
 
 function mapResume(row: Record<string, unknown>): Resume {
   return {
@@ -27,7 +28,7 @@ function mapProfile(row: Record<string, unknown>): UserProfile {
 
 export class SupabaseResumeRepository implements IResumeRepository {
   private get db() {
-    return createSupabaseServerClient();
+    return createSupabaseAdminClient();
   }
 
   async createResume(
@@ -204,5 +205,76 @@ export class SupabaseResumeRepository implements IResumeRepository {
     const update: Record<string, unknown> = { ai_usage_this_month: usage };
     if (resetAt !== undefined) update.ai_usage_reset_at = resetAt;
     await this.db.from('profiles').update(update).eq('id', userId);
+  }
+
+  async createMcpKey(
+    userId: string,
+    name: string,
+    keyHash: string,
+    keyId: string
+  ): Promise<void> {
+    debug('[supabase] createMcpKey userId:', userId, 'name:', name);
+    const { error } = await this.db
+      .from('mcp_keys')
+      .insert({ id: keyId, user_id: userId, key_hash: keyHash, name });
+    if (error) {
+      console.error('[supabase] createMcpKey failed:', error);
+      throw error;
+    }
+    debug('[supabase] createMcpKey success, keyId:', keyId);
+  }
+
+  async getMcpKeyByHash(
+    keyHash: string
+  ): Promise<{ id: string; userId: string } | null> {
+    debug('[supabase] getMcpKeyByHash, hash prefix:', keyHash.slice(0, 8));
+    const { data, error } = await this.db
+      .from('mcp_keys')
+      .select('id, user_id')
+      .eq('key_hash', keyHash)
+      .maybeSingle();
+    if (error) {
+      console.error('[supabase] getMcpKeyByHash failed:', error);
+      throw error;
+    }
+    debug(
+      '[supabase] getMcpKeyByHash result:',
+      data ? `found id=${data.id}` : 'not found'
+    );
+    if (!data) return null;
+    return { id: data.id as string, userId: data.user_id as string };
+  }
+
+  async listMcpKeys(
+    userId: string
+  ): Promise<
+    { id: string; name: string; createdAt: string; lastUsedAt: string | null }[]
+  > {
+    const { data } = await this.db
+      .from('mcp_keys')
+      .select('id, name, created_at, last_used_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    return (data ?? []).map((r: Record<string, unknown>) => ({
+      id: r.id as string,
+      name: r.name as string,
+      createdAt: r.created_at as string,
+      lastUsedAt: (r.last_used_at as string | null) ?? null,
+    }));
+  }
+
+  async deleteMcpKey(keyId: string, userId: string): Promise<void> {
+    await this.db
+      .from('mcp_keys')
+      .delete()
+      .eq('id', keyId)
+      .eq('user_id', userId);
+  }
+
+  async updateMcpKeyLastUsed(keyId: string): Promise<void> {
+    await this.db
+      .from('mcp_keys')
+      .update({ last_used_at: new Date().toISOString() })
+      .eq('id', keyId);
   }
 }

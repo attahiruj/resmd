@@ -75,6 +75,13 @@ export default function HelpPage() {
             <Toc href="#templates">Templates</Toc>
             <Toc href="#export">Exporting PDF</Toc>
             <Toc href="#publishing">Publishing</Toc>
+            <Toc href="#mcp">MCP / Automation</Toc>
+            <Toc href="#mcp-setup" indent>
+              Setup
+            </Toc>
+            <Toc href="#mcp-tools" indent>
+              Available tools
+            </Toc>
           </nav>
         </aside>
 
@@ -559,6 +566,116 @@ GitHub: github.com/alexrivera`}</Code>
               publish any variant to get a shareable URL at{' '}
               <C>resmd.app/r/your-slug</C>.
             </p>
+          </section>
+
+          {/* ── MCP ─────────────────────────────────────────────────────── */}
+          <section id="mcp" className="scroll-mt-8">
+            <H2>MCP / Automation</H2>
+            <p className="text-muted text-sm mb-4">
+              resmd exposes a{' '}
+              <a
+                href="https://modelcontextprotocol.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent hover:underline"
+              >
+                Model Context Protocol
+              </a>{' '}
+              server so AI agents and tools like{' '}
+              <strong className="text-text">Claude Code</strong> can
+              programmatically create, edit, tailor, and export your resumes.
+            </p>
+
+            <div id="mcp-setup" className="scroll-mt-8">
+              <H3>Setup</H3>
+              <p className="text-muted text-sm mb-3">
+                <strong className="text-text">1. Generate an MCP key</strong> —
+                open the dashboard, click your user menu (bottom-left), select{' '}
+                <strong className="text-text">MCP Keys</strong>, enter a name,
+                and click <strong className="text-text">Generate</strong>. Copy
+                the key immediately — it is only shown once.
+              </p>
+              <p className="text-muted text-sm mb-3">
+                <strong className="text-text">
+                  2. Clone and build the server
+                </strong>{' '}
+                from{' '}
+                <a
+                  href="https://github.com/attahiruj/resmd-mcp"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent hover:underline"
+                >
+                  resmd-mcp
+                </a>
+                :
+              </p>
+              <Code>{`git clone https://github.com/attahiruj/resmd-mcp
+cd resmd-mcp
+npm install && npm run build`}</Code>
+              <p className="text-muted text-sm mt-4 mb-3">
+                <strong className="text-text">
+                  3. Register with Claude Code
+                </strong>{' '}
+                — point it at the hosted app or your local instance:
+              </p>
+              <Code>{`# Hosted app
+claude mcp add resmd \\
+  --env RESMD_API_URL=https://resmd.app \\
+  --env RESMD_MCP_KEY=<your-mcp-key> \\
+  -- node /path/to/resmd-mcp/dist/server.js
+
+# Local instance
+claude mcp add resmd \\
+  --env RESMD_API_URL=http://localhost:3000 \\
+  --env RESMD_MCP_KEY=<your-mcp-key> \\
+  -- node /path/to/resmd-mcp/dist/server.js`}</Code>
+              <Note>
+                To update the key, run <C>claude mcp remove resmd</C> first,
+                then re-add it.
+              </Note>
+            </div>
+
+            <div id="mcp-tools" className="scroll-mt-8">
+              <H3>Available tools</H3>
+              <table className="w-full text-sm border-collapse mt-2">
+                <thead>
+                  <tr className="border-b border-border text-left">
+                    <th className="py-2 pr-6 text-faint font-medium">Tool</th>
+                    <th className="py-2 text-faint font-medium">Description</th>
+                  </tr>
+                </thead>
+                <tbody className="text-muted text-xs">
+                  {[
+                    ['list_resumes', 'List all your resumes'],
+                    ['get_resume', 'Fetch a resume with full content'],
+                    ['create_resume', 'Create a new resume'],
+                    ['update_resume', 'Update content, title, or template'],
+                    ['delete_resume', 'Delete a resume'],
+                    ['clone_resume', 'Clone with a new title'],
+                    [
+                      'tailor_resume',
+                      'Clone + AI-tailor for a job description',
+                    ],
+                    ['chat_with_resume', 'Chat with AI about a resume'],
+                    ['enhance_text', 'AI-rewrite a piece of resume text'],
+                    ['import_resume', 'Import PDF / DOCX / TXT → resmarkup'],
+                    ['export_pdf', 'Export resume as a base64 PDF'],
+                    ['list_templates', 'List available templates'],
+                  ].map(([tool, desc]) => (
+                    <tr
+                      key={tool}
+                      className="border-b border-border/50 last:border-0"
+                    >
+                      <td className="py-2 pr-6 font-mono text-accent">
+                        {tool}
+                      </td>
+                      <td className="py-2">{desc}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
 
           <div className="border-t border-border pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
