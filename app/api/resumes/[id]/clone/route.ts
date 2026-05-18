@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerAuthProvider } from '@/lib/db/server';
+import { getAuthUser } from '@/lib/getAuthUser';
 import {
   cloneResume,
   getUserResumes,
@@ -17,7 +17,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const user = await getServerAuthProvider().getUser();
+  const user = await getAuthUser(req);
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

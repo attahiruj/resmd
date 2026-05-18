@@ -64,6 +64,22 @@ export interface IResumeRepository {
     usage: number,
     resetAt?: string
   ): Promise<void>;
+  createMcpKey(
+    userId: string,
+    name: string,
+    keyHash: string,
+    keyId: string
+  ): Promise<void>;
+  getMcpKeyByHash(
+    keyHash: string
+  ): Promise<{ id: string; userId: string } | null>;
+  listMcpKeys(
+    userId: string
+  ): Promise<
+    { id: string; name: string; createdAt: string; lastUsedAt: string | null }[]
+  >;
+  deleteMcpKey(keyId: string, userId: string): Promise<void>;
+  updateMcpKeyLastUsed(keyId: string): Promise<void>;
 }
 
 export interface IServerAuthProvider {

@@ -24,6 +24,7 @@ import {
   QuestionIcon,
   CoffeeIcon,
   SignOutIcon,
+  KeyIcon,
 } from '@phosphor-icons/react';
 import type { Resume } from '@/types/resume';
 import { parseResume } from '@/lib/parser';
@@ -33,6 +34,7 @@ import { TEMPLATE_CONTENT } from '@/lib/defaultContent';
 import { applyTheme, getStoredThemePrefs } from '@/lib/themes';
 import CloneModal from '@/components/variants/CloneModal';
 import ImportModal from '@/components/dashboard/ImportModal';
+import McpKeysModal from '@/components/dashboard/McpKeysModal';
 import { Button } from '@/components/ui/Button';
 import OnboardingModal from '@/components/ui/OnboardingModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
@@ -76,6 +78,7 @@ export default function DashboardClient({
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [showMcpKeys, setShowMcpKeys] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('updatedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -267,6 +270,7 @@ export default function DashboardClient({
             isDark={isDark}
             onToggleTheme={toggleTheme}
             onShowFeedback={() => setShowFeedback(true)}
+            onShowMcpKeys={() => setShowMcpKeys(true)}
             onSignOut={async () => {
               await getClientAuthProvider().signOut();
               router.push('/auth');
@@ -571,6 +575,7 @@ export default function DashboardClient({
       )}
 
       {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
+      {showMcpKeys && <McpKeysModal onClose={() => setShowMcpKeys(false)} />}
     </div>
   );
 
@@ -865,12 +870,14 @@ function AvatarDropdown({
   isDark,
   onToggleTheme,
   onShowFeedback,
+  onShowMcpKeys,
   onSignOut,
 }: {
   email: string;
   isDark: boolean;
   onToggleTheme: () => void;
   onShowFeedback: () => void;
+  onShowMcpKeys: () => void;
   onSignOut: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -924,6 +931,16 @@ function AvatarDropdown({
             >
               <ChatTeardropTextIcon size={15} />
               Feedback
+            </button>
+            <button
+              onClick={() => {
+                onShowMcpKeys();
+                setOpen(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors"
+            >
+              <KeyIcon size={15} />
+              MCP Keys
             </button>
           </div>
 

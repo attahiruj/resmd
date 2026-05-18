@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerAuthProvider, getDbProvider } from '@/lib/db/server';
+import { getDbProvider } from '@/lib/db/server';
+import { getAuthUser } from '@/lib/getAuthUser';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { buildSystemPrompt, AI_MAX_TOKENS } from '@/lib/prompts';
 import { getProviderForModel } from '@/lib/ai-providers';
@@ -7,7 +8,7 @@ import { debug } from '@/lib/env';
 
 export async function POST(req: NextRequest) {
   // Auth check
-  const user = await getServerAuthProvider().getUser();
+  const user = await getAuthUser(req);
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (user.is_anonymous)
