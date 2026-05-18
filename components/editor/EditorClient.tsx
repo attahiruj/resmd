@@ -464,28 +464,29 @@ export default function EditorClient({
               </div>
             </div>
           )}
-          {mobileTab === 'write' ? (
-            <div className="h-full flex flex-col bg-editor-bg">
-              <div className="flex-1 min-h-0 overflow-hidden">
-                {isMounted && (
-                  <Editor
-                    value={rawContent}
-                    onChange={handleContentChange}
-                    jumpTarget={jumpTarget}
-                    onJumpComplete={() => setJumpTarget(null)}
-                    resumeContext={rawContent}
-                    onEnhance={handleApplyEdit}
-                  />
-                )}
-              </div>
-              <AIChat
-                resumeContent={rawContent}
-                onApplyEdit={handleApplyEdit}
-                onReplaceResume={handleReplaceResume}
-                isGuest={isGuest}
-              />
+          <div
+            className={`h-full flex flex-col bg-editor-bg ${mobileTab === 'write' ? '' : 'hidden'}`}
+          >
+            <div className="flex-1 min-h-0 overflow-hidden">
+              {isMounted && (
+                <Editor
+                  value={rawContent}
+                  onChange={handleContentChange}
+                  jumpTarget={jumpTarget}
+                  onJumpComplete={() => setJumpTarget(null)}
+                  resumeContext={rawContent}
+                  onEnhance={handleApplyEdit}
+                />
+              )}
             </div>
-          ) : (
+            <AIChat
+              resumeContent={rawContent}
+              onApplyEdit={handleApplyEdit}
+              onReplaceResume={handleReplaceResume}
+              isGuest={isGuest}
+            />
+          </div>
+          <div className={mobileTab === 'preview' ? 'h-full' : 'hidden'}>
             <PreviewPane
               rawContent={rawContent}
               templateId={templateId}
@@ -494,7 +495,7 @@ export default function EditorClient({
               onTextDoubleClick={handlePreviewDoubleClick}
               onOpenTemplatePicker={() => setShowTemplatePicker(true)}
             />
-          )}
+          </div>
         </div>
 
         {/* Desktop split-pane body (≥md) */}
