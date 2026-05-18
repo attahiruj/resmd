@@ -5,6 +5,9 @@ const nextConfig = {
   outputFileTracingIncludes: {
     '/api/export/pdf': ['./public/fonts/**/*'],
   },
+  experimental: {
+    optimizePackageImports: ['@phosphor-icons/react'],
+  },
 };
 
 module.exports = nextConfig;

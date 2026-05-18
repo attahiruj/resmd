@@ -45,6 +45,7 @@ const courierPrime = localFont({
   ],
   variable: '--font-courier-prime',
   display: 'swap',
+  preload: false,
 });
 
 export const metadata: Metadata = {

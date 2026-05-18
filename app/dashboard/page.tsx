@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation';
 import { getServerAuthProvider } from '@/lib/db/server';
-import { getUserResumes, getUserProfile } from '@/lib/resumeService';
+import {
+  getCachedUserResumes,
+  getCachedUserProfile,
+} from '@/lib/resumeService';
 import DashboardClient from '@/components/dashboard/DashboardClient';
 
 export default async function DashboardPage() {
@@ -11,8 +14,8 @@ export default async function DashboardPage() {
   }
 
   const [resumes, profile] = await Promise.all([
-    getUserResumes(user.id),
-    getUserProfile(user.id),
+    getCachedUserResumes(user.id),
+    getCachedUserProfile(user.id),
   ]);
 
   return (
