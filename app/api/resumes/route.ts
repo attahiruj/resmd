@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbProvider } from '@/lib/db/server';
 import { getAuthUser } from '@/lib/getAuthUser';
-import { createResume, getUserResumes } from '@/lib/resumeService';
+import {
+  createResume,
+  getUserResumes,
+  invalidateUserCache,
+} from '@/lib/resumeService';
 import { LIMITS } from '@/lib/limits';
 import { getAllTemplates } from '@/lib/templates';
 import { checkRateLimit } from '@/lib/rateLimit';
@@ -99,6 +103,7 @@ export async function POST(req: NextRequest) {
     }
 
     const resume = await createResume(user.id, title, rawContent, templateId);
+    invalidateUserCache(user.id);
     debug('Resume created', { id: resume.id, title: resume.title });
     return NextResponse.json({ data: resume });
   } catch (err) {
