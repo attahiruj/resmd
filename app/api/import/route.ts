@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerAuthProvider } from '@/lib/db/server';
+import { getAuthUser } from '@/lib/getAuthUser';
 import { extractText } from '@/lib/import/extractor';
 import { mapToResMarkup } from '@/lib/import/mapper';
 import { getProviderForModel } from '@/lib/ai-providers';
@@ -24,7 +24,7 @@ function getExtension(filename: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getServerAuthProvider().getUser();
+    const user = await getAuthUser(req);
     if (!user)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
