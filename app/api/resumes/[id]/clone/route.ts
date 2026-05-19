@@ -4,6 +4,7 @@ import {
   cloneResume,
   getUserResumes,
   updateResumeContent,
+  invalidateUserCache,
 } from '@/lib/resumeService';
 import { LIMITS } from '@/lib/limits';
 import { checkRateLimit } from '@/lib/rateLimit';
@@ -99,6 +100,7 @@ export async function POST(
       }
     }
 
+    invalidateUserCache(user.id);
     return NextResponse.json({ data: resume });
   } catch {
     return NextResponse.json(

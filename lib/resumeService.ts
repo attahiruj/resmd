@@ -1,3 +1,4 @@
+import { unstable_cache, revalidateTag } from 'next/cache';
 import type { Resume, UserProfile } from '@/types/resume';
 import { getDbProvider } from '@/lib/db/server';
 
@@ -38,3 +39,19 @@ export const getResumeBySlug = (slug: string): Promise<Resume | null> =>
 
 export const getUserProfile = (userId: string): Promise<UserProfile | null> =>
   getDbProvider().getUserProfile(userId);
+
+// Cached versions for dashboard — revalidated on mutations via invalidateUserCache()
+export const getCachedUserResumes = (userId: string) =>
+  unstable_cache(() => getDbProvider().getUserResumes(userId), [userId], {
+    revalidate: 30,
+    tags: [`user-data-${userId}`],
+  })();
+
+export const getCachedUserProfile = (userId: string) =>
+  unstable_cache(() => getDbProvider().getUserProfile(userId), [userId], {
+    revalidate: 60,
+    tags: [`user-data-${userId}`],
+  })();
+
+export const invalidateUserCache = (userId: string) =>
+  revalidateTag(`user-data-${userId}`);

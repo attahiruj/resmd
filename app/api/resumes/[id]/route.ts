@@ -4,6 +4,7 @@ import {
   getResume,
   updateResumeContent,
   deleteResume,
+  invalidateUserCache,
 } from '@/lib/resumeService';
 import { getAllTemplates } from '@/lib/templates';
 import { checkRateLimit } from '@/lib/rateLimit';
@@ -87,6 +88,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     await updateResumeContent(id, rawContent, templateId, title);
+    invalidateUserCache(user.id);
     return NextResponse.json({ data: { success: true } });
   } catch {
     return NextResponse.json(
@@ -119,6 +121,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     }
 
     await deleteResume(id);
+    invalidateUserCache(user.id);
     return NextResponse.json({ data: { success: true } });
   } catch {
     return NextResponse.json(
