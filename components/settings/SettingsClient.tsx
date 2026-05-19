@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ArrowLeftIcon,
   PlusIcon,
@@ -96,6 +96,7 @@ export default function SettingsClient({
   const [providersLoading, setProvidersLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState<AddFormState>(EMPTY_FORM);
+  const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [showKey, setShowKey] = useState(false);
@@ -242,16 +243,15 @@ export default function SettingsClient({
     <main className="min-h-screen bg-bg">
       {/* Nav */}
       <div className="border-b border-border bg-surface">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Link
-            href="/dashboard"
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+          <span className="text-sm font-semibold text-text">Settings</span>
+          <button
+            onClick={() => router.back()}
             className="flex items-center gap-1.5 text-sm text-muted hover:text-text transition-colors"
           >
             <ArrowLeftIcon size={14} />
-            Dashboard
-          </Link>
-          <span className="text-border">/</span>
-          <span className="text-sm text-text font-medium">Settings</span>
+            Back
+          </button>
         </div>
       </div>
 

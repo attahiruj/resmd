@@ -71,15 +71,15 @@ export default function PreviewPane({
   }
 
   return (
-    <div className="flex flex-col h-full bg-surface-2">
+    <div className="flex flex-col h-full bg-bg">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-3 h-14 sm:h-11 flex-shrink-0 border-b border-border bg-surface z-10">
+      <div className="flex items-center justify-between px-3 h-14 sm:h-11 flex-shrink-0 border-b border-border bg-bg z-10">
         {/* Left: template selector chip */}
         <button
           onClick={() =>
             onOpenTemplatePicker ? onOpenTemplatePicker() : setShowGallery(true)
           }
-          className="flex items-center gap-2 pl-2.5 pr-3 py-2.5 sm:py-1.5 rounded-lg border border-border bg-surface-2 hover:border-accent/60 hover:bg-surface-3 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent group"
+          className="flex items-center gap-2 pl-2.5 pr-3 py-2.5 sm:py-1.5 rounded-lg border border-border bg-surface hover:border-accent/60 hover:bg-surface-2 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent group"
         >
           <SquaresFourIcon
             size={14}
@@ -115,7 +115,7 @@ export default function PreviewPane({
             className={`flex items-center justify-center w-11 h-11 sm:w-8 sm:h-8 rounded-lg border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               showSettings
                 ? 'bg-accent-muted border-accent text-accent'
-                : 'bg-surface border-border text-muted hover:text-text hover:bg-surface-2'
+                : 'bg-bg border-border text-muted hover:text-text hover:bg-surface'
             }`}
           >
             <SlidersHorizontalIcon size={15} />

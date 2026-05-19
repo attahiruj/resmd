@@ -246,7 +246,7 @@ export default function LivePreview({
 
   if (isEmpty || !template) {
     return (
-      <div className="flex items-center justify-center h-full p-8 bg-surface-2">
+      <div className="flex items-center justify-center h-full p-8 bg-bg">
         <EmptyState />
       </div>
     );
@@ -292,7 +292,7 @@ export default function LivePreview({
   return (
     <div
       ref={containerRef}
-      className="h-full overflow-y-auto overflow-x-hidden bg-surface-2"
+      className="h-full overflow-y-auto overflow-x-hidden bg-bg"
       onDoubleClick={handleDblClick}
     >
       {/* Hidden measurement div — renders the full template to measure section heights */}
@@ -349,7 +349,7 @@ export default function LivePreview({
                 width: A4_WIDTH,
                 height: A4_HEIGHT,
                 background: '#ffffff',
-                boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
+                boxShadow: '0 1px 8px rgba(0,0,0,0.12)',
               }}
             />
           ) : (

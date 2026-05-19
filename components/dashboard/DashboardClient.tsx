@@ -17,15 +17,7 @@ import {
   ArrowDownIcon,
   ClockIcon,
   FileTextIcon,
-  SunIcon,
-  MoonIcon,
-  ChatTeardropTextIcon,
   UploadSimpleIcon,
-  QuestionIcon,
-  CoffeeIcon,
-  SignOutIcon,
-  KeyIcon,
-  GearIcon,
 } from '@phosphor-icons/react';
 import type { Resume } from '@/types/resume';
 import { parseResume } from '@/lib/parser';
@@ -35,10 +27,10 @@ import { TEMPLATE_CONTENT } from '@/lib/defaultContent';
 import { applyTheme, getStoredThemePrefs } from '@/lib/themes';
 import CloneModal from '@/components/variants/CloneModal';
 import ImportModal from '@/components/dashboard/ImportModal';
-import McpKeysModal from '@/components/dashboard/McpKeysModal';
 import { Button } from '@/components/ui/Button';
 import OnboardingModal from '@/components/ui/OnboardingModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
+import AvatarDropdown from '@/components/ui/AvatarDropdown';
 import Navbar from '@/components/ui/Navbar';
 import { getClientAuthProvider } from '@/lib/db/client';
 
@@ -79,7 +71,10 @@ export default function DashboardClient({
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [showMcpKeys, setShowMcpKeys] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('updatedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -271,7 +266,6 @@ export default function DashboardClient({
             isDark={isDark}
             onToggleTheme={toggleTheme}
             onShowFeedback={() => setShowFeedback(true)}
-            onShowMcpKeys={() => setShowMcpKeys(true)}
             onSignOut={async () => {
               await getClientAuthProvider().signOut();
               router.push('/auth');
@@ -519,7 +513,9 @@ export default function DashboardClient({
                         : null
                     }
                     isDeleting={deletingId === resume.id}
-                    onDelete={() => handleDelete(resume.id)}
+                    onDelete={() =>
+                      setDeleteTarget({ id: resume.id, title: resume.title })
+                    }
                     onClone={() => setCloneSource(resume)}
                     onOpen={() => router.push(`/editor/${resume.id}`)}
                     atLimit={atLimit}
@@ -541,7 +537,9 @@ export default function DashboardClient({
                         : null
                     }
                     isDeleting={deletingId === resume.id}
-                    onDelete={() => handleDelete(resume.id)}
+                    onDelete={() =>
+                      setDeleteTarget({ id: resume.id, title: resume.title })
+                    }
                     onClone={() => setCloneSource(resume)}
                     onOpen={() => router.push(`/editor/${resume.id}`)}
                     atLimit={atLimit}
@@ -576,7 +574,37 @@ export default function DashboardClient({
       )}
 
       {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
-      {showMcpKeys && <McpKeysModal onClose={() => setShowMcpKeys(false)} />}
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-surface border border-border rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
+            <h2 className="text-sm font-semibold text-text mb-1">
+              Delete resume?
+            </h2>
+            <p className="text-sm text-muted mb-6">
+              &ldquo;{deleteTarget.title}&rdquo; will be permanently deleted.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 text-sm rounded-lg border border-border text-text hover:bg-surface-2 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  handleDelete(deleteTarget.id);
+                  setDeleteTarget(null);
+                }}
+                disabled={!!deletingId}
+                className="px-4 py-2 text-sm rounded-lg bg-danger text-white hover:bg-danger/90 transition-colors disabled:opacity-50"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -864,134 +892,6 @@ function ResumeCard({
           )}
         </button>
       </div>
-    </div>
-  );
-}
-
-function AvatarDropdown({
-  email,
-  isDark,
-  onToggleTheme,
-  onShowFeedback,
-  onShowMcpKeys,
-  onSignOut,
-}: {
-  email: string;
-  isDark: boolean;
-  onToggleTheme: () => void;
-  onShowFeedback: () => void;
-  onShowMcpKeys: () => void;
-  onSignOut: () => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node))
-        setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  const initial = email?.[0]?.toUpperCase() || '?';
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center text-sm font-semibold hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        title="Account"
-      >
-        {initial}
-      </button>
-
-      {open && (
-        <div className="absolute right-0 top-full mt-2 w-56 bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-30">
-          {/* Email header */}
-          <div className="px-4 py-3 border-b border-border">
-            <p className="text-[11px] text-muted truncate">{email}</p>
-          </div>
-
-          {/* Quick actions */}
-          <div className="py-1">
-            <button
-              onClick={() => {
-                onToggleTheme();
-              }}
-              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors"
-            >
-              {isDark ? <SunIcon size={15} /> : <MoonIcon size={15} />}
-              {isDark ? 'Light mode' : 'Dark mode'}
-            </button>
-            <button
-              onClick={() => {
-                onShowFeedback();
-                setOpen(false);
-              }}
-              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors"
-            >
-              <ChatTeardropTextIcon size={15} />
-              Feedback
-            </button>
-            <Link
-              href="/settings"
-              onClick={() => setOpen(false)}
-              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors"
-            >
-              <GearIcon size={15} />
-              Settings
-            </Link>
-            <button
-              onClick={() => {
-                onShowMcpKeys();
-                setOpen(false);
-              }}
-              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors"
-            >
-              <KeyIcon size={15} />
-              MCP Keys
-            </button>
-          </div>
-
-          {/* Help & Support */}
-          <div className="border-t border-border py-1">
-            <Link
-              href="/help"
-              onClick={() => setOpen(false)}
-              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors"
-            >
-              <QuestionIcon size={15} />
-              Help
-            </Link>
-            <a
-              href="https://buymeacoffee.com/hattahiroo"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setOpen(false)}
-              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors block"
-            >
-              <CoffeeIcon size={15} />
-              Support resmd
-            </a>
-          </div>
-
-          {/* Sign out */}
-          <div className="border-t border-border py-1">
-            <button
-              onClick={() => {
-                setOpen(false);
-                onSignOut();
-              }}
-              className="w-full px-4 py-2 text-left text-sm text-danger hover:bg-danger/5 flex items-center gap-2.5 transition-colors"
-            >
-              <SignOutIcon size={15} />
-              Sign out
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
