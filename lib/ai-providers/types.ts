@@ -2,6 +2,7 @@ export interface AIModel {
   id: string;
   name: string;
   provider: string;
+  providerId?: string; // 'server' | UUID from user_providers — added by routes/callers
   use_count?: number;
 }
 

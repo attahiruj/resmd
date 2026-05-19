@@ -2,6 +2,17 @@ import type { Resume, UserProfile } from '@/types/resume';
 
 export type { Resume, UserProfile };
 
+export type AdapterType = 'openai' | 'anthropic';
+
+export interface UserProvider {
+  id: string;
+  name: string;
+  adapterType: AdapterType;
+  baseUrl: string;
+  keyPreview: string;
+  createdAt: string;
+}
+
 export interface AuthUser {
   id: string;
   email?: string;
@@ -80,6 +91,25 @@ export interface IResumeRepository {
   >;
   deleteMcpKey(keyId: string, userId: string): Promise<void>;
   updateMcpKeyLastUsed(keyId: string): Promise<void>;
+  createUserProvider(
+    userId: string,
+    name: string,
+    adapterType: AdapterType,
+    baseUrl: string,
+    encryptedKey: string,
+    keyPreview: string
+  ): Promise<string>;
+  listUserProviders(userId: string): Promise<UserProvider[]>;
+  getUserProviderKey(
+    providerId: string,
+    userId: string
+  ): Promise<{
+    encryptedKey: string;
+    adapterType: AdapterType;
+    baseUrl: string;
+    name: string;
+  } | null>;
+  deleteUserProvider(providerId: string, userId: string): Promise<void>;
 }
 
 export interface IServerAuthProvider {

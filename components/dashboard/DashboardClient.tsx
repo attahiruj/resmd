@@ -25,6 +25,7 @@ import {
   CoffeeIcon,
   SignOutIcon,
   KeyIcon,
+  GearIcon,
 } from '@phosphor-icons/react';
 import type { Resume } from '@/types/resume';
 import { parseResume } from '@/lib/parser';
@@ -934,6 +935,14 @@ function AvatarDropdown({
               <ChatTeardropTextIcon size={15} />
               Feedback
             </button>
+            <Link
+              href="/settings"
+              onClick={() => setOpen(false)}
+              className="w-full px-4 py-2 text-left text-sm text-text hover:bg-surface-2 flex items-center gap-2.5 transition-colors"
+            >
+              <GearIcon size={15} />
+              Settings
+            </Link>
             <button
               onClick={() => {
                 onShowMcpKeys();

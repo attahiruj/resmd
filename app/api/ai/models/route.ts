@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerAuthProvider, getDbProvider } from '@/lib/db/server';
-import { getActiveProviders } from '@/lib/ai-providers';
+import { getActiveProviders, listUserProviderModels } from '@/lib/ai-providers';
 import type { AIModel } from '@/lib/ai-providers';
 import { debug } from '@/lib/env';
 
@@ -13,35 +13,51 @@ export async function GET() {
   if (!user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const providers = getActiveProviders();
-  debug('AI Models', { providerCount: providers.length });
-  if (providers.length === 0)
-    return NextResponse.json(
-      { error: 'AI service not configured' },
-      { status: 503 }
-    );
-
   try {
-    const perProvider = await Promise.all(
+    // Server provider models
+    const providers = getActiveProviders();
+    debug('AI Models', { providerCount: providers.length });
+    const serverResults = await Promise.allSettled(
       providers.map((p) =>
         p.listModels
           ? p.listModels()
           : Promise.resolve([
-              { id: p.defaultModel, name: p.defaultModel, provider: p.name },
+              {
+                id: p.defaultModel,
+                name: p.defaultModel,
+                provider: p.name,
+                providerId: 'server',
+              },
             ])
       )
     );
-    const models: AIModel[] = perProvider.flat();
+    const serverModels: AIModel[] = serverResults
+      .flatMap((r) => (r.status === 'fulfilled' ? r.value : []))
+      .map((m) => ({ ...m, providerId: 'server' }));
+
+    // BYOK models
+    const userModels: AIModel[] = user.is_anonymous
+      ? []
+      : await listUserProviderModels(user.id).catch(() => []);
+
+    const allModels = [...serverModels, ...userModels];
+
+    if (allModels.length === 0) {
+      return NextResponse.json(
+        { error: 'AI service not configured' },
+        { status: 503 }
+      );
+    }
 
     // Enrich with global usage counts (best-effort)
     const stats = await getDbProvider().getAiModelStats(
-      models.map((m) => m.id)
+      allModels.map((m) => m.id)
     );
     const countMap: Record<string, number> = Object.fromEntries(
       stats.map((s) => [s.model_id, s.use_count])
     );
 
-    const enriched = models.map((m) => ({
+    const enriched = allModels.map((m) => ({
       ...m,
       use_count: countMap[m.id] ?? 0,
     }));

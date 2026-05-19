@@ -64,3 +64,14 @@ CREATE TABLE IF NOT EXISTS mcp_keys (
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   last_used_at TEXT
 );
+
+CREATE TABLE IF NOT EXISTS user_providers (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  adapter_type TEXT NOT NULL,
+  base_url TEXT NOT NULL,
+  encrypted_key TEXT NOT NULL,
+  key_preview TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);

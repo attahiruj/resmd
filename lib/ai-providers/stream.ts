@@ -59,6 +59,66 @@ export function createSSEStream(
 }
 
 /**
+ * Parses an Anthropic SSE stream and yields plain text chunks.
+ * Handles the Anthropic Messages API streaming format.
+ */
+export function createAnthropicSSEStream(
+  body: ReadableStream<Uint8Array>,
+  options?: {
+    onChunk?: (text: string) => string | null;
+  }
+): ReadableStream<Uint8Array> {
+  return new ReadableStream({
+    async start(controller) {
+      const reader = body.getReader();
+      const decoder = new TextDecoder();
+      const encoder = new TextEncoder();
+      const onChunk = options?.onChunk;
+      let buffer = '';
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() ?? '';
+
+          let eventType = '';
+          for (const line of lines) {
+            if (line.startsWith('event: ')) {
+              eventType = line.slice(7).trim();
+            } else if (line.startsWith('data: ')) {
+              const data = line.slice(6).trim();
+              if (!data) continue;
+              try {
+                const parsed = JSON.parse(data);
+                if (eventType === 'content_block_delta') {
+                  const text: string = parsed.delta?.text ?? '';
+                  if (text) {
+                    const filtered = onChunk ? onChunk(text) : text;
+                    if (filtered !== null) {
+                      controller.enqueue(encoder.encode(filtered));
+                    }
+                  }
+                }
+              } catch {
+                // skip malformed SSE lines
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[AI] Anthropic stream error:', err);
+      } finally {
+        controller.close();
+      }
+    },
+  });
+}
+
+/**
  * Creates a filter that strips content before the first <<<SUGGESTION>>> tag.
  * Useful for providers (like MiniMax) that output reasoning before the suggestion block.
  */

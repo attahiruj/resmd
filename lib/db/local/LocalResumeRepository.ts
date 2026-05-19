@@ -1,6 +1,11 @@
 import { randomUUID } from 'crypto';
 import { getLocalDb } from './LocalDatabase';
-import type { IResumeRepository, AiModelStat } from '@/lib/db/interfaces';
+import type {
+  IResumeRepository,
+  AiModelStat,
+  UserProvider,
+  AdapterType,
+} from '@/lib/db/interfaces';
 import type { Resume, UserProfile } from '@/types/resume';
 
 function mapResume(row: Record<string, unknown>): Resume {
@@ -274,6 +279,78 @@ export class LocalResumeRepository implements IResumeRepository {
     await this.db.execute({
       sql: `UPDATE mcp_keys SET last_used_at = ? WHERE id = ?`,
       args: [now, keyId],
+    });
+  }
+
+  async createUserProvider(
+    userId: string,
+    name: string,
+    adapterType: AdapterType,
+    baseUrl: string,
+    encryptedKey: string,
+    keyPreview: string
+  ): Promise<string> {
+    const id = randomUUID();
+    const now = new Date().toISOString();
+    await this.db.execute({
+      sql: `INSERT INTO user_providers (id, user_id, name, adapter_type, base_url, encrypted_key, key_preview, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        id,
+        userId,
+        name,
+        adapterType,
+        baseUrl,
+        encryptedKey,
+        keyPreview,
+        now,
+      ],
+    });
+    return id;
+  }
+
+  async listUserProviders(userId: string): Promise<UserProvider[]> {
+    const result = await this.db.execute({
+      sql: `SELECT id, name, adapter_type, base_url, key_preview, created_at FROM user_providers WHERE user_id = ? ORDER BY created_at DESC`,
+      args: [userId],
+    });
+    return result.rows.map((r) => ({
+      id: r.id as string,
+      name: r.name as string,
+      adapterType: r.adapter_type as AdapterType,
+      baseUrl: r.base_url as string,
+      keyPreview: r.key_preview as string,
+      createdAt: r.created_at as string,
+    }));
+  }
+
+  async getUserProviderKey(
+    providerId: string,
+    userId: string
+  ): Promise<{
+    encryptedKey: string;
+    adapterType: AdapterType;
+    baseUrl: string;
+    name: string;
+  } | null> {
+    const result = await this.db.execute({
+      sql: `SELECT encrypted_key, adapter_type, base_url, name FROM user_providers WHERE id = ? AND user_id = ?`,
+      args: [providerId, userId],
+    });
+    if (result.rows.length === 0) return null;
+    const r = result.rows[0];
+    return {
+      encryptedKey: r.encrypted_key as string,
+      adapterType: r.adapter_type as AdapterType,
+      baseUrl: r.base_url as string,
+      name: r.name as string,
+    };
+  }
+
+  async deleteUserProvider(providerId: string, userId: string): Promise<void> {
+    await this.db.execute({
+      sql: `DELETE FROM user_providers WHERE id = ? AND user_id = ?`,
+      args: [providerId, userId],
     });
   }
 

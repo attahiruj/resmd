@@ -1,6 +1,12 @@
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
-import type { IResumeRepository, AiModelStat } from '@/lib/db/interfaces';
+import type {
+  IResumeRepository,
+  AiModelStat,
+  UserProvider,
+  AdapterType,
+} from '@/lib/db/interfaces';
 import type { Resume, UserProfile } from '@/types/resume';
+import { randomUUID } from 'crypto';
 import { debug } from '@/lib/env';
 
 function mapResume(row: Record<string, unknown>): Resume {
@@ -276,5 +282,77 @@ export class SupabaseResumeRepository implements IResumeRepository {
       .from('mcp_keys')
       .update({ last_used_at: new Date().toISOString() })
       .eq('id', keyId);
+  }
+
+  async createUserProvider(
+    userId: string,
+    name: string,
+    adapterType: AdapterType,
+    baseUrl: string,
+    encryptedKey: string,
+    keyPreview: string
+  ): Promise<string> {
+    const id = randomUUID();
+    const { error } = await this.db.from('user_providers').insert({
+      id,
+      user_id: userId,
+      name,
+      adapter_type: adapterType,
+      base_url: baseUrl,
+      encrypted_key: encryptedKey,
+      key_preview: keyPreview,
+    });
+    if (error) throw error;
+    return id;
+  }
+
+  async listUserProviders(userId: string): Promise<UserProvider[]> {
+    const { data, error } = await this.db
+      .from('user_providers')
+      .select('id, name, adapter_type, base_url, key_preview, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map((r: Record<string, unknown>) => ({
+      id: r.id as string,
+      name: r.name as string,
+      adapterType: r.adapter_type as AdapterType,
+      baseUrl: r.base_url as string,
+      keyPreview: r.key_preview as string,
+      createdAt: r.created_at as string,
+    }));
+  }
+
+  async getUserProviderKey(
+    providerId: string,
+    userId: string
+  ): Promise<{
+    encryptedKey: string;
+    adapterType: AdapterType;
+    baseUrl: string;
+    name: string;
+  } | null> {
+    const { data, error } = await this.db
+      .from('user_providers')
+      .select('encrypted_key, adapter_type, base_url, name')
+      .eq('id', providerId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    return {
+      encryptedKey: data.encrypted_key as string,
+      adapterType: data.adapter_type as AdapterType,
+      baseUrl: data.base_url as string,
+      name: data.name as string,
+    };
+  }
+
+  async deleteUserProvider(providerId: string, userId: string): Promise<void> {
+    await this.db
+      .from('user_providers')
+      .delete()
+      .eq('id', providerId)
+      .eq('user_id', userId);
   }
 }

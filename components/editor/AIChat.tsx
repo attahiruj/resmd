@@ -14,12 +14,13 @@ import {
 } from '@phosphor-icons/react';
 import ReactMarkdown from 'react-markdown';
 import { parseSuggestion } from '@/lib/prompts';
-import { AI_MODEL_STORAGE_KEY } from '@/lib/ai';
+import { loadSelectedModel, saveSelectedModel } from '@/lib/ai';
 
 interface ModelOption {
   id: string;
   name: string;
   provider: string;
+  providerId: string;
   use_count?: number;
 }
 
@@ -27,6 +28,9 @@ const PROVIDER_COLORS: Record<string, string> = {
   openrouter: 'text-purple-400 bg-purple-400/10',
   groq: 'text-orange-400 bg-orange-400/10',
   minimax: 'text-teal-400 bg-teal-400/10',
+  openai: 'text-green-400 bg-green-400/10',
+  anthropic: 'text-amber-400 bg-amber-400/10',
+  'google gemini': 'text-blue-400 bg-blue-400/10',
 };
 
 // ---------------------------------------------------------------------------
@@ -73,7 +77,9 @@ export default function AIChat({
   const [loading, setLoading] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [models, setModels] = useState<ModelOption[]>([]);
-  const [selectedModel, setSelectedModel] = useState<string>('');
+  const [selectedModelId, setSelectedModelId] = useState<string>('');
+  const [selectedProviderId, setSelectedProviderId] =
+    useState<string>('server');
   const [showModelPicker, setShowModelPicker] = useState(false);
   const historyRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -82,18 +88,25 @@ export default function AIChat({
 
   // Load persisted model selection and fetch available models
   useEffect(() => {
-    const saved = localStorage.getItem(AI_MODEL_STORAGE_KEY);
-    if (saved) setSelectedModel(saved);
+    const saved = loadSelectedModel();
+    if (saved) {
+      setSelectedModelId(saved.modelId);
+      setSelectedProviderId(saved.providerId);
+    }
 
     fetch('/api/ai/models')
       .then((r) => r.json())
       .then((data) => {
         if (data.models?.length) {
           setModels(data.models);
-          // If no saved model, default to the first one
           if (!saved) {
-            setSelectedModel(data.models[0].id);
-            localStorage.setItem(AI_MODEL_STORAGE_KEY, data.models[0].id);
+            const first = data.models[0];
+            setSelectedModelId(first.id);
+            setSelectedProviderId(first.providerId ?? 'server');
+            saveSelectedModel({
+              modelId: first.id,
+              providerId: first.providerId ?? 'server',
+            });
           }
         }
       })
@@ -119,9 +132,10 @@ export default function AIChat({
     return () => document.removeEventListener('mousedown', handler);
   }, [showModelPicker]);
 
-  const handleModelChange = (id: string) => {
-    setSelectedModel(id);
-    localStorage.setItem(AI_MODEL_STORAGE_KEY, id);
+  const handleModelChange = (id: string, provId: string) => {
+    setSelectedModelId(id);
+    setSelectedProviderId(provId);
+    saveSelectedModel({ modelId: id, providerId: provId });
     setShowModelPicker(false);
   };
 
@@ -261,7 +275,8 @@ export default function AIChat({
           resumeContent,
           // Send only prose for history — the full resume is always in the preamble
           history: history.map((m) => ({ role: m.role, content: m.prose })),
-          model: selectedModel || undefined,
+          model: selectedModelId || undefined,
+          providerId: selectedProviderId || undefined,
         }),
       });
 
@@ -291,7 +306,7 @@ export default function AIChat({
               status: 'pending' as EditStatus,
             })),
             fullResume,
-            model: selectedModel || undefined,
+            model: selectedModelId || undefined,
           },
         ]);
       } else {
@@ -335,7 +350,10 @@ export default function AIChat({
     el.style.height = `${el.scrollHeight}px`;
   };
 
-  const activeModel = models.find((m) => m.id === selectedModel);
+  const activeModel =
+    models.find(
+      (m) => m.id === selectedModelId && m.providerId === selectedProviderId
+    ) ?? models.find((m) => m.id === selectedModelId);
 
   // Keep input focused whenever the user interacts with non-interactive chat areas
   const handleContainerClick = (e: React.MouseEvent) => {
@@ -547,33 +565,48 @@ export default function AIChat({
                 className="absolute bottom-full mb-1.5 right-0 w-56 bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-50"
               >
                 <div className="overflow-y-auto" style={{ maxHeight: '240px' }}>
-                  {models.map((m) => {
-                    const isActive = m.id === selectedModel;
-                    const badgeClass =
-                      PROVIDER_COLORS[m.provider] ?? 'text-muted bg-surface-2';
-                    return (
-                      <button
-                        key={m.id}
-                        onClick={() => handleModelChange(m.id)}
-                        className={`w-full text-left px-3 py-3 sm:py-2 text-xs transition-colors duration-100 ${
-                          isActive
-                            ? 'bg-accent-muted text-accent'
-                            : 'text-text hover:bg-surface-2'
-                        }`}
+                  {models.length === 0 ? (
+                    <p className="text-xs text-faint text-center py-4 px-3">
+                      No models —{' '}
+                      <a
+                        href="/settings"
+                        className="text-accent hover:underline"
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="truncate">{m.name}</span>
-                          <div className="flex items-center gap-1.5 flex-shrink-0">
-                            <span
-                              className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full uppercase tracking-wide ${badgeClass}`}
-                            >
-                              {m.provider}
-                            </span>
+                        Add a provider
+                      </a>
+                    </p>
+                  ) : (
+                    models.map((m) => {
+                      const isActive =
+                        m.id === selectedModelId &&
+                        m.providerId === selectedProviderId;
+                      const badgeClass =
+                        PROVIDER_COLORS[m.provider.toLowerCase()] ??
+                        'text-muted bg-surface-2';
+                      return (
+                        <button
+                          key={`${m.providerId}:${m.id}`}
+                          onClick={() => handleModelChange(m.id, m.providerId)}
+                          className={`w-full text-left px-3 py-3 sm:py-2 text-xs transition-colors duration-100 ${
+                            isActive
+                              ? 'bg-accent-muted text-accent'
+                              : 'text-text hover:bg-surface-2'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="truncate">{m.name}</span>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <span
+                                className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full uppercase tracking-wide ${badgeClass}`}
+                              >
+                                {m.provider}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      </button>
-                    );
-                  })}
+                        </button>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             )}
@@ -589,7 +622,7 @@ export default function AIChat({
               </span>
               {activeModel && (
                 <span
-                  className={`hidden sm:inline text-[9px] font-medium px-1.5 py-0.5 rounded-full uppercase tracking-wide ${PROVIDER_COLORS[activeModel.provider] ?? 'text-muted bg-surface-2'}`}
+                  className={`hidden sm:inline text-[9px] font-medium px-1.5 py-0.5 rounded-full uppercase tracking-wide ${PROVIDER_COLORS[activeModel.provider.toLowerCase()] ?? 'text-muted bg-surface-2'}`}
                 >
                   {activeModel.provider}
                 </span>

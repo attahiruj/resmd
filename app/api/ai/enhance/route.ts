@@ -4,8 +4,11 @@ import { getAuthUser } from '@/lib/getAuthUser';
 import { checkRateLimit } from '@/lib/rateLimit';
 import {
   getProviderForModel,
+  resolveUserProvider,
   createSSEStream,
+  createAnthropicSSEStream,
   createSuggestionFilter,
+  AnthropicCompatibleProvider,
 } from '@/lib/ai-providers';
 import { debug, env } from '@/lib/env';
 
@@ -35,7 +38,7 @@ export async function POST(req: NextRequest) {
   const profile = await getDbProvider().getAiProfileUsage(user.id);
 
   try {
-    const { selectedText, instruction, resumeContext, model } =
+    const { selectedText, instruction, resumeContext, model, providerId } =
       await req.json();
 
     if (!selectedText) {
@@ -46,13 +49,24 @@ export async function POST(req: NextRequest) {
     }
 
     let provider;
-    try {
-      provider = getProviderForModel(model ?? '');
-    } catch {
-      return NextResponse.json(
-        { error: 'AI service not configured' },
-        { status: 503 }
-      );
+    if (providerId && providerId !== 'server') {
+      try {
+        provider = await resolveUserProvider(user.id, providerId);
+      } catch {
+        return NextResponse.json(
+          { error: 'Provider not found or key invalid' },
+          { status: 404 }
+        );
+      }
+    } else {
+      try {
+        provider = getProviderForModel(model ?? '');
+      } catch {
+        return NextResponse.json(
+          { error: 'AI service not configured' },
+          { status: 503 }
+        );
+      }
     }
 
     // Build the prompt for enhancement
@@ -146,9 +160,10 @@ rewritten text here
       return createSuggestionFilter()(text);
     };
 
-    const stream = createSSEStream(response.body!, {
-      onChunk: handleChunk,
-    });
+    const stream =
+      provider instanceof AnthropicCompatibleProvider
+        ? createAnthropicSSEStream(response.body!, { onChunk: handleChunk })
+        : createSSEStream(response.body!, { onChunk: handleChunk });
 
     return new Response(
       new ReadableStream({
