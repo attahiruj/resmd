@@ -26,7 +26,9 @@ const Editor = dynamic(() => import('@/components/editor/Editor'), {
 });
 
 const MIN_PANE_PX = 300;
-const DEFAULT_SPLIT = 40;
+const DEFAULT_SPLIT = 50;
+const SPLIT_LARGE = 60;
+const BREAKPOINT_LG = 1280;
 const AUTOSAVE_DELAY = 2000;
 
 type MobileTab = 'write' | 'preview';
@@ -47,6 +49,7 @@ export default function EditorClient({
   const [resumeTitle, setResumeTitle] = useState(resume.title);
 
   const [splitPct, setSplitPct] = useState(DEFAULT_SPLIT);
+  const [previewCollapsed, setPreviewCollapsed] = useState(false);
   const [mobileTab, setMobileTab] = useState<MobileTab>('write');
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -115,6 +118,7 @@ export default function EditorClient({
   resumeTitleRef.current = resumeTitle;
 
   useEffect(() => {
+    // Restore or set split percentage
     const savedSplit = localStorage.getItem('resmd_split');
     if (savedSplit) {
       const n = Number(savedSplit);
@@ -122,7 +126,22 @@ export default function EditorClient({
         setSplitPct(n);
         splitPctRef.current = n;
       }
+    } else if (window.innerWidth >= BREAKPOINT_LG) {
+      setSplitPct(SPLIT_LARGE);
+      splitPctRef.current = SPLIT_LARGE;
     }
+
+    // Restore preview collapsed state or default by screen size
+    const savedCollapsed = localStorage.getItem('resmd_preview_collapsed');
+    if (savedCollapsed !== null) {
+      setPreviewCollapsed(savedCollapsed === '1');
+    }
+
+    // Collapse variants rail on smaller screens
+    if (window.innerWidth < BREAKPOINT_LG) {
+      setVariantsOpen(false);
+    }
+
     setIsMounted(true);
 
     // Show swipe hint once on mobile
@@ -426,7 +445,7 @@ export default function EditorClient({
         {isGuest && <GuestBanner />}
 
         {/* Mobile tab bar (<md) */}
-        <div className="md:hidden flex h-12 border-b border-border bg-surface flex-shrink-0 px-2 gap-1 items-center">
+        <div className="xl:hidden flex h-12 border-b border-border bg-surface flex-shrink-0 px-2 gap-1 items-center">
           <button
             onClick={() => setMobileTab('write')}
             className={`flex-1 py-1.5 text-sm font-medium rounded-full transition-colors duration-150 ${
@@ -449,9 +468,9 @@ export default function EditorClient({
           </button>
         </div>
 
-        {/* Mobile single-pane body */}
+        {/* Single-pane body (mobile + tablet) */}
         <div
-          className="md:hidden relative flex-1 overflow-hidden min-h-0"
+          className="xl:hidden relative flex-1 overflow-hidden min-h-0"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
@@ -498,8 +517,8 @@ export default function EditorClient({
           </div>
         </div>
 
-        {/* Desktop split-pane body (≥md) */}
-        <div className="hidden md:flex flex-1 min-h-0 p-4 gap-3">
+        {/* Desktop split-pane body (≥xl) */}
+        <div className="hidden xl:flex flex-1 min-h-0 p-4 gap-3">
           {/* Variants rail — always mounted for authenticated users */}
           {!isGuest && (
             <VariantsRail
@@ -522,7 +541,7 @@ export default function EditorClient({
             <div
               ref={leftPaneRef}
               className="flex flex-col overflow-hidden flex-shrink-0 bg-editor-bg"
-              style={{ width: `${splitPct}%` }}
+              style={{ width: previewCollapsed ? '100%' : `${splitPct}%` }}
             >
               <div className="flex-1 min-h-0 overflow-hidden">
                 {isMounted && (
@@ -544,28 +563,52 @@ export default function EditorClient({
               />
             </div>
 
-            {/* Drag divider */}
+            {/* Drag divider / preview toggle */}
             <div
-              className="w-1 flex-shrink-0 bg-border hover:bg-accent transition-colors duration-150 select-none"
-              style={{ cursor: 'col-resize' }}
-              onMouseDown={handleDividerMouseDown}
-            />
+              className="relative w-1 flex-shrink-0 bg-border select-none flex items-center justify-center group"
+              style={{ cursor: previewCollapsed ? 'default' : 'col-resize' }}
+              onMouseDown={
+                previewCollapsed ? undefined : handleDividerMouseDown
+              }
+            >
+              <button
+                className="absolute z-10 hidden xl:flex items-center justify-center w-5 h-8 rounded bg-border hover:bg-accent transition-colors duration-150 opacity-0 group-hover:opacity-100"
+                onClick={() =>
+                  setPreviewCollapsed((v) => {
+                    const next = !v;
+                    localStorage.setItem(
+                      'resmd_preview_collapsed',
+                      next ? '1' : '0'
+                    );
+                    return next;
+                  })
+                }
+              >
+                {previewCollapsed ? (
+                  <CaretLeftIcon size={10} />
+                ) : (
+                  <CaretRightIcon size={10} />
+                )}
+              </button>
+            </div>
 
             {/* Preview pane */}
-            <div
-              ref={rightPaneRef}
-              className="flex-1 overflow-hidden"
-              style={{ width: `${100 - splitPct}%` }}
-            >
-              <PreviewPane
-                rawContent={rawContent}
-                templateId={templateId}
-                onTemplateChange={handleTemplateChange}
-                onContentChange={handleContentChange}
-                onTextDoubleClick={handlePreviewDoubleClick}
-                onOpenTemplatePicker={() => setShowTemplatePicker(true)}
-              />
-            </div>
+            {!previewCollapsed && (
+              <div
+                ref={rightPaneRef}
+                className="flex-1 overflow-hidden"
+                style={{ width: `${100 - splitPct}%` }}
+              >
+                <PreviewPane
+                  rawContent={rawContent}
+                  templateId={templateId}
+                  onTemplateChange={handleTemplateChange}
+                  onContentChange={handleContentChange}
+                  onTextDoubleClick={handlePreviewDoubleClick}
+                  onOpenTemplatePicker={() => setShowTemplatePicker(true)}
+                />
+              </div>
+            )}
           </div>
         </div>
       </main>
