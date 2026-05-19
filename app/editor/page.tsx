@@ -13,7 +13,7 @@ const Editor = dynamic(() => import('@/components/editor/Editor'), {
 });
 
 const MIN_PANE_PX = 300;
-const DEFAULT_SPLIT = 50;
+const DEFAULT_SPLIT = 60;
 
 type MobileTab = 'write' | 'preview';
 

@@ -120,7 +120,7 @@ export function createAnthropicSSEStream(
 
 /**
  * Creates a filter that strips content before the first <<<SUGGESTION>>> tag.
- * Useful for providers (like MiniMax) that output reasoning before the suggestion block.
+ * Useful for providers that output reasoning before the suggestion block.
  */
 export function createSuggestionFilter() {
   let seenTag = false;

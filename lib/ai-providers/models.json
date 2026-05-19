@@ -6,13 +6,11 @@
       "name": "Nemotron 3 Super 120B"
     },
     { "id": "arcee-ai/trinity-large-preview:free", "name": "Trinity Large" },
-    { "id": "minimax/minimax-m2.5:free", "name": "MiniMax M2.5" },
     { "id": "z-ai/glm-4.5-air:free", "name": "GLM 4.5 Air" }
   ],
   "groq": [
     { "id": "llama-3.3-70b-versatile", "name": "Llama 3.3 70B" },
     { "id": "gemma2-9b-it", "name": "Gemma 2 9B" },
     { "id": "llama3-8b-8192", "name": "Llama 3 8B" }
-  ],
-  "minimax": [{ "id": "MiniMax-M2.7", "name": "MiniMax M2.7" }]
+  ]
 }

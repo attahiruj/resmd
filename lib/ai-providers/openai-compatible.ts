@@ -67,18 +67,44 @@ export class OpenAICompatibleProvider implements AIProvider {
       ];
     }
 
+    console.log(`[listModels:${provider}] fetching ${this.config.modelsUrl}`);
     const res = await fetch(this.config.modelsUrl, {
       headers: { Authorization: `Bearer ${this.config.apiKey}` },
-      next: { revalidate: 3600 },
+      cache: 'no-store',
     });
 
-    if (!res.ok) throw new Error(`Failed to fetch models: ${res.status}`);
+    console.log(`[listModels:${provider}] status ${res.status}`);
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      console.error(`[listModels:${provider}] error body:`, body);
+      throw new Error(
+        `Failed to fetch models from ${this.config.modelsUrl}: ${res.status} ${body}`
+      );
+    }
 
     const data = await res.json();
-    const models: { id: string; name: string }[] = data.data ?? [];
-    return models
-      .filter(this.config.modelsFilter ?? (() => true))
-      .map((m) => ({ id: m.id, name: m.name, provider }))
+    console.log(
+      `[listModels:${provider}] raw response keys:`,
+      Object.keys(data)
+    );
+    console.log(
+      `[listModels:${provider}] data.data length:`,
+      (data.data ?? []).length
+    );
+    const raw: { id: string; name: string }[] = data.data ?? [];
+    // Google returns IDs like "models/gemini-2.0-flash" — strip the prefix
+    const models = raw.map((m) => ({
+      ...m,
+      id: m.id.replace(/^models\//, ''),
+    }));
+    const filtered = models.filter(this.config.modelsFilter ?? (() => true));
+    console.log(
+      `[listModels:${provider}] after filter:`,
+      filtered.length,
+      'models'
+    );
+    return filtered
+      .map((m) => ({ id: m.id, name: m.name ?? m.id, provider }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 }

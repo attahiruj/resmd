@@ -27,11 +27,12 @@ interface ModelOption {
 const PROVIDER_COLORS: Record<string, string> = {
   openrouter: 'text-purple-400 bg-purple-400/10',
   groq: 'text-orange-400 bg-orange-400/10',
-  minimax: 'text-teal-400 bg-teal-400/10',
   openai: 'text-green-400 bg-green-400/10',
   anthropic: 'text-amber-400 bg-amber-400/10',
   'google gemini': 'text-blue-400 bg-blue-400/10',
 };
+
+const FREE_TIER_PROVIDERS = new Set(['openrouter', 'groq']);
 
 // ---------------------------------------------------------------------------
 // Types
@@ -81,6 +82,9 @@ export default function AIChat({
   const [selectedProviderId, setSelectedProviderId] =
     useState<string>('server');
   const [showModelPicker, setShowModelPicker] = useState(false);
+  const [collapsedProviders, setCollapsedProviders] = useState<Set<string>>(
+    new Set()
+  );
   const historyRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -99,7 +103,17 @@ export default function AIChat({
       .then((data) => {
         if (data.models?.length) {
           setModels(data.models);
-          if (!saved) {
+          const providers = new Set<string>(
+            data.models.map((m: ModelOption) => m.provider)
+          );
+          setCollapsedProviders(providers);
+          const savedStillValid =
+            saved &&
+            data.models.some(
+              (m: ModelOption) =>
+                m.id === saved.modelId && m.providerId === saved.providerId
+            );
+          if (!savedStillValid) {
             const first = data.models[0];
             setSelectedModelId(first.id);
             setSelectedProviderId(first.providerId ?? 'server');
@@ -562,67 +576,171 @@ export default function AIChat({
             {showModelPicker && (
               <div
                 ref={pickerRef}
-                className="absolute bottom-full mb-1.5 right-0 w-56 bg-surface border border-border rounded-xl shadow-xl overflow-hidden z-50"
+                className="absolute bottom-full mb-2 right-0 w-72 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden z-50"
               >
-                <div className="overflow-y-auto" style={{ maxHeight: '240px' }}>
-                  {models.length === 0 ? (
-                    <p className="text-xs text-faint text-center py-4 px-3">
-                      No models —{' '}
-                      <a
-                        href="/settings"
-                        className="text-accent hover:underline"
-                      >
-                        Add a provider
-                      </a>
-                    </p>
-                  ) : (
-                    models.map((m) => {
-                      const isActive =
-                        m.id === selectedModelId &&
-                        m.providerId === selectedProviderId;
-                      const badgeClass =
-                        PROVIDER_COLORS[m.provider.toLowerCase()] ??
-                        'text-muted bg-surface-2';
-                      return (
-                        <button
-                          key={`${m.providerId}:${m.id}`}
-                          onClick={() => handleModelChange(m.id, m.providerId)}
-                          className={`w-full text-left px-3 py-3 sm:py-2 text-xs transition-colors duration-100 ${
-                            isActive
-                              ? 'bg-accent-muted text-accent'
-                              : 'text-text hover:bg-surface-2'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="truncate">{m.name}</span>
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <span
-                                className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full uppercase tracking-wide ${badgeClass}`}
-                              >
-                                {m.provider}
-                              </span>
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })
-                  )}
+                {/* Header */}
+                <div className="px-3 py-2.5 border-b border-border flex items-center justify-between">
+                  <span className="text-xs font-semibold text-text">
+                    Select model
+                  </span>
+                  <a
+                    href="/settings"
+                    className="text-[10px] text-accent hover:underline"
+                  >
+                    + Add provider
+                  </a>
                 </div>
+
+                {models.length === 0 ? (
+                  <p className="text-xs text-faint text-center py-6 px-4">
+                    No models —{' '}
+                    <a href="/settings" className="text-accent hover:underline">
+                      add a provider
+                    </a>
+                  </p>
+                ) : (
+                  (() => {
+                    // BYOK models first, then server models
+                    const byok = models.filter(
+                      (m) => m.providerId !== 'server'
+                    );
+                    const server = models.filter(
+                      (m) => m.providerId === 'server'
+                    );
+                    const ordered = [...byok, ...server];
+
+                    // Group by provider
+                    const groups = new Map<string, ModelOption[]>();
+                    for (const m of ordered) {
+                      if (!groups.has(m.provider)) groups.set(m.provider, []);
+                      groups.get(m.provider)!.push(m);
+                    }
+
+                    return (
+                      <div
+                        className="overflow-y-auto"
+                        style={{ maxHeight: '320px' }}
+                      >
+                        {Array.from(groups.entries()).map(
+                          ([providerName, providerModels], gi) => {
+                            const isCollapsed =
+                              collapsedProviders.has(providerName);
+                            const hasActive = providerModels.some(
+                              (m) =>
+                                m.id === selectedModelId &&
+                                m.providerId === selectedProviderId
+                            );
+                            return (
+                              <div key={providerName}>
+                                {/* Provider section header — clickable to collapse */}
+                                <button
+                                  onClick={() =>
+                                    setCollapsedProviders((prev) => {
+                                      const next = new Set(prev);
+                                      next.has(providerName)
+                                        ? next.delete(providerName)
+                                        : next.add(providerName);
+                                      return next;
+                                    })
+                                  }
+                                  className={`w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-2 transition-colors duration-100 ${gi > 0 ? 'border-t border-border' : ''}`}
+                                >
+                                  <span
+                                    className={`text-[9px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                      PROVIDER_COLORS[
+                                        providerName.toLowerCase()
+                                      ] ?? 'text-muted bg-surface-2'
+                                    }`}
+                                  >
+                                    {providerName}
+                                  </span>
+                                  <span className="text-[10px] text-faint flex-1 text-left">
+                                    {providerModels.length} model
+                                    {providerModels.length !== 1 ? 's' : ''}
+                                  </span>
+                                  {hasActive && !isCollapsed && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0" />
+                                  )}
+                                  {isCollapsed ? (
+                                    <CaretDownIcon
+                                      size={10}
+                                      weight="bold"
+                                      className="text-faint flex-shrink-0"
+                                    />
+                                  ) : (
+                                    <CaretUpIcon
+                                      size={10}
+                                      weight="bold"
+                                      className="text-faint flex-shrink-0"
+                                    />
+                                  )}
+                                </button>
+
+                                {/* Models in this provider */}
+                                {!isCollapsed &&
+                                  providerModels.map((m) => {
+                                    const isActive =
+                                      m.id === selectedModelId &&
+                                      m.providerId === selectedProviderId;
+                                    return (
+                                      <button
+                                        key={`${m.providerId}:${m.id}`}
+                                        onClick={() =>
+                                          handleModelChange(m.id, m.providerId)
+                                        }
+                                        className={`w-full text-left px-3 py-2.5 transition-colors duration-100 flex items-center justify-between gap-3 ${
+                                          isActive
+                                            ? 'bg-accent-muted'
+                                            : 'hover:bg-surface-2'
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-2 min-w-0">
+                                          <span
+                                            className={`text-xs truncate ${isActive ? 'text-accent font-medium' : 'text-text'}`}
+                                          >
+                                            {m.name}
+                                          </span>
+                                          {FREE_TIER_PROVIDERS.has(
+                                            m.provider.toLowerCase()
+                                          ) && (
+                                            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 flex-shrink-0">
+                                              free
+                                            </span>
+                                          )}
+                                        </div>
+                                        {isActive && (
+                                          <CheckIcon
+                                            size={12}
+                                            weight="bold"
+                                            className="text-accent flex-shrink-0"
+                                          />
+                                        )}
+                                      </button>
+                                    );
+                                  })}
+                              </div>
+                            );
+                          }
+                        )}
+                      </div>
+                    );
+                  })()
+                )}
               </div>
             )}
             <button
               ref={pickerTriggerRef}
               onClick={() => setShowModelPicker((v) => !v)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs text-muted hover:text-text bg-surface hover:bg-surface-2 border border-border transition-colors duration-150"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs text-muted hover:text-text bg-surface hover:bg-surface-2 border border-border transition-colors duration-150"
               title="Select AI model"
             >
               <BrainIcon size={12} className="text-accent flex-shrink-0" />
-              <span className="hidden sm:inline max-w-[80px] truncate">
+              <span className="hidden sm:inline max-w-[100px] truncate text-text">
                 {activeModel?.name ?? '…'}
               </span>
               {activeModel && (
                 <span
-                  className={`hidden sm:inline text-[9px] font-medium px-1.5 py-0.5 rounded-full uppercase tracking-wide ${PROVIDER_COLORS[activeModel.provider.toLowerCase()] ?? 'text-muted bg-surface-2'}`}
+                  className={`hidden sm:inline text-[9px] font-medium px-1.5 py-0.5 rounded-full uppercase tracking-wider ${PROVIDER_COLORS[activeModel.provider.toLowerCase()] ?? 'text-muted bg-surface-2'}`}
                 >
                   {activeModel.provider}
                 </span>

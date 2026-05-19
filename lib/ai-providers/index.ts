@@ -30,7 +30,15 @@ function getModelsFilter(baseUrl: string): (m: { id: string }) => boolean {
   if (baseUrl.includes('openai.com'))
     return (m) => /^gpt-/.test(m.id) && !m.id.includes('instruct');
   if (baseUrl.includes('generativelanguage'))
-    return (m) => /^gemini-/.test(m.id);
+    return (m) =>
+      /^gemini-/.test(m.id) &&
+      !/-tts/.test(m.id) &&
+      !/embedding/.test(m.id) &&
+      !/-vision/.test(m.id) &&
+      !/imagen/.test(m.id) &&
+      !/robotics/.test(m.id) &&
+      !/-audio/.test(m.id) &&
+      !/aqa/.test(m.id);
   return () => true;
 }
 
@@ -88,6 +96,13 @@ export async function listUserProviderModels(
       return models.map((m) => ({ ...m, providerId: p.id }));
     })
   );
+  results.forEach((r, i) => {
+    if (r.status === 'rejected')
+      console.error(
+        `[BYOK] listModels failed for provider ${stored[i]?.name}:`,
+        r.reason
+      );
+  });
   return results.flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
 }
 
@@ -95,24 +110,17 @@ export async function listUserProviderModels(
 // Provider factories — one per provider, only constructed when key is present
 // ---------------------------------------------------------------------------
 
-function makeMinimaxProvider(key: string): AIProvider {
-  return new OpenAICompatibleProvider({
-    name: 'minimax',
-    baseUrl: 'https://api.minimax.io/v1',
-    apiKey: key,
-    defaultModel: 'M2-her',
-    maxTokensParam: 'max_completion_tokens',
-    staticModels: CURATED_MODELS.minimax,
-  });
-}
-
 function makeGroqProvider(key: string): AIProvider {
   return new OpenAICompatibleProvider({
     name: 'groq',
     baseUrl: 'https://api.groq.com/openai/v1',
     apiKey: key,
     defaultModel: 'llama-3.3-70b-versatile',
-    staticModels: CURATED_MODELS.groq,
+    modelsUrl: 'https://api.groq.com/openai/v1/models',
+    modelsFilter: (m) =>
+      !m.id.includes('whisper') &&
+      !m.id.includes('guard') &&
+      !m.id.includes('tool-use'),
   });
 }
 
@@ -139,8 +147,6 @@ function makeOpenRouterProvider(key: string): AIProvider {
  */
 export function getActiveProviders(): AIProvider[] {
   const providers: AIProvider[] = [];
-  if (process.env.MINIMAX_API_KEY)
-    providers.push(makeMinimaxProvider(process.env.MINIMAX_API_KEY));
   if (process.env.GROQ_API_KEY)
     providers.push(makeGroqProvider(process.env.GROQ_API_KEY));
   if (process.env.OPENROUTER_API_KEY)

@@ -40,7 +40,7 @@ export async function GET() {
       ? []
       : await listUserProviderModels(user.id).catch(() => []);
 
-    const allModels = [...serverModels, ...userModels];
+    const allModels = [...userModels, ...serverModels];
 
     if (allModels.length === 0) {
       return NextResponse.json(
